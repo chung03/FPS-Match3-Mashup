@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
-public class NEtworkLobby : MonoBehaviour
+public class MyNetworkLobby : NetworkLobbyManager
 {
     // Start is called before the first frame update
     void Start()
@@ -15,4 +16,26 @@ public class NEtworkLobby : MonoBehaviour
     {
         
     }
+
+	private void GetLocalPlayer()
+	{
+
+	}
+
+	//////////////// UI FUNCTIONS ////////////////////////
+
+	public void SetLocalPlayerReady()
+	{
+
+	}
+
+	public void SetLocalPlayerTeam()
+	{
+
+	}
+
+	public void SetLocalPlayerType()
+	{
+
+	}
 }
