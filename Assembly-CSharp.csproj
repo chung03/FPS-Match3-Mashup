@@ -60,8 +60,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Networking\Client.cs" />
     <Compile Include="Assets\Scripts\Networking\Server.cs" />
     <Compile Include="Assets\Scripts\Util.cs" />
+    <Reference Include="Unity.Collections">
+      <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.Collections.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>
@@ -71,20 +75,17 @@
     <Reference Include="Unity.CollabProxy.Editor">
       <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.CollabProxy.Editor.dll</HintPath>
     </Reference>
-    <Reference Include="Unity.TextMeshPro">
-      <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Analytics.DataPrivacy">
-      <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.Analytics.DataPrivacy.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Collections">
-      <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.Collections.dll</HintPath>
-    </Reference>
     <Reference Include="Unity.Mathematics">
       <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Mathematics.Editor">
       <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.Mathematics.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Analytics.DataPrivacy">
+      <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.Analytics.DataPrivacy.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>D:/Programs/Unity/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
