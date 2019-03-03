@@ -60,17 +60,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Networking\Client_Multithread.cs" />
-    <Compile Include="Assets\Scripts\Networking\Server_Multithread.cs" />
+    <Compile Include="Assets\Scripts\Networking\ClientCode\Client_Game_Job.cs" />
+    <Compile Include="Assets\Scripts\Networking\ClientCode\Client_Lobby_Job.cs" />
+    <Compile Include="Assets\Scripts\Networking\ClientCode\Client_Multithread.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\Server_Game_Job.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\Server_Lobby_Jobs.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\Server_Multithread.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\ServerUtils.cs" />
     <Compile Include="Assets\Scripts\Networking\SingleThread\Client.cs" />
     <Compile Include="Assets\Scripts\Networking\SingleThread\Server.cs" />
+    <Compile Include="Assets\Scripts\UI\ModeChooseBehaviour.cs" />
     <Compile Include="Assets\Scripts\Util.cs" />
-    <Reference Include="Unity.Jobs">
-      <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.Jobs.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Jobs.Editor">
-      <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.Jobs.Editor.dll</HintPath>
-    </Reference>
     <Reference Include="Unity.Collections">
       <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.Collections.dll</HintPath>
     </Reference>

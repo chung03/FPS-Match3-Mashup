@@ -8,14 +8,21 @@ using UnityEngine.Assertions;
 
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
+using ServerJobs;
+using ServerUtils;
+
 public class Server_Multithread : MonoBehaviour
 {
 	public UdpCNetworkDriver m_Driver;
 	public NativeList<NetworkConnection> m_Connections;
 	private JobHandle ServerJobHandle;
 
-	void Start()
+	private SERVER_MODE currentMode;
+
+	private void Start()
 	{
+		currentMode = SERVER_MODE.GAME_MODE;
+
 		m_Driver = new UdpCNetworkDriver(new INetworkParameter[0]);
 		if (m_Driver.Bind(new IPEndPoint(IPAddress.Any, 9000)) != 0)
 			Debug.Log("Failed to bind to port 9000");
@@ -54,55 +61,6 @@ public class Server_Multithread : MonoBehaviour
 		// Must complete here because reading m_Connections before the job completes is wrong
 		ServerJobHandle.Complete();
 		ServerJobHandle = serverUpdateJob.Schedule(m_Connections.Length, 1, ServerJobHandle);
-	}
-
-	struct ServerUpdateJob : IJobParallelFor
-	{
-		public UdpCNetworkDriver.Concurrent driver;
-		public NativeArray<NetworkConnection> connections;
-
-		public void Execute(int index)
-		{
-			Debug.Log("ServerUpdateJob connections.Length = " + connections.Length + ", index = " + index);
-
-			if (!connections[index].IsCreated)
-			{
-				Debug.Log("ServerUpdateJob connections[" + index + "] was not created");
-				Assert.IsTrue(true);
-			}
-
-			NetworkEvent.Type cmd;
-			DataStreamReader stream;
-			while ((cmd = driver.PopEventForConnection(connections[index], out stream)) !=
-					NetworkEvent.Type.Empty)
-			{
-				if (cmd == NetworkEvent.Type.Data)
-				{
-					var readerCtx = default(DataStreamReader.Context);
-					uint number = stream.ReadUInt(ref readerCtx);
-
-					Debug.Log("Got " + number + " from the Client adding + 2 to it.");
-					number += 2;
-
-					using (var writer = new DataStreamWriter(4, Allocator.Temp))
-					{
-						writer.Write(number);
-						driver.Send(connections[index], writer);
-					}
-				}
-				else if (cmd == NetworkEvent.Type.Disconnect)
-				{
-					Debug.Log("Client disconnected from server");
-					connections[index] = default(NetworkConnection);
-				}
-				else
-				{
-					Debug.Log("Unhandled Network Event: " + cmd);
-				}
-			}
-
-			Debug.Log("ServerUpdateJob Finished processing connection[" + index + "]");
-		}
 	}
 
 	struct ServerUpdateConnectionsJob : IJob
