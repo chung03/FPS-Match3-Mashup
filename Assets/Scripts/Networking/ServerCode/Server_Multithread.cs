@@ -4,7 +4,6 @@ using UnityEngine;
 using Unity.Networking.Transport;
 using Unity.Collections;
 using Unity.Jobs;
-using UnityEngine.Assertions;
 
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
@@ -17,11 +16,11 @@ public class Server_Multithread : MonoBehaviour
 	public NativeList<NetworkConnection> m_Connections;
 	private JobHandle ServerJobHandle;
 
-	private SERVER_MODE currentMode;
+	private SERVER_MODE m_CurrentMode;
 
 	private void Start()
 	{
-		currentMode = SERVER_MODE.GAME_MODE;
+		m_CurrentMode = SERVER_MODE.GAME_MODE;
 
 		m_Driver = new UdpCNetworkDriver(new INetworkParameter[0]);
 		if (m_Driver.Bind(new IPEndPoint(IPAddress.Any, 9000)) != 0)
@@ -30,6 +29,11 @@ public class Server_Multithread : MonoBehaviour
 			m_Driver.Listen();
 
 		m_Connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
+	}
+
+	public void SetMode(SERVER_MODE newMode)
+	{
+		m_CurrentMode = newMode;
 	}
 
 	void OnDestroy()
@@ -49,43 +53,34 @@ public class Server_Multithread : MonoBehaviour
 			connections = m_Connections
 		};
 
-		var serverUpdateJob = new ServerUpdateJob
-		{
-			driver = m_Driver.ToConcurrent(),
-			connections = m_Connections.ToDeferredJobArray()
-		};
-		
 		ServerJobHandle = m_Driver.ScheduleUpdate();
 		ServerJobHandle = connectionJob.Schedule(ServerJobHandle);
 
 		// Must complete here because reading m_Connections before the job completes is wrong
 		ServerJobHandle.Complete();
-		ServerJobHandle = serverUpdateJob.Schedule(m_Connections.Length, 1, ServerJobHandle);
+		ServerJobHandle = HandleData(m_CurrentMode, m_Driver, m_Connections, ServerJobHandle);
 	}
 
-	struct ServerUpdateConnectionsJob : IJob
+	private JobHandle HandleData(SERVER_MODE currentMode, 
+									UdpCNetworkDriver driver, 
+									NativeList<NetworkConnection> connections,
+									JobHandle dependencies)
 	{
-		public UdpCNetworkDriver driver;
-		public NativeList<NetworkConnection> connections;
-
-		public void Execute()
+		if (currentMode == SERVER_MODE.GAME_MODE)
 		{
-			// Clean up connections
-			for (int i = 0; i < connections.Length; i++)
+			return new ServerGameJob
 			{
-				if (!connections[i].IsCreated)
-				{
-					connections.RemoveAtSwapBack(i);
-					--i;
-				}
-			}
-			// Accept new connections
-			NetworkConnection c;
-			while ((c = driver.Accept()) != default(NetworkConnection))
+				driver = driver.ToConcurrent(),
+				connections = connections.ToDeferredJobArray()
+			}.Schedule(connections.Length, 1, dependencies);
+		}
+		else
+		{
+			return new ServerLobbyJob
 			{
-				connections.Add(c);
-				Debug.Log("Accepted a connection");
-			}
+				driver = driver.ToConcurrent(),
+				connections = connections.ToDeferredJobArray()
+			}.Schedule(connections.Length, 1, dependencies);
 		}
 	}
 }

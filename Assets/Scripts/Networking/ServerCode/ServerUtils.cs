@@ -1,6 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+
+using Unity.Networking.Transport;
+using Unity.Collections;
+using Unity.Jobs;
+using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
 namespace ServerUtils
 {
@@ -8,5 +11,31 @@ namespace ServerUtils
 	{
 		LOBBY_MODE,
 		GAME_MODE
+	}
+
+	public struct ServerUpdateConnectionsJob : IJob
+	{
+		public UdpCNetworkDriver driver;
+		public NativeList<NetworkConnection> connections;
+
+		public void Execute()
+		{
+			// Clean up connections
+			for (int i = 0; i < connections.Length; i++)
+			{
+				if (!connections[i].IsCreated)
+				{
+					connections.RemoveAtSwapBack(i);
+					--i;
+				}
+			}
+			// Accept new connections
+			NetworkConnection c;
+			while ((c = driver.Accept()) != default(NetworkConnection))
+			{
+				connections.Add(c);
+				Debug.Log("Accepted a connection");
+			}
+		}
 	}
 }

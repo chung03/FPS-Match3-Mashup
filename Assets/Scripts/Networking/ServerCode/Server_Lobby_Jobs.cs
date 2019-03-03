@@ -1,5 +1,4 @@
-﻿using System.Net;
-using UnityEngine;
+﻿using UnityEngine;
 
 using Unity.Networking.Transport;
 using Unity.Collections;
@@ -9,18 +8,18 @@ using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Ne
 
 namespace ServerJobs
 {
-	public struct ServerUpdateJob : IJobParallelFor
+	public struct ServerLobbyJob : IJobParallelFor
 	{
 		public UdpCNetworkDriver.Concurrent driver;
 		public NativeArray<NetworkConnection> connections;
 
 		public void Execute(int index)
 		{
-			Debug.Log("ServerUpdateJob connections.Length = " + connections.Length + ", index = " + index);
+			Debug.Log("ServerLobbyJob connections.Length = " + connections.Length + ", index = " + index);
 
 			if (!connections[index].IsCreated)
 			{
-				Debug.Log("ServerUpdateJob connections[" + index + "] was not created");
+				Debug.Log("ServerLobbyJob connections[" + index + "] was not created");
 				Assert.IsTrue(true);
 			}
 
@@ -55,7 +54,7 @@ namespace ServerJobs
 				}
 			}
 
-			Debug.Log("ServerUpdateJob Finished processing connection[" + index + "]");
+			Debug.Log("ServerLobbyJob Finished processing connection[" + index + "]");
 		}
 	}
 }
