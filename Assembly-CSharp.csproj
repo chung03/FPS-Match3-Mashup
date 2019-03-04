@@ -66,9 +66,11 @@
     <Compile Include="Assets\Scripts\Networking\ServerCode\Server_Game_Job.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Server_Lobby_Jobs.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Server_Multithread.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\ServerUI.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerUtils.cs" />
     <Compile Include="Assets\Scripts\Networking\SingleThread\Client.cs" />
     <Compile Include="Assets\Scripts\Networking\SingleThread\Server.cs" />
+    <Compile Include="Assets\Scripts\UI\LobbyUIBehaviour.cs" />
     <Compile Include="Assets\Scripts\UI\ModeChooseBehaviour.cs" />
     <Compile Include="Assets\Scripts\Util.cs" />
     <Reference Include="Unity.Collections">

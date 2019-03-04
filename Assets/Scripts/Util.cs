@@ -10,4 +10,9 @@
 	{
 		SEND_PLAYER_NAME
 	}
+
+	public struct PlayerInfo
+	{
+		public byte m_Name;
+	}
 }

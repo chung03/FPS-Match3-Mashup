@@ -5,6 +5,8 @@ using Unity.Collections;
 using Unity.Jobs;
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
+using Util;
+
 namespace ServerUtils
 {
 	public enum SERVER_MODE
@@ -17,6 +19,7 @@ namespace ServerUtils
 	{
 		public UdpCNetworkDriver driver;
 		public NativeList<NetworkConnection> connections;
+		public NativeList<PlayerInfo> playersList;
 
 		public void Execute()
 		{
@@ -26,6 +29,7 @@ namespace ServerUtils
 				if (!connections[i].IsCreated)
 				{
 					connections.RemoveAtSwapBack(i);
+					playersList.RemoveAtSwapBack(i);
 					--i;
 				}
 			}
@@ -34,6 +38,7 @@ namespace ServerUtils
 			while ((c = driver.Accept()) != default(NetworkConnection))
 			{
 				connections.Add(c);
+				playersList.Add(new PlayerInfo());
 				Debug.Log("Accepted a connection");
 			}
 		}
