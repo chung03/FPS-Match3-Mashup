@@ -19,14 +19,14 @@ public class Server_Multithread : MonoBehaviour
 	public UdpCNetworkDriver m_Driver;
 
 	public NativeList<NetworkConnection> m_Connections;
-	public NativeList<PlayerInfo> m_PlayerList;
+	public NativeList<LobbyPlayerInfo> m_PlayerList;
 	private JobHandle ServerJobHandle;
 
 	private SERVER_MODE m_CurrentMode;
 
 	private void Start()
 	{
-		m_CurrentMode = SERVER_MODE.GAME_MODE;
+		m_CurrentMode = SERVER_MODE.LOBBY_MODE;
 
 		m_Driver = new UdpCNetworkDriver(new INetworkParameter[0]);
 		if (m_Driver.Bind(new IPEndPoint(IPAddress.Any, 9000)) != 0)
@@ -35,7 +35,7 @@ public class Server_Multithread : MonoBehaviour
 			m_Driver.Listen();
 
 		m_Connections = new NativeList<NetworkConnection>(MAX_NUM_PLAYERS, Allocator.Persistent);
-		m_PlayerList = new NativeList<PlayerInfo>(MAX_NUM_PLAYERS, Allocator.Persistent);
+		m_PlayerList = new NativeList<LobbyPlayerInfo>(MAX_NUM_PLAYERS, Allocator.Persistent);
 	}
 
 	public void Init()
@@ -79,6 +79,11 @@ public class Server_Multithread : MonoBehaviour
 		// Must complete here because reading m_Connections before the job completes is wrong
 		ServerJobHandle.Complete();
 		ServerJobHandle = HandleData(m_CurrentMode, m_Driver, m_Connections, ServerJobHandle);
+
+		// Now that all connections are updated, we do something with the data
+
+		// Now we send clients the updated data
+
 	}
 
 	private JobHandle HandleData(SERVER_MODE currentMode, 
@@ -96,10 +101,11 @@ public class Server_Multithread : MonoBehaviour
 		}
 		else
 		{
-			return new ServerLobbyJob
+			return new ServerReceiveLobbyJob
 			{
 				driver = driver.ToConcurrent(),
-				connections = connections.ToDeferredJobArray()
+				connections = connections.ToDeferredJobArray(),
+				playerList = m_PlayerList.ToDeferredJobArray()
 			}.Schedule(connections.Length, 1, dependencies);
 		}
 	}

@@ -60,12 +60,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Networking\ClientCode\Client_Game_Job.cs" />
-    <Compile Include="Assets\Scripts\Networking\ClientCode\Client_Lobby_Job.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Client_Multithread.cs" />
+    <Compile Include="Assets\Scripts\Networking\ClientCode\ClientReadGameJob.cs" />
+    <Compile Include="Assets\Scripts\Networking\ClientCode\ClientReadLobbyJob.cs" />
+    <Compile Include="Assets\Scripts\Networking\ClientCode\ClientSendGameJob.cs" />
+    <Compile Include="Assets\Scripts\Networking\ClientCode\ClientSendLobbyJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Server_Game_Job.cs" />
-    <Compile Include="Assets\Scripts\Networking\ServerCode\Server_Lobby_Jobs.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Server_Multithread.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\ServerReceiveLobbyJob.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\ServerSendLobbyJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerUI.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerUtils.cs" />
     <Compile Include="Assets\Scripts\Networking\SingleThread\Client.cs" />

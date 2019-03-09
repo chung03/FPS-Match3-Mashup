@@ -19,7 +19,7 @@ namespace ServerUtils
 	{
 		public UdpCNetworkDriver driver;
 		public NativeList<NetworkConnection> connections;
-		public NativeList<PlayerInfo> playersList;
+		public NativeList<LobbyPlayerInfo> playersList;
 
 		public void Execute()
 		{
@@ -38,7 +38,7 @@ namespace ServerUtils
 			while ((c = driver.Accept()) != default(NetworkConnection))
 			{
 				connections.Add(c);
-				playersList.Add(new PlayerInfo());
+				playersList.Add(new LobbyPlayerInfo());
 				Debug.Log("Accepted a connection");
 			}
 		}

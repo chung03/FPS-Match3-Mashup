@@ -6,20 +6,23 @@ using Unity.Jobs;
 using UnityEngine.Assertions;
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
+using Util;
+
 namespace ServerJobs
 {
-	public struct ServerLobbyJob : IJobParallelFor
+	public struct ServerSendLobbyJob : IJobParallelFor
 	{
 		public UdpCNetworkDriver.Concurrent driver;
 		public NativeArray<NetworkConnection> connections;
+		public NativeArray<LobbyPlayerInfo> playerList;
 
 		public void Execute(int index)
 		{
-			Debug.Log("ServerLobbyJob connections.Length = " + connections.Length + ", index = " + index);
+			Debug.Log("ServerSendLobbyJob connections.Length = " + connections.Length + ", index = " + index);
 
 			if (!connections[index].IsCreated)
 			{
-				Debug.Log("ServerLobbyJob connections[" + index + "] was not created");
+				Debug.Log("ServerSendLobbyJob connections[" + index + "] was not created");
 				Assert.IsTrue(true);
 			}
 
@@ -31,15 +34,22 @@ namespace ServerJobs
 				if (cmd == NetworkEvent.Type.Data)
 				{
 					var readerCtx = default(DataStreamReader.Context);
-					uint number = stream.ReadUInt(ref readerCtx);
+					byte clientCmd = stream.ReadByte(ref readerCtx);
 
-					Debug.Log("Got " + number + " from the Client adding + 2 to it.");
-					number += 2;
+					Debug.Log("Got " + clientCmd + " from the Client");
+
+					if (clientCmd == (byte)LOBBY_COMMANDS.READY)
+					{
+						byte readyStatus = stream.ReadByte(ref readerCtx);
+						LobbyPlayerInfo newInfo = playerList[index];
+						newInfo.isReady = readyStatus;
+						playerList[index] = newInfo;
+					}
 
 					using (var writer = new DataStreamWriter(4, Allocator.Temp))
 					{
 						//writer.Write(System.Text.Encoding.UTF8.GetBytes("abcd"), 4);
-						writer.Write(number);
+						writer.Write(clientCmd);
 						driver.Send(connections[index], writer);
 					}
 				}
@@ -54,7 +64,7 @@ namespace ServerJobs
 				}
 			}
 
-			Debug.Log("ServerLobbyJob Finished processing connection[" + index + "]");
+			Debug.Log("ServerSendLobbyJob Finished processing connection[" + index + "]");
 		}
 	}
 }

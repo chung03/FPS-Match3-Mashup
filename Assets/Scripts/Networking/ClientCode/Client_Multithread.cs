@@ -7,6 +7,8 @@ using Unity.Jobs;
 
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
+using ClientJobs;
+
 public class Client_Multithread : MonoBehaviour
 {
 	public UdpCNetworkDriver m_Driver;
@@ -36,65 +38,23 @@ public class Client_Multithread : MonoBehaviour
 	public void Update() {
 		ClientJobHandle.Complete();
 
-		var job = new ClientUpdateJob
+		var readJob = new ClientReadLobbyJob
 		{
 			driver = m_Driver,
 			connection = m_Connection,
-			done = m_Done
+			ready = m_Done
 		};
 
 		ClientJobHandle = m_Driver.ScheduleUpdate();
-		ClientJobHandle = job.Schedule(ClientJobHandle);
-	}
+		ClientJobHandle = readJob.Schedule(ClientJobHandle);
 
-	struct ClientUpdateJob : IJob
-	{
-		public UdpCNetworkDriver driver;
-		public NativeArray<NetworkConnection> connection;
-		public NativeArray<byte> done;
-
-		public void Execute()
+		var sendJob = new ClientSendLobbyJob
 		{
-			if (!connection[0].IsCreated)
-			{
-				// Remember that its not a bool anymore.
-				if (done[0] != 1)
-					Debug.Log("Something went wrong during connect");
-				return;
-			}
-			DataStreamReader stream;
-			NetworkEvent.Type cmd;
+			driver = m_Driver,
+			connection = m_Connection,
+			ready = m_Done
+		};
 
-			while ((cmd = connection[0].PopEvent(driver, out stream)) !=
-				   NetworkEvent.Type.Empty)
-			{
-				if (cmd == NetworkEvent.Type.Connect)
-				{
-					Debug.Log("We are now connected to the server");
-
-					var value = 1;
-					using (var writer = new DataStreamWriter(4, Allocator.Temp))
-					{
-						writer.Write(value);
-						connection[0].Send(driver, writer);
-					}
-				}
-				else if (cmd == NetworkEvent.Type.Data)
-				{
-					var readerCtx = default(DataStreamReader.Context);
-					uint value = stream.ReadUInt(ref readerCtx);
-					Debug.Log("Got the value = " + value + " back from the server");
-					// And finally change the `done[0]` to `1`
-					done[0] = 1;
-					connection[0].Disconnect(driver);
-					connection[0] = default(NetworkConnection);
-				}
-				else if (cmd == NetworkEvent.Type.Disconnect)
-				{
-					Debug.Log("Client got disconnected from server");
-					connection[0] = default(NetworkConnection);
-				}
-			}
-		}
+		ClientJobHandle = sendJob.Schedule(ClientJobHandle);
 	}
 }

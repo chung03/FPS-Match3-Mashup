@@ -7,8 +7,11 @@ public class LobbyUIBehaviour : MonoBehaviour
 	[SerializeField]
 	private GameObject startGameButton;
 
-    // Start is called before the first frame update
-    private void Start()
+	[SerializeField]
+	private GameObject[] teamStats;
+
+	// Start is called before the first frame update
+	private void Start()
     {
         
     }
@@ -25,5 +28,10 @@ public class LobbyUIBehaviour : MonoBehaviour
 		{
 			startGameButton.SetActive(true);
 		}
+	}
+
+	public void AddPlayer(int team)
+	{
+
 	}
 }

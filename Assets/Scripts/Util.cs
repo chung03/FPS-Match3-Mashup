@@ -1,4 +1,6 @@
-﻿namespace Util
+﻿using Unity.Collections;
+
+namespace Util
 {
 	public enum PLAYER_TYPE
 	{
@@ -11,8 +13,16 @@
 		SEND_PLAYER_NAME
 	}
 
-	public struct PlayerInfo
+	public struct LobbyPlayerInfo
 	{
 		public byte m_Name;
+		public byte isReady;
+	}
+
+	public enum LOBBY_COMMANDS
+	{
+		CHANGE_TEAM,
+		READY,
+		GET_ID
 	}
 }
