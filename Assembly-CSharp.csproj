@@ -65,8 +65,11 @@
     <Compile Include="Assets\Scripts\Networking\ClientCode\ClientReadLobbyJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\ClientSendGameJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\ClientSendLobbyJob.cs" />
+    <Compile Include="Assets\Scripts\Networking\CommonCode\LobbyDataStruct.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Server_Game_Job.cs" />
-    <Compile Include="Assets\Scripts\Networking\ServerCode\Server_Multithread.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\ServerConnectionsComponent.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\ServerGameComponent.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\ServerLobbyComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerReceiveLobbyJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerSendLobbyJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerUI.cs" />
