@@ -21,7 +21,7 @@ public class ModeChooseBehaviour : MonoBehaviour
 		DontDestroyOnLoad(newServer);
 
 		GameObject newClient = Instantiate(clientObject);
-		newClient.GetComponent<ClientConnectionsComponent>().Init();
+		newClient.GetComponent<ClientConnectionsComponent>().Init(true);
 		DontDestroyOnLoad(newClient);
 
 		SceneManager.LoadScene(LOBBY_SCENE);
@@ -30,6 +30,7 @@ public class ModeChooseBehaviour : MonoBehaviour
 	public void BeClient()
 	{
 		GameObject newClient = Instantiate(clientObject);
+		newClient.GetComponent<ClientConnectionsComponent>().Init(false);
 		DontDestroyOnLoad(newClient);
 
 		SceneManager.LoadScene(SEARCH_SCENE);

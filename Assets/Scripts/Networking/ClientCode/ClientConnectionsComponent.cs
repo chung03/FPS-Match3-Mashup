@@ -13,11 +13,16 @@ public class ClientConnectionsComponent : MonoBehaviour
 	public UdpCNetworkDriver m_Driver;
 	public NetworkConnection m_Connection;
 
+	private bool isHost = false;
+
 	[SerializeField]
 	private GameObject clientLobbyObj;
 
 	[SerializeField]
 	private GameObject clientGameObj;
+
+	[SerializeField]
+	private GameObject lobbyUI;
 
 	private void Start()
 	{
@@ -50,6 +55,9 @@ public class ClientConnectionsComponent : MonoBehaviour
 		{
 			GameObject client = Instantiate(clientLobbyObj);
 			client.GetComponent<ClientLobbyComponent>().Init(this);
+
+			GameObject ui = Instantiate(lobbyUI);
+			ui.GetComponent<LobbyUIBehaviour>().SetUI(isHost);
 		}
 		else if (scene.name == "GameScene")
 		{
@@ -58,8 +66,9 @@ public class ClientConnectionsComponent : MonoBehaviour
 		}
 	}
 
-	public void Init()
+	public void Init(bool _isHost)
 	{
 		SceneManager.sceneLoaded += OnSceneLoaded;
+		isHost = _isHost;
 	}
 }

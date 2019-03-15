@@ -47,3 +47,4 @@ MonoBehaviour:
     type: 3}
   clientGameObj: {fileID: 3471701973108298168, guid: d57cee835e7472b43abce97672ac7a66,
     type: 3}
+  lobbyUI: {fileID: 1999145933014034460, guid: f1b5803c0ddf992439c5eb7f975fcaa7, type: 3}
