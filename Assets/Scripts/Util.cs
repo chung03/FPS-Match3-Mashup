@@ -15,7 +15,7 @@ namespace Util
 
 	public struct LobbyPlayerInfo
 	{
-		public byte m_Name;
+		public byte team;
 		public byte isReady;
 	}
 

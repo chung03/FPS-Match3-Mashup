@@ -17,8 +17,12 @@ public class ModeChooseBehaviour : MonoBehaviour
 	public void BeServer()
 	{
 		GameObject newServer = Instantiate(serverObject);
-		newServer.GetComponent<ServerLobbyComponent>().Init();
+		newServer.GetComponent<ServerConnectionsComponent>().Init();
 		DontDestroyOnLoad(newServer);
+
+		GameObject newClient = Instantiate(clientObject);
+		newClient.GetComponent<ClientConnectionsComponent>().Init();
+		DontDestroyOnLoad(newClient);
 
 		SceneManager.LoadScene(LOBBY_SCENE);
 	}
