@@ -71,24 +71,16 @@ public class ClientLobbyComponent : MonoBehaviour
 				Debug.Log("ClientLobbyComponent::HandleReceiveData We are now connected to the server");
 				
 				// Send initial state
-				using (var writer = new DataStreamWriter(32, Allocator.Temp))
+				using (var writer = new DataStreamWriter(16, Allocator.Temp))
 				{
-					// writer.Write((byte)LOBBY_COMMANDS.READY);
-					//connection.Send(driver, writer);
+					 writer.Write((byte)LOBBY_COMMANDS.READY);
+					 writer.Write((byte)0);
 
-					// writer.Write((byte)0);
-					//connection.Send(driver, writer);
+					 writer.Write((byte)LOBBY_COMMANDS.CHANGE_TEAM);
+					 writer.Write((byte)1);
 
-					// writer.Write((byte)LOBBY_COMMANDS.CHANGE_TEAM);
-					//connection.Send(driver, writer);
-
-					// writer.Write((byte)1);
-					//connection.Send(driver, writer);
-
-					byte[] bytes = { (byte)LOBBY_COMMANDS.READY, 0 , (byte)LOBBY_COMMANDS.CHANGE_TEAM , 1};
-					
-
-					writer.Write(bytes, 4);
+					//byte[] bytes = { (byte)LOBBY_COMMANDS.READY, 0 , (byte)LOBBY_COMMANDS.CHANGE_TEAM , 1};
+					//writer.Write(bytes, 4);
 
 					connection.Send(driver, writer);
 				}
