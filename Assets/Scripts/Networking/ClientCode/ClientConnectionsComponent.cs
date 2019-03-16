@@ -26,6 +26,7 @@ public class ClientConnectionsComponent : MonoBehaviour
 
 	private void Start()
 	{
+		//Debug.Log("ClientConnectionsComponent::Start called");
 		m_Driver = new UdpCNetworkDriver(new INetworkParameter[0]);
 		m_Connection = default(NetworkConnection);
 
@@ -50,7 +51,7 @@ public class ClientConnectionsComponent : MonoBehaviour
 
 	private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
 	{
-		Debug.Log("ClientConnectionsComponent::OnSceneLoaded called");
+		//Debug.Log("ClientConnectionsComponent::OnSceneLoaded called");
 		if (scene.name == "LobbyScene")
 		{
 			GameObject client = Instantiate(clientLobbyObj);

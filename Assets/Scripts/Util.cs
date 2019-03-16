@@ -21,7 +21,7 @@ namespace Util
 
 	public enum LOBBY_COMMANDS
 	{
-		CHANGE_TEAM,
+		CHANGE_TEAM = 1,
 		READY,
 		GET_ID
 	}

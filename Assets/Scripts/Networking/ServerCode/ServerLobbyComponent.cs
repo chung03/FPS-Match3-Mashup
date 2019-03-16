@@ -21,12 +21,14 @@ public class ServerLobbyComponent : MonoBehaviour
 
 	private void Start()
 	{
+		//Debug.Log("ServerLobbyComponent::Start Called");
 		m_PlayerList = new List<LobbyPlayerInfo>(MAX_NUM_PLAYERS);
 	}
 
 
 	public void Init(ServerConnectionsComponent connHolder)
 	{
+		//Debug.Log("ServerLobbyComponent::Init Called");
 		connectionsComponent = connHolder;
 	}
 
@@ -34,6 +36,8 @@ public class ServerLobbyComponent : MonoBehaviour
 	{
 		ref UdpCNetworkDriver driver = ref connectionsComponent.GetDriver();
 		ref NativeList<NetworkConnection> connections = ref connectionsComponent.GetConnections();
+
+		driver.ScheduleUpdate().Complete();
 
 		// ***** Handle Connections *****
 		HandleConnections(ref connections, ref driver, m_PlayerList);
@@ -50,11 +54,15 @@ public class ServerLobbyComponent : MonoBehaviour
 
 	private void HandleConnections(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
 	{
+		//Debug.Log("ServerLobbyComponent::HandleConnections Called");
+
 		// Clean up connections
 		for (int i = 0; i < connections.Length; i++)
 		{
 			if (!connections[i].IsCreated)
 			{
+				Debug.Log("ServerLobbyComponent::HandleConnections Removing a connection");
+
 				connections.RemoveAtSwapBack(i);
 				playerList.RemoveAtSwapBack(i);
 				--i;
@@ -66,7 +74,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		{
 			connections.Add(c);
 			playerList.Add(new LobbyPlayerInfo());
-			Debug.Log("Accepted a connection");
+			Debug.Log("ServerLobbyComponent::HandleConnections Accepted a connection");
 		}
 	}
 
@@ -87,46 +95,60 @@ public class ServerLobbyComponent : MonoBehaviour
 			{
 				if (cmd == NetworkEvent.Type.Data)
 				{
-					var readerCtx = default(DataStreamReader.Context);
-					byte clientCmd = stream.ReadByte(ref readerCtx);
-
-					Debug.Log("Got " + clientCmd + " from the Client");
-
-					if (clientCmd == (byte)LOBBY_COMMANDS.READY)
-					{
-						byte readyStatus = stream.ReadByte(ref readerCtx);
-						
-						LobbyPlayerInfo newInfo = playerList[index];
-						newInfo.isReady = readyStatus;
-						playerList[index] = newInfo;
-						
-
-						Debug.Log("A Client " + index + " ready state set to " + readyStatus);
-					}
-					else if (clientCmd == (byte)LOBBY_COMMANDS.CHANGE_TEAM)
-					{
-						byte newTeam = stream.ReadByte(ref readerCtx);
-
-						LobbyPlayerInfo newInfo = playerList[index];
-						newInfo.team = newTeam;
-						playerList[index] = newInfo;
-
-
-						Debug.Log("A Client " + index + " team was set to " + newTeam);
-					}
+					ReadClientBytes(index, playerList, stream);
 				}
 				else if (cmd == NetworkEvent.Type.Disconnect)
 				{
-					Debug.Log("Client disconnected from server");
+					Debug.Log("ServerLobbyComponent::HandleReceiveData Client disconnected from server");
 					connections[index] = default(NetworkConnection);
 				}
 				else
 				{
-					Debug.Log("Unhandled Network Event: " + cmd);
+					Debug.Log("ServerLobbyComponent::HandleReceiveData Unhandled Network Event: " + cmd);
 				}
 			}
 
-			Debug.Log("ServerLobbyComponent::HandleReceiveData Finished processing connection[" + index + "]");
+			//Debug.Log("ServerLobbyComponent::HandleReceiveData Finished processing connection[" + index + "]");
+		}
+	}
+
+	private void ReadClientBytes(int index, List<LobbyPlayerInfo> playerList, DataStreamReader stream)
+	{
+		var readerCtx = default(DataStreamReader.Context);
+		
+
+		Debug.Log("ServerLobbyComponent::ReadClientBytes stream.Length = " + stream.Length);
+
+		byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
+
+		for (int i = 0; i < stream.Length; ++i)
+		{
+			byte clientCmd = bytes[i];
+			++i;
+
+			Debug.Log("ServerLobbyComponent::ReadClientBytes Got " + clientCmd + " from the Client");
+
+			if (clientCmd == (byte)LOBBY_COMMANDS.READY)
+			{
+				byte readyStatus = bytes[i];
+
+				LobbyPlayerInfo newInfo = playerList[index];
+				newInfo.isReady = readyStatus;
+				playerList[index] = newInfo;
+
+
+				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " ready state set to " + readyStatus);
+			}
+			else if (clientCmd == (byte)LOBBY_COMMANDS.CHANGE_TEAM)
+			{
+				byte newTeam = bytes[i];
+
+				LobbyPlayerInfo newInfo = playerList[index];
+				newInfo.team = newTeam;
+				playerList[index] = newInfo;
+
+				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " team was set to " + newTeam);
+			}
 		}
 	}
 

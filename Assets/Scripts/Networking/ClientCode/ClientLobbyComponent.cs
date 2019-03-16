@@ -19,11 +19,13 @@ public class ClientLobbyComponent : MonoBehaviour
 
 	private void Start()
 	{
+		//Debug.Log("ClientLobbyComponent::Start Called");
 		m_Player = new LobbyPlayerInfo();
 	}
 
 	public void Init(ClientConnectionsComponent connHolder)
 	{
+		//Debug.Log("ClientLobbyComponent::Init Called");
 		connectionsComponent = connHolder;
 	}
 
@@ -32,9 +34,13 @@ public class ClientLobbyComponent : MonoBehaviour
 		ref UdpCNetworkDriver driver = ref connectionsComponent.GetDriver();
 		ref NetworkConnection connection = ref connectionsComponent.GetConnection();
 
+		driver.ScheduleUpdate().Complete();
+		
+		//Debug.Log("ClientLobbyComponent::Update connection.IsCreated = " + connection.IsCreated);
+
 		if (!connection.IsCreated)
 		{
-			Debug.Log("Something went wrong during connect");
+			Debug.Log("ClientLobbyComponent::Update Something went wrong during connect");
 			return;
 		}
 
@@ -53,6 +59,8 @@ public class ClientLobbyComponent : MonoBehaviour
 
 	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, LobbyPlayerInfo playerList)
 	{
+		//Debug.Log("ClientLobbyComponent::HandleReceiveData Called");
+
 		NetworkEvent.Type cmd;
 		DataStreamReader stream;
 		while ((cmd = connection.PopEvent(driver, out stream)) !=
@@ -60,16 +68,27 @@ public class ClientLobbyComponent : MonoBehaviour
 		{
 			if (cmd == NetworkEvent.Type.Connect)
 			{
-				Debug.Log("We are now connected to the server");
+				Debug.Log("ClientLobbyComponent::HandleReceiveData We are now connected to the server");
 				
 				// Send initial state
-				using (var writer = new DataStreamWriter(4, Allocator.Temp))
+				using (var writer = new DataStreamWriter(32, Allocator.Temp))
 				{
-					writer.Write((byte)LOBBY_COMMANDS.READY);
-					writer.Write((byte)0);
+					// writer.Write((byte)LOBBY_COMMANDS.READY);
+					//connection.Send(driver, writer);
 
-					writer.Write((byte)LOBBY_COMMANDS.CHANGE_TEAM);
-					writer.Write((byte)0);
+					// writer.Write((byte)0);
+					//connection.Send(driver, writer);
+
+					// writer.Write((byte)LOBBY_COMMANDS.CHANGE_TEAM);
+					//connection.Send(driver, writer);
+
+					// writer.Write((byte)1);
+					//connection.Send(driver, writer);
+
+					byte[] bytes = { (byte)LOBBY_COMMANDS.READY, 0 , (byte)LOBBY_COMMANDS.CHANGE_TEAM , 1};
+					
+
+					writer.Write(bytes, 4);
 
 					connection.Send(driver, writer);
 				}
@@ -78,13 +97,13 @@ public class ClientLobbyComponent : MonoBehaviour
 			{
 				var readerCtx = default(DataStreamReader.Context);
 				uint value = stream.ReadUInt(ref readerCtx);
-				Debug.Log("Got the value = " + value + " back from the server");
+				Debug.Log("ClientLobbyComponent::HandleReceiveData Got the value = " + value + " back from the server");
 				connection.Disconnect(driver);
 				connection = default(NetworkConnection);
 			}
 			else if (cmd == NetworkEvent.Type.Disconnect)
 			{
-				Debug.Log("Client got disconnected from server");
+				Debug.Log("ClientLobbyComponent::HandleReceiveData Client got disconnected from server");
 				connection = default(NetworkConnection);
 			}
 		}

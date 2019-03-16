@@ -23,10 +23,12 @@ public class ServerConnectionsComponent : MonoBehaviour
 
 	private void Start()
 	{
+		//Debug.Log("ServerConnectionsComponent::Start called");
+
 		m_Driver = new UdpCNetworkDriver(new INetworkParameter[0]);
 		if (m_Driver.Bind(new IPEndPoint(IPAddress.Any, 9000)) != 0)
 		{
-			Debug.Log("Failed to bind to port 9000");
+			Debug.Log("ServerConnectionsComponent::Start Failed to bind to port 9000");
 		}
 		else
 		{
