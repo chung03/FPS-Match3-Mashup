@@ -10,6 +10,7 @@ using Util;
 
 namespace ServerJobs
 {
+	/*
 	public struct ServerSendLobbyJob : IJobParallelFor
 	{
 		public UdpCNetworkDriver.Concurrent driver;
@@ -67,4 +68,5 @@ namespace ServerJobs
 			Debug.Log("ServerSendLobbyJob Finished processing connection[" + index + "]");
 		}
 	}
+	*/
 }

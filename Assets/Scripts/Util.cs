@@ -13,15 +13,23 @@ namespace Util
 		SEND_PLAYER_NAME
 	}
 
-	public struct LobbyPlayerInfo
+	public class LobbyPlayerInfo
 	{
 		public byte team;
 		public byte isReady;
 	}
 
-	public enum LOBBY_COMMANDS
+	public enum LOBBY_SERVER_COMMANDS
 	{
 		CHANGE_TEAM = 1,
+		READY,
+		SET_ID,
+		SET_ALL_PLAYER_STATES
+	}
+
+	public enum LOBBY_CLIENT_REQUESTS
+	{
+		CHANGE_TEAM = 10,
 		READY,
 		GET_ID
 	}

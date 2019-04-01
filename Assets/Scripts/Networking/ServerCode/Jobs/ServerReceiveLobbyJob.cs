@@ -10,6 +10,7 @@ using Util;
 
 namespace ServerJobs
 {
+	/*
 	public struct ServerReceiveLobbyJob : IJobParallelFor
 	{
 		public UdpCNetworkDriver.Concurrent driver;
@@ -46,15 +47,14 @@ namespace ServerJobs
 						playerList[index] = newInfo;
 						Debug.Log("A Client was set to 'ready'");
 					}
-
-					/*
+					
 					using (var writer = new DataStreamWriter(4, Allocator.Temp))
 					{
 						//writer.Write(System.Text.Encoding.UTF8.GetBytes("abcd"), 4);
 						writer.Write(clientCmd);
 						driver.Send(connections[index], writer);
 					}
-					*/
+					
 				}
 				else if (cmd == NetworkEvent.Type.Disconnect)
 				{
@@ -70,4 +70,5 @@ namespace ServerJobs
 			Debug.Log("ServerReceiveLobbyJob Finished processing connection[" + index + "]");
 		}
 	}
+	*/
 }

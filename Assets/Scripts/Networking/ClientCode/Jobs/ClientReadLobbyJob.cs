@@ -30,7 +30,7 @@ namespace ClientJobs
 					
 					using (var writer = new DataStreamWriter(4, Allocator.Temp))
 					{
-						writer.Write((byte)LOBBY_COMMANDS.READY);
+						writer.Write((byte)LOBBY_SERVER_COMMANDS.READY);
 						writer.Write(ready[0]);
 						connection[0].Send(driver, writer);
 					}
@@ -39,9 +39,9 @@ namespace ClientJobs
 				{
 					var readerCtx = default(DataStreamReader.Context);
 					byte serverCmd = stream.ReadByte(ref readerCtx);
-					Debug.Log("Got the command = " + ((LOBBY_COMMANDS)serverCmd).ToString() + " back from the server");
+					Debug.Log("Got the command = " + ((LOBBY_SERVER_COMMANDS)serverCmd).ToString() + " back from the server");
 
-					if (serverCmd == (byte)LOBBY_COMMANDS.GET_ID)
+					if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.SET_ID)
 					{
 
 					}

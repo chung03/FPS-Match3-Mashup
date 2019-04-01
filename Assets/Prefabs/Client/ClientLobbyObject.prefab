@@ -43,3 +43,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b446185dc8e69364ba51b5abe3926831, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lobbyUIObj: {fileID: 1999145933014034460, guid: f1b5803c0ddf992439c5eb7f975fcaa7,
+    type: 3}

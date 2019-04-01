@@ -9,6 +9,7 @@ using Util;
 
 namespace ServerUtils
 {
+	/*
 	public enum SERVER_MODE
 	{
 		LOBBY_MODE,
@@ -43,4 +44,5 @@ namespace ServerUtils
 			}
 		}
 	}
+	*/
 }

@@ -13,14 +13,32 @@ using UnityEngine.SceneManagement;
 
 public class ClientLobbyComponent : MonoBehaviour
 {	
-	public LobbyPlayerInfo m_Player;
+	// This is the player's ID. This is all it needs to identify itself and to find its player info.
+	private int m_PlayerID;
+
+	// This stores the infor for all players, including this one.
+	private List<LobbyPlayerInfo> m_AllPlayerInfo;
 
 	ClientConnectionsComponent connectionsComponent;
+
+	[SerializeField]
+	private GameObject lobbyUIObj;
+	private GameObject lobbyUIInstance;
+
 
 	private void Start()
 	{
 		//Debug.Log("ClientLobbyComponent::Start Called");
-		m_Player = new LobbyPlayerInfo();
+		m_PlayerID = -1;
+		m_AllPlayerInfo = new List<LobbyPlayerInfo>(ServerLobbyComponent.MAX_NUM_PLAYERS);
+
+		for (int index = 0; index < ServerLobbyComponent.MAX_NUM_PLAYERS; ++index)
+		{
+			m_AllPlayerInfo.Add(new LobbyPlayerInfo());
+		}
+
+		lobbyUIInstance = Instantiate(lobbyUIObj);
+		lobbyUIInstance.GetComponent<LobbyUIBehaviour>().SetUI(connectionsComponent.IsHost());
 	}
 
 	public void Init(ClientConnectionsComponent connHolder)
@@ -45,19 +63,20 @@ public class ClientLobbyComponent : MonoBehaviour
 		}
 
 		// ***** Receive data *****
-		HandleReceiveData(ref connection, ref driver, m_Player);
+		HandleReceiveData(ref connection, ref driver, m_AllPlayerInfo);
 
 		// ***** Process data *****
 
 		// ***** Update UI ****
+		UpdateUI();
 
 		// ***** Accept Player Input ****
 
 		// ***** Send data *****
-		HandleSendData(ref connection, ref driver, m_Player);
+		HandleSendData(ref connection, ref driver, m_AllPlayerInfo);
 	}
 
-	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, LobbyPlayerInfo playerList)
+	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> allPlayerInfo)
 	{
 		//Debug.Log("ClientLobbyComponent::HandleReceiveData Called");
 
@@ -73,11 +92,13 @@ public class ClientLobbyComponent : MonoBehaviour
 				// Send initial state
 				using (var writer = new DataStreamWriter(16, Allocator.Temp))
 				{
-					 writer.Write((byte)LOBBY_COMMANDS.READY);
+					 writer.Write((byte)LOBBY_CLIENT_REQUESTS.READY);
 					 writer.Write((byte)0);
 
-					 writer.Write((byte)LOBBY_COMMANDS.CHANGE_TEAM);
+					 writer.Write((byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM);
 					 writer.Write((byte)1);
+
+					writer.Write((byte)LOBBY_CLIENT_REQUESTS.GET_ID);
 
 					//byte[] bytes = { (byte)LOBBY_COMMANDS.READY, 0 , (byte)LOBBY_COMMANDS.CHANGE_TEAM , 1};
 					//writer.Write(bytes, 4);
@@ -87,11 +108,7 @@ public class ClientLobbyComponent : MonoBehaviour
 			}
 			else if (cmd == NetworkEvent.Type.Data)
 			{
-				var readerCtx = default(DataStreamReader.Context);
-				uint value = stream.ReadUInt(ref readerCtx);
-				Debug.Log("ClientLobbyComponent::HandleReceiveData Got the value = " + value + " back from the server");
-				connection.Disconnect(driver);
-				connection = default(NetworkConnection);
+				ReadServerBytes(allPlayerInfo, stream);
 			}
 			else if (cmd == NetworkEvent.Type.Disconnect)
 			{
@@ -101,7 +118,83 @@ public class ClientLobbyComponent : MonoBehaviour
 		}
 	}
 
-	private void HandleSendData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, LobbyPlayerInfo playerList)
+	private void ReadServerBytes(List<LobbyPlayerInfo> playerList, DataStreamReader stream)
+	{
+		var readerCtx = default(DataStreamReader.Context);
+
+
+		Debug.Log("ClientLobbyComponent::ReadServerBytes stream.Length = " + stream.Length);
+
+		byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
+
+		// Must always manually move index for bytes
+		for (int i = 0; i < stream.Length;)
+		{
+			// Unsafely assuming that everything is working as expected and there are no attackers.
+			byte serverCmd = bytes[i];
+			++i;
+
+			Debug.Log("ClientLobbyComponent::ReadServerBytes Got " + serverCmd + " from the Server");
+
+			if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.READY)
+			{
+				byte readyStatus = bytes[i];
+				++i;
+
+				playerList[m_PlayerID].isReady = readyStatus;
+
+				Debug.Log("ClientLobbyComponent::ReadServerBytes Client ready state set to " + readyStatus);
+			}
+			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.CHANGE_TEAM)
+			{
+				byte newTeam = bytes[i];
+				++i;
+
+				playerList[m_PlayerID].team = newTeam;
+
+				Debug.Log("ClientLobbyComponent::ReadServerBytes Client team was set to " + newTeam);
+			}
+			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.SET_ID)
+			{
+				byte newID = bytes[i];
+				++i;
+
+				m_PlayerID = newID;
+
+				Debug.Log("ClientLobbyComponent::ReadServerBytes Client ID was set to " + m_PlayerID);
+			}
+			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES)
+			{
+				// Do a for loop iterating over the bytes using the same counter
+				for (int player = 0; player < ServerLobbyComponent.MAX_NUM_PLAYERS; ++player)
+				{
+					// Unsafely assuming that everything is working as expected and there are no attackers.
+					byte isPlayerInSlot = bytes[i];
+					++i;
+
+					if (isPlayerInSlot != 0)
+					{
+						Debug.Log("ClientLobbyComponent::ReadServerBytes Data for client " + player + " received");
+
+						byte isReady = bytes[i];
+						++i;
+						byte team = bytes[i];
+						++i;
+
+						playerList[player].isReady = isReady;
+						playerList[player].team = team;
+					}
+				}
+			}
+		}
+	}
+
+	private void UpdateUI()
+	{
+		
+	}
+
+	private void HandleSendData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> allPlayerInfo)
 	{
 	}
 }

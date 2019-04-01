@@ -124,35 +124,72 @@ public class ServerLobbyComponent : MonoBehaviour
 		for (int i = 0; i < stream.Length; ++i)
 		{
 			byte clientCmd = bytes[i];
+
+			// Unsafely assuming that everything is working as expected and there are no attackers.
 			++i;
 
 			Debug.Log("ServerLobbyComponent::ReadClientBytes Got " + clientCmd + " from the Client");
 
-			if (clientCmd == (byte)LOBBY_COMMANDS.READY)
+			if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.READY)
 			{
 				byte readyStatus = bytes[i];
 
-				LobbyPlayerInfo newInfo = playerList[index];
-				newInfo.isReady = readyStatus;
-				playerList[index] = newInfo;
+				playerList[index].isReady = readyStatus;
 
 
 				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " ready state set to " + readyStatus);
 			}
-			else if (clientCmd == (byte)LOBBY_COMMANDS.CHANGE_TEAM)
+			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM)
 			{
 				byte newTeam = bytes[i];
 
-				LobbyPlayerInfo newInfo = playerList[index];
-				newInfo.team = newTeam;
-				playerList[index] = newInfo;
+				playerList[index].team = newTeam;
 
 				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " team was set to " + newTeam);
+			}
+			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.GET_ID)
+			{
+				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " sent request for its ID");
 			}
 		}
 	}
 
+	// For now, send entire lobby state to all players
 	private void HandleSendData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
 	{
+		for (int index = 0; index < connections.Length; ++index)
+		{
+			if (!connections.IsCreated)
+			{
+				Debug.Log("ServerLobbyComponent::HandleReceiveData connections[" + index + "] was not created");
+				Assert.IsTrue(true);
+			}
+
+			// Send state of all players
+			using (var writer = new DataStreamWriter(16, Allocator.Temp))
+			{
+				writer.Write((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES);
+
+				// Send data for present players
+				for ( int playerNum = 0; playerNum < playerList.Count; playerNum++)
+				{
+					// Tell Client this player is really there
+					writer.Write((byte)1);
+
+					// Write player info
+					writer.Write((byte)playerList[playerNum].isReady);
+					writer.Write((byte)playerList[playerNum].team);
+				}
+
+				// Send data saying that some player slots aren't filled
+				for (int playerNum = playerList.Count; playerNum < MAX_NUM_PLAYERS; playerNum++)
+				{
+					// Tell Client this player is not there
+					writer.Write((byte)0);
+				}
+
+				connections[index].Send(driver, writer);
+			}
+		}
 	}
 }
