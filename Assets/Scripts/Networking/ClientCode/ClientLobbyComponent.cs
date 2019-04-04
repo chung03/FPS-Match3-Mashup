@@ -10,14 +10,16 @@ using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Ne
 using UnityEngine.Assertions;
 using Util;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class ClientLobbyComponent : MonoBehaviour
-{	
+{
 	// This is the player's ID. This is all it needs to identify itself and to find its player info.
 	private int m_PlayerID;
 
 	// This stores the infor for all players, including this one.
 	private List<LobbyPlayerInfo> m_AllPlayerInfo;
+	private Queue<byte> sendQueue;
 
 	ClientConnectionsComponent connectionsComponent;
 
@@ -29,16 +31,22 @@ public class ClientLobbyComponent : MonoBehaviour
 	private void Start()
 	{
 		//Debug.Log("ClientLobbyComponent::Start Called");
-		m_PlayerID = -1;
+		m_PlayerID = 0;
 		m_AllPlayerInfo = new List<LobbyPlayerInfo>(ServerLobbyComponent.MAX_NUM_PLAYERS);
 
 		for (int index = 0; index < ServerLobbyComponent.MAX_NUM_PLAYERS; ++index)
 		{
 			m_AllPlayerInfo.Add(new LobbyPlayerInfo());
+			// m_AllPlayerInfo[index].team = (byte)(index / (ServerLobbyComponent.MAX_NUM_PLAYERS / 2));
+			m_AllPlayerInfo[index].team = 99;
+			// Debug.LogWarning("ClientLobbyComponent::Start m_AllPlayerInfo[" + index + "].team = " + m_AllPlayerInfo[index].team);
 		}
 
 		lobbyUIInstance = Instantiate(lobbyUIObj);
 		lobbyUIInstance.GetComponent<LobbyUIBehaviour>().SetUI(connectionsComponent.IsHost());
+		lobbyUIInstance.GetComponent<LobbyUIBehaviour>().Init(this);
+
+		sendQueue = new Queue<byte>();
 	}
 
 	public void Init(ClientConnectionsComponent connHolder)
@@ -47,13 +55,41 @@ public class ClientLobbyComponent : MonoBehaviour
 		connectionsComponent = connHolder;
 	}
 
+	public void ChangeTeam()
+	{
+		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM);
+
+		byte newTeam = 0;
+
+		if (m_AllPlayerInfo[m_PlayerID].team == 0)
+		{
+			newTeam = 1;
+		}
+
+		sendQueue.Enqueue(newTeam);
+	}
+
+	public void ChangeReadyStatus()
+	{
+		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.READY);
+
+		byte newReadyStatus = 0;
+
+		if (m_AllPlayerInfo[m_PlayerID].isReady == 0)
+		{
+			newReadyStatus = 1;
+		}
+
+		sendQueue.Enqueue(newReadyStatus);
+	}
+
 	void Update()
 	{
 		ref UdpCNetworkDriver driver = ref connectionsComponent.GetDriver();
 		ref NetworkConnection connection = ref connectionsComponent.GetConnection();
 
 		driver.ScheduleUpdate().Complete();
-		
+
 		//Debug.Log("ClientLobbyComponent::Update connection.IsCreated = " + connection.IsCreated);
 
 		if (!connection.IsCreated)
@@ -64,6 +100,8 @@ public class ClientLobbyComponent : MonoBehaviour
 
 		// ***** Receive data *****
 		HandleReceiveData(ref connection, ref driver, m_AllPlayerInfo);
+
+		driver.ScheduleUpdate().Complete();
 
 		// ***** Process data *****
 
@@ -88,23 +126,13 @@ public class ClientLobbyComponent : MonoBehaviour
 			if (cmd == NetworkEvent.Type.Connect)
 			{
 				Debug.Log("ClientLobbyComponent::HandleReceiveData We are now connected to the server");
-				
+
 				// Send initial state
-				using (var writer = new DataStreamWriter(16, Allocator.Temp))
-				{
-					 writer.Write((byte)LOBBY_CLIENT_REQUESTS.READY);
-					 writer.Write((byte)0);
-
-					 writer.Write((byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM);
-					 writer.Write((byte)1);
-
-					writer.Write((byte)LOBBY_CLIENT_REQUESTS.GET_ID);
-
-					//byte[] bytes = { (byte)LOBBY_COMMANDS.READY, 0 , (byte)LOBBY_COMMANDS.CHANGE_TEAM , 1};
-					//writer.Write(bytes, 4);
-
-					connection.Send(driver, writer);
-				}
+				sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.READY);
+				sendQueue.Enqueue(1);
+				sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM);
+				sendQueue.Enqueue(0);
+				sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.GET_ID);
 			}
 			else if (cmd == NetworkEvent.Type.Data)
 			{
@@ -191,10 +219,71 @@ public class ClientLobbyComponent : MonoBehaviour
 
 	private void UpdateUI()
 	{
-		
+		// Prototype hack to get UI up and running.
+		// Should be replaced with more efficient and maintainable code later
+
+		const string PLAYER_STATS = "PlayerStats";
+		const string TEAM_1_STATS = "Team1Stats";
+		const string TEAM_2_STATS = "Team2Stats";
+
+		GameObject playerStatsObj = lobbyUIInstance.transform.Find(PLAYER_STATS).gameObject;
+
+		GameObject team1Obj = playerStatsObj.transform.Find(TEAM_1_STATS).gameObject;
+		GameObject team2Obj = playerStatsObj.transform.Find(TEAM_2_STATS).gameObject;
+
+		// Go through all players looking for team players and then updating UI.
+		SetTeamUI(team1Obj, 0);
+		SetTeamUI(team2Obj, 1);
+	}
+
+	private void SetTeamUI(GameObject teamObj, int team)
+	{
+		const string PLAYER_PREFIX = "Player ";
+
+		const string NAME_TEXT = "Name Text";
+		const string READY_TEXT = "Ready Text";
+		const string PLAYER_TYPE_TEXT = "Player Type Text";
+
+		// Go through all players looking for team 2 players and then updating UI.
+		int numTeamFound = 0;
+		for (int i = 0; i < ServerLobbyComponent.MAX_NUM_PLAYERS; ++i)
+		{
+			if (m_AllPlayerInfo[i].team == team)
+			{
+				numTeamFound++;
+				GameObject playerObj = teamObj.transform.Find(PLAYER_PREFIX + numTeamFound).gameObject;
+
+				GameObject readyTextObj = playerObj.transform.Find(READY_TEXT).gameObject;
+				if (m_AllPlayerInfo[i].isReady == 0)
+				{
+					readyTextObj.GetComponent<Text>().text = "Not Ready";
+				}
+				else
+				{
+					readyTextObj.GetComponent<Text>().text = "Ready";
+				}
+			}
+		}
 	}
 
 	private void HandleSendData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> allPlayerInfo)
 	{
+		int numBytes = sendQueue.Count;
+
+		if (numBytes <= 0)
+		{
+			return;
+		}
+
+		// Send eveyrthing in the queue
+		using (var writer = new DataStreamWriter(numBytes, Allocator.Temp))
+		{
+			for (int i = 0; i < numBytes; ++i)
+			{
+				writer.Write(sendQueue.Dequeue());
+			}
+
+			connection.Send(driver, writer);
+		}
 	}
 }

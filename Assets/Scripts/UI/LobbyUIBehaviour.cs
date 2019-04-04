@@ -10,6 +10,8 @@ public class LobbyUIBehaviour : MonoBehaviour
 	[SerializeField]
 	private GameObject[] teamStats;
 
+	private ClientLobbyComponent client;
+
 	// Start is called before the first frame update
 	private void Start()
     {
@@ -33,5 +35,20 @@ public class LobbyUIBehaviour : MonoBehaviour
 	public void AddPlayer(int team)
 	{
 
+	}
+
+	public void Init(ClientLobbyComponent _client)
+	{
+		client = _client;
+	}
+
+	public void OnReadyClick()
+	{
+		client.ChangeReadyStatus();
+	}
+
+	public void OnTeamClick()
+	{
+		client.ChangeTeam();
 	}
 }

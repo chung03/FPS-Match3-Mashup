@@ -17,12 +17,15 @@ public class ServerLobbyComponent : MonoBehaviour
 	
 	public List<LobbyPlayerInfo> m_PlayerList;
 
+	private Queue<byte> sendQueue;
+
 	ServerConnectionsComponent connectionsComponent;
 
 	private void Start()
 	{
 		//Debug.Log("ServerLobbyComponent::Start Called");
 		m_PlayerList = new List<LobbyPlayerInfo>(MAX_NUM_PLAYERS);
+		sendQueue = new Queue<byte>();
 	}
 
 
@@ -95,7 +98,10 @@ public class ServerLobbyComponent : MonoBehaviour
 			{
 				if (cmd == NetworkEvent.Type.Data)
 				{
-					ReadClientBytes(index, playerList, stream);
+					var readerCtx = default(DataStreamReader.Context);
+					byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
+					
+					ReadClientBytes(index, playerList, bytes);
 				}
 				else if (cmd == NetworkEvent.Type.Disconnect)
 				{
@@ -112,16 +118,11 @@ public class ServerLobbyComponent : MonoBehaviour
 		}
 	}
 
-	private void ReadClientBytes(int index, List<LobbyPlayerInfo> playerList, DataStreamReader stream)
+	private void ReadClientBytes(int index, List<LobbyPlayerInfo> playerList, byte[] bytes)
 	{
-		var readerCtx = default(DataStreamReader.Context);
-		
+		Debug.Log("ServerLobbyComponent::ReadClientBytes bytes.Length = " + bytes.Length);
 
-		Debug.Log("ServerLobbyComponent::ReadClientBytes stream.Length = " + stream.Length);
-
-		byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
-
-		for (int i = 0; i < stream.Length; ++i)
+		for (int i = 0; i < bytes.Length;)
 		{
 			byte clientCmd = bytes[i];
 
@@ -133,6 +134,7 @@ public class ServerLobbyComponent : MonoBehaviour
 			if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.READY)
 			{
 				byte readyStatus = bytes[i];
+				++i;
 
 				playerList[index].isReady = readyStatus;
 
@@ -142,6 +144,7 @@ public class ServerLobbyComponent : MonoBehaviour
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM)
 			{
 				byte newTeam = bytes[i];
+				++i;
 
 				playerList[index].team = newTeam;
 
