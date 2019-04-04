@@ -251,7 +251,10 @@ public class ClientLobbyComponent : MonoBehaviour
 			if (m_AllPlayerInfo[i].team == team)
 			{
 				numTeamFound++;
+
+				// Set UI element active in case it was disabled before
 				GameObject playerObj = teamObj.transform.Find(PLAYER_PREFIX + numTeamFound).gameObject;
+				playerObj.SetActive(true);
 
 				GameObject readyTextObj = playerObj.transform.Find(READY_TEXT).gameObject;
 				if (m_AllPlayerInfo[i].isReady == 0)
@@ -264,21 +267,26 @@ public class ClientLobbyComponent : MonoBehaviour
 				}
 			}
 		}
+
+		// Disable unused player slots to make UI easier to debug and understand at a glance
+		for (int i = numTeamFound; i < ServerLobbyComponent.MAX_NUM_PLAYERS / 2; ++i)
+		{
+			GameObject playerObj = teamObj.transform.Find(PLAYER_PREFIX + (i + 1)).gameObject;
+			playerObj.SetActive(false);
+		}
 	}
 
 	private void HandleSendData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> allPlayerInfo)
 	{
-		int numBytes = sendQueue.Count;
-
-		if (numBytes <= 0)
+		if (sendQueue.Count <= 0)
 		{
 			return;
 		}
 
 		// Send eveyrthing in the queue
-		using (var writer = new DataStreamWriter(numBytes, Allocator.Temp))
+		using (var writer = new DataStreamWriter(sendQueue.Count, Allocator.Temp))
 		{
-			for (int i = 0; i < numBytes; ++i)
+			while (sendQueue.Count > 0)
 			{
 				writer.Write(sendQueue.Dequeue());
 			}
