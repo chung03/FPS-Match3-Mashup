@@ -33,6 +33,7 @@ public class ModeChooseBehaviour : MonoBehaviour
 		newClient.GetComponent<ClientConnectionsComponent>().Init(false);
 		DontDestroyOnLoad(newClient);
 
-		SceneManager.LoadScene(SEARCH_SCENE);
+		//SceneManager.LoadScene(SEARCH_SCENE);
+		SceneManager.LoadScene(LOBBY_SCENE);
 	}
 }

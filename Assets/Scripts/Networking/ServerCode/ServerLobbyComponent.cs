@@ -17,15 +17,15 @@ public class ServerLobbyComponent : MonoBehaviour
 	
 	public List<LobbyPlayerInfo> m_PlayerList;
 
-	private Queue<byte> sendQueue;
+	//private Queue<KeyValuePair<byte, int>> sendQueue;
 
 	ServerConnectionsComponent connectionsComponent;
-
+	 
 	private void Start()
 	{
 		//Debug.Log("ServerLobbyComponent::Start Called");
 		m_PlayerList = new List<LobbyPlayerInfo>(MAX_NUM_PLAYERS);
-		sendQueue = new Queue<byte>();
+		//sendQueue = new Queue<KeyValuePair<byte, int>>();
 	}
 
 
@@ -101,7 +101,7 @@ public class ServerLobbyComponent : MonoBehaviour
 					var readerCtx = default(DataStreamReader.Context);
 					byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
 					
-					ReadClientBytes(index, playerList, bytes);
+					ReadClientBytes(index, playerList, ref connections, ref driver, bytes);
 				}
 				else if (cmd == NetworkEvent.Type.Disconnect)
 				{
@@ -118,7 +118,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		}
 	}
 
-	private void ReadClientBytes(int index, List<LobbyPlayerInfo> playerList, byte[] bytes)
+	private void ReadClientBytes(int index, List<LobbyPlayerInfo> playerList, ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, byte[] bytes)
 	{
 		Debug.Log("ServerLobbyComponent::ReadClientBytes bytes.Length = " + bytes.Length);
 
@@ -153,6 +153,13 @@ public class ServerLobbyComponent : MonoBehaviour
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.GET_ID)
 			{
 				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " sent request for its ID");
+				using (var writer = new DataStreamWriter(16, Allocator.Temp))
+				{
+					writer.Write((byte)LOBBY_SERVER_COMMANDS.SET_ID);
+					writer.Write((byte)index);
+
+					connections[index].Send(driver, writer);
+				}
 			}
 		}
 	}
