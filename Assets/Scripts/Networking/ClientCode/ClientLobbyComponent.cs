@@ -14,6 +14,8 @@ using UnityEngine.UI;
 
 public class ClientLobbyComponent : MonoBehaviour
 {
+	private static readonly string PLAY_SCENE = "Assets/Scenes/PlayScene.unity";
+
 	// This is the player's ID. This is all it needs to identify itself and to find its player info.
 	private int m_PlayerID;
 
@@ -81,6 +83,11 @@ public class ClientLobbyComponent : MonoBehaviour
 		}
 
 		sendQueue.Enqueue(newReadyStatus);
+	}
+
+	public void SendStartGame()
+	{
+		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.START_GAME);
 	}
 
 	void Update()
@@ -213,6 +220,10 @@ public class ClientLobbyComponent : MonoBehaviour
 						playerList[player].team = team;
 					}
 				}
+			}
+			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.START_GAME)
+			{
+				SceneManager.LoadScene(PLAY_SCENE);
 			}
 		}
 	}

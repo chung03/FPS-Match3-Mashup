@@ -24,13 +24,15 @@ namespace Util
 		CHANGE_TEAM = 1,
 		READY,
 		SET_ID,
-		SET_ALL_PLAYER_STATES
+		SET_ALL_PLAYER_STATES,
+		START_GAME
 	}
 
 	public enum LOBBY_CLIENT_REQUESTS
 	{
 		CHANGE_TEAM = 10,
 		READY,
-		GET_ID
+		GET_ID,
+		START_GAME
 	}
 }

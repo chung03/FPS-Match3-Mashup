@@ -17,7 +17,8 @@ public class ServerLobbyComponent : MonoBehaviour
 	
 	public List<LobbyPlayerInfo> m_PlayerList;
 
-	//private Queue<KeyValuePair<byte, int>> sendQueue;
+	private Queue<KeyValuePair<byte, int>> individualSendQueue;
+	private Queue<byte> allSendQueue;
 
 	ServerConnectionsComponent connectionsComponent;
 	 
@@ -25,7 +26,8 @@ public class ServerLobbyComponent : MonoBehaviour
 	{
 		//Debug.Log("ServerLobbyComponent::Start Called");
 		m_PlayerList = new List<LobbyPlayerInfo>(MAX_NUM_PLAYERS);
-		//sendQueue = new Queue<KeyValuePair<byte, int>>();
+		individualSendQueue = new Queue<KeyValuePair<byte, int>>();
+		allSendQueue = new Queue<byte>();
 	}
 
 
@@ -161,12 +163,42 @@ public class ServerLobbyComponent : MonoBehaviour
 					connections[index].Send(driver, writer);
 				}
 			}
+			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
+			{
+				allSendQueue.Enqueue((byte)LOBBY_SERVER_COMMANDS.START_GAME);
+			}
 		}
 	}
 
 	// For now, send entire lobby state to all players
 	private void HandleSendData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
 	{
+		// Send things in the queue meant for all players
+		if (allSendQueue.Count > 0)
+		{
+			// Send eveyrthing in the queue
+			using (var writer = new DataStreamWriter(allSendQueue.Count, Allocator.Temp))
+			{
+				while (allSendQueue.Count > 0)
+				{
+					byte byteToSend = allSendQueue.Dequeue();
+
+					for (int index = 0; index < connections.Length; ++index)
+					{
+						if (!connections.IsCreated)
+						{
+							Debug.Log("ServerLobbyComponent::HandleReceiveData connections[" + index + "] was not created");
+							Assert.IsTrue(true);
+						}
+
+						writer.Write(byteToSend);
+						connections[index].Send(driver, writer);
+					}
+				}
+			}
+		}
+
+		// Send player state to all players
 		for (int index = 0; index < connections.Length; ++index)
 		{
 			if (!connections.IsCreated)
