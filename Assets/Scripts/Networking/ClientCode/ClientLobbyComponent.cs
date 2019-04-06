@@ -42,6 +42,7 @@ public class ClientLobbyComponent : MonoBehaviour
 			// m_AllPlayerInfo[index].team = (byte)(index / (ServerLobbyComponent.MAX_NUM_PLAYERS / 2));
 			m_AllPlayerInfo[index].team = 99;
 			// Debug.LogWarning("ClientLobbyComponent::Start m_AllPlayerInfo[" + index + "].team = " + m_AllPlayerInfo[index].team);
+			m_AllPlayerInfo[index].name = "Player " + (index + 1);
 		}
 
 		lobbyUIInstance = Instantiate(lobbyUIObj);
@@ -276,6 +277,9 @@ public class ClientLobbyComponent : MonoBehaviour
 				{
 					readyTextObj.GetComponent<Text>().text = "Ready";
 				}
+
+				GameObject nameTextObj = playerObj.transform.Find(NAME_TEXT).gameObject;
+				nameTextObj.GetComponent<Text>().text = m_AllPlayerInfo[i].name;
 			}
 		}
 

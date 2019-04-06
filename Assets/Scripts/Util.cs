@@ -17,6 +17,7 @@ namespace Util
 	{
 		public byte team;
 		public byte isReady;
+		public string name;
 	}
 
 	public enum LOBBY_SERVER_COMMANDS
