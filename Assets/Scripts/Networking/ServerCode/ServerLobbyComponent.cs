@@ -20,7 +20,7 @@ public class ServerLobbyComponent : MonoBehaviour
 	private Queue<KeyValuePair<byte, int>> individualSendQueue;
 	private Queue<byte> allSendQueue;
 
-	ServerConnectionsComponent connectionsComponent;
+	private ServerConnectionsComponent connectionsComponent;
 	 
 	private void Start()
 	{

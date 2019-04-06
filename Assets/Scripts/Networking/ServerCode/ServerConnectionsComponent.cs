@@ -62,7 +62,7 @@ public class ServerConnectionsComponent : MonoBehaviour
 			GameObject server = Instantiate(serverLobbyObj);
 			server.GetComponent<ServerLobbyComponent>().Init(this);
 		}
-		else if (scene.name == "GameScene")
+		else if (scene.name == "PlayScene")
 		{
 			Instantiate(serverGameObj);
 		}

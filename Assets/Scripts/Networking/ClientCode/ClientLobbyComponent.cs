@@ -23,7 +23,7 @@ public class ClientLobbyComponent : MonoBehaviour
 	private List<LobbyPlayerInfo> m_AllPlayerInfo;
 	private Queue<byte> sendQueue;
 
-	ClientConnectionsComponent connectionsComponent;
+	private ClientConnectionsComponent connectionsComponent;
 
 	[SerializeField]
 	private GameObject lobbyUIObj;
