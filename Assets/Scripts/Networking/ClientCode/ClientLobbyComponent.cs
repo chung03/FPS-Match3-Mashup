@@ -43,6 +43,8 @@ public class ClientLobbyComponent : MonoBehaviour
 			m_AllPlayerInfo[index].team = 99;
 			// Debug.LogWarning("ClientLobbyComponent::Start m_AllPlayerInfo[" + index + "].team = " + m_AllPlayerInfo[index].team);
 			m_AllPlayerInfo[index].name = "Player " + (index + 1);
+
+			m_AllPlayerInfo[index].playerType = PLAYER_TYPE.NONE;
 		}
 
 		lobbyUIInstance = Instantiate(lobbyUIObj);
@@ -75,6 +77,20 @@ public class ClientLobbyComponent : MonoBehaviour
 	public void ChangeReadyStatus()
 	{
 		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.READY);
+
+		byte newReadyStatus = 0;
+
+		if (m_AllPlayerInfo[m_PlayerID].isReady == 0)
+		{
+			newReadyStatus = 1;
+		}
+
+		sendQueue.Enqueue(newReadyStatus);
+	}
+
+	public void ChangePlayerType()
+	{
+		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE);
 
 		byte newReadyStatus = 0;
 
@@ -135,11 +151,7 @@ public class ClientLobbyComponent : MonoBehaviour
 			{
 				Debug.Log("ClientLobbyComponent::HandleReceiveData We are now connected to the server");
 
-				// Send initial state
-				sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.READY);
-				sendQueue.Enqueue(1);
-				sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM);
-				sendQueue.Enqueue(0);
+				// Get ID
 				sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.GET_ID);
 			}
 			else if (cmd == NetworkEvent.Type.Data)
@@ -216,9 +228,12 @@ public class ClientLobbyComponent : MonoBehaviour
 						++i;
 						byte team = bytes[i];
 						++i;
+						byte playerType = bytes[i];
+						++i;
 
 						playerList[player].isReady = isReady;
 						playerList[player].team = team;
+						playerList[player].playerType = (PLAYER_TYPE)playerType;
 					}
 				}
 			}
@@ -280,6 +295,9 @@ public class ClientLobbyComponent : MonoBehaviour
 
 				GameObject nameTextObj = playerObj.transform.Find(NAME_TEXT).gameObject;
 				nameTextObj.GetComponent<Text>().text = m_AllPlayerInfo[i].name;
+
+				GameObject playerTypeTextObj = playerObj.transform.Find(PLAYER_TYPE_TEXT).gameObject;
+				playerTypeTextObj.GetComponent<Text>().text = m_AllPlayerInfo[i].playerType.ToString();
 			}
 		}
 

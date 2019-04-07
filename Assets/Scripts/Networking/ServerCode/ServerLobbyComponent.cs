@@ -152,6 +152,12 @@ public class ServerLobbyComponent : MonoBehaviour
 
 				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " team was set to " + newTeam);
 			}
+			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE)
+			{
+				playerList[index].playerType = (PLAYER_TYPE)((int)(playerList[index].playerType + 1) % ((int)PLAYER_TYPE.MATCH3 + 1));
+
+				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " player type was set to " + playerList[index].playerType.ToString());
+			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.GET_ID)
 			{
 				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " sent request for its ID");
@@ -196,6 +202,7 @@ public class ServerLobbyComponent : MonoBehaviour
 					// Write player info
 					writer.Write((byte)playerList[playerNum].isReady);
 					writer.Write((byte)playerList[playerNum].team);
+					writer.Write((byte)playerList[playerNum].playerType);
 				}
 
 				// Send data saying that some player slots aren't filled

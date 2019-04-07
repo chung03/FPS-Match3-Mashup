@@ -2,12 +2,6 @@
 
 namespace Util
 {
-	public enum PLAYER_TYPE
-	{
-		TYPE_1,
-		TYPE_2
-	}
-
 	public enum NETWORK_DATA_TYPE
 	{
 		SEND_PLAYER_NAME
@@ -18,6 +12,7 @@ namespace Util
 		public byte team;
 		public byte isReady;
 		public string name;
+		public PLAYER_TYPE playerType;
 	}
 
 	public enum LOBBY_SERVER_COMMANDS
@@ -34,6 +29,14 @@ namespace Util
 		CHANGE_TEAM = 10,
 		READY,
 		GET_ID,
+		CHANGE_PLAYER_TYPE,
 		START_GAME
+	}
+
+	public enum PLAYER_TYPE
+	{
+		NONE = 0,
+		SHOOTER,
+		MATCH3
 	}
 }

@@ -52,6 +52,11 @@ public class LobbyUIBehaviour : MonoBehaviour
 		client.ChangeTeam();
 	}
 
+	public void OnPlayerTypeClick()
+	{
+		client.ChangePlayerType();
+	}
+
 	public void OnStartGameClick()
 	{
 		client.SendStartGame();

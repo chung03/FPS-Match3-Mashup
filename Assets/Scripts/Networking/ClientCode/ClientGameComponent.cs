@@ -27,7 +27,7 @@ public class ClientGameComponent : MonoBehaviour
 	void Update()
     {
 		ref UdpCNetworkDriver driver = ref connectionsComponent.GetDriver();
-		ref NativeList<NetworkConnection> connections = ref connectionsComponent.GetConnections();
+		ref NetworkConnection connection = ref connectionsComponent.GetConnection();
 
 		driver.ScheduleUpdate().Complete();
 	}
