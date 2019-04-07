@@ -13,12 +13,19 @@ using UnityEngine.SceneManagement;
 
 public class ServerLobbyComponent : MonoBehaviour
 {
+	private enum LOBBY_SERVER_PROCESS
+	{
+		START_GAME
+	}
+
 	public static readonly int MAX_NUM_PLAYERS = 6;
 	
 	public List<LobbyPlayerInfo> m_PlayerList;
 
+
 	private Queue<KeyValuePair<byte, int>> individualSendQueue;
 	private Queue<byte> allSendQueue;
+	private Queue<LOBBY_SERVER_PROCESS> commandProcessingQueue;
 
 	private ServerConnectionsComponent connectionsComponent;
 	 
@@ -28,6 +35,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		m_PlayerList = new List<LobbyPlayerInfo>(MAX_NUM_PLAYERS);
 		individualSendQueue = new Queue<KeyValuePair<byte, int>>();
 		allSendQueue = new Queue<byte>();
+		commandProcessingQueue = new Queue<LOBBY_SERVER_PROCESS>();
 	}
 
 
@@ -51,7 +59,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		HandleReceiveData(ref connections, ref driver, m_PlayerList);
 
 		// ***** Process data *****
-
+		ProcessData(ref connections, ref driver, m_PlayerList);
 
 		// ***** Send data *****
 		HandleSendData(ref connections, ref driver, m_PlayerList);
@@ -171,6 +179,19 @@ public class ServerLobbyComponent : MonoBehaviour
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
 			{
+				commandProcessingQueue.Enqueue(LOBBY_SERVER_PROCESS.START_GAME);
+			}
+		}
+	}
+
+	private void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+	{
+		while (commandProcessingQueue.Count > 0)
+		{
+			LOBBY_SERVER_PROCESS processCommand = commandProcessingQueue.Dequeue();
+
+			if (processCommand == LOBBY_SERVER_PROCESS.START_GAME)
+			{
 				bool isReadytoStart = true;
 
 				for (int playerNum = 0; playerNum < connections.Length; ++playerNum)
@@ -181,7 +202,6 @@ public class ServerLobbyComponent : MonoBehaviour
 						isReadytoStart = false;
 					}
 				}
-
 
 				if (isReadytoStart)
 				{
