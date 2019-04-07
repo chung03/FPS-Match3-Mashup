@@ -171,7 +171,22 @@ public class ServerLobbyComponent : MonoBehaviour
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
 			{
-				allSendQueue.Enqueue((byte)LOBBY_SERVER_COMMANDS.START_GAME);
+				bool isReadytoStart = true;
+
+				for (int playerNum = 0; playerNum < connections.Length; ++playerNum)
+				{
+					if (playerList[playerNum].playerType == PLAYER_TYPE.NONE
+						|| playerList[playerNum].isReady == 0)
+					{
+						isReadytoStart = false;
+					}
+				}
+
+
+				if (isReadytoStart)
+				{
+					allSendQueue.Enqueue((byte)LOBBY_SERVER_COMMANDS.START_GAME);
+				}
 			}
 		}
 	}
