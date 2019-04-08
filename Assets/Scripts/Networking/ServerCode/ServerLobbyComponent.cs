@@ -15,17 +15,21 @@ public class ServerLobbyComponent : MonoBehaviour
 {
 	private enum LOBBY_SERVER_PROCESS
 	{
-		START_GAME
+		START_GAME,
+		CHANGE_PLAYER_TYPE
 	}
 
 	public static readonly int MAX_NUM_PLAYERS = 6;
-	
+	public static readonly int SEND_ALL_PLAYERS = -1;
+
 	public List<LobbyPlayerInfo> m_PlayerList;
 
-
+	// Byte to send and the player ID
 	private Queue<KeyValuePair<byte, int>> individualSendQueue;
 	private Queue<byte> allSendQueue;
-	private Queue<LOBBY_SERVER_PROCESS> commandProcessingQueue;
+
+	// Command and the player ID
+	private Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>> commandProcessingQueue;
 
 	private ServerConnectionsComponent connectionsComponent;
 	 
@@ -35,7 +39,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		m_PlayerList = new List<LobbyPlayerInfo>(MAX_NUM_PLAYERS);
 		individualSendQueue = new Queue<KeyValuePair<byte, int>>();
 		allSendQueue = new Queue<byte>();
-		commandProcessingQueue = new Queue<LOBBY_SERVER_PROCESS>();
+		commandProcessingQueue = new Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>>();
 	}
 
 
@@ -162,9 +166,7 @@ public class ServerLobbyComponent : MonoBehaviour
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE)
 			{
-				playerList[index].playerType = (PLAYER_TYPE)((int)(playerList[index].playerType + 1) % ((int)PLAYER_TYPE.MATCH3 + 1));
-
-				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " player type was set to " + playerList[index].playerType.ToString());
+				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.CHANGE_PLAYER_TYPE, index));
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.GET_ID)
 			{
@@ -179,7 +181,7 @@ public class ServerLobbyComponent : MonoBehaviour
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
 			{
-				commandProcessingQueue.Enqueue(LOBBY_SERVER_PROCESS.START_GAME);
+				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int> (LOBBY_SERVER_PROCESS.START_GAME, SEND_ALL_PLAYERS));
 			}
 		}
 	}
@@ -188,26 +190,85 @@ public class ServerLobbyComponent : MonoBehaviour
 	{
 		while (commandProcessingQueue.Count > 0)
 		{
-			LOBBY_SERVER_PROCESS processCommand = commandProcessingQueue.Dequeue();
+			KeyValuePair<LOBBY_SERVER_PROCESS, int> processCommand = commandProcessingQueue.Dequeue();
 
-			if (processCommand == LOBBY_SERVER_PROCESS.START_GAME)
+			if (processCommand.Value == SEND_ALL_PLAYERS)
 			{
-				bool isReadytoStart = true;
-
-				for (int playerNum = 0; playerNum < connections.Length; ++playerNum)
+				if (processCommand.Key == LOBBY_SERVER_PROCESS.START_GAME)
 				{
-					if (playerList[playerNum].playerType == PLAYER_TYPE.NONE
-						|| playerList[playerNum].isReady == 0)
+					bool isReadytoStart = true;
+
+					for (int playerNum = 0; playerNum < connections.Length; ++playerNum)
 					{
-						isReadytoStart = false;
+						if (playerList[playerNum].playerType == PLAYER_TYPE.NONE
+							|| playerList[playerNum].isReady == 0)
+						{
+							isReadytoStart = false;
+						}
+					}
+
+					if (isReadytoStart)
+					{
+						allSendQueue.Enqueue((byte)LOBBY_SERVER_COMMANDS.START_GAME);
 					}
 				}
-
-				if (isReadytoStart)
+			}
+			else
+			{
+				// Make sure that changing player types doesn't result in some invalid team configuration
+				if (processCommand.Key == LOBBY_SERVER_PROCESS.CHANGE_PLAYER_TYPE)
 				{
-					allSendQueue.Enqueue((byte)LOBBY_SERVER_COMMANDS.START_GAME);
+					int numShootersFound = 0;
+					int numMatch3Found = 0;
+
+					LobbyPlayerInfo currPlayer = playerList[processCommand.Value];
+
+					PLAYER_TYPE newplayerType = (PLAYER_TYPE)((int)(currPlayer.playerType + 1) % (int)PLAYER_TYPE.PLAYER_TYPES);
+
+					// Get number of types of players on this player's team
+					for (int playerNum = 0; playerNum < connections.Length; ++playerNum)
+					{
+						// Skip over self
+						if (processCommand.Value == playerNum)
+						{
+							continue;
+						}
+
+						if (playerList[playerNum].team == currPlayer.team)
+						{
+							if (playerList[playerNum].playerType == PLAYER_TYPE.SHOOTER)
+							{
+								++numShootersFound;
+							}
+							else if (playerList[playerNum].playerType == PLAYER_TYPE.MATCH3)
+							{
+								++numMatch3Found;
+							}
+						}
+					}
+
+					// Debug.Log("ServerLobbyComponent::ProcessData numShootersFound = " + numShootersFound + ", numMatch3Found = " + numMatch3Found);
+
+					// Now figure out what type the player can be
+					if (newplayerType == PLAYER_TYPE.SHOOTER
+						&& numShootersFound >= 2)
+					{
+						newplayerType = (PLAYER_TYPE)((int)(newplayerType + 1) % (int)PLAYER_TYPE.PLAYER_TYPES);
+					}
+
+					if (newplayerType == PLAYER_TYPE.MATCH3
+						&& numMatch3Found >= 1)
+					{
+						newplayerType = (PLAYER_TYPE)((int)(newplayerType + 1) % (int)PLAYER_TYPE.PLAYER_TYPES);
+					}
+
+
+					currPlayer.playerType = newplayerType;
+
+					Debug.Log("ServerLobbyComponent::ProcessData Client " + processCommand.Value + " player type was set to " + currPlayer.playerType.ToString());
 				}
 			}
+			
 		}
 	}
 

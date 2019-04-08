@@ -91,15 +91,6 @@ public class ClientLobbyComponent : MonoBehaviour
 	public void ChangePlayerType()
 	{
 		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE);
-
-		byte newReadyStatus = 0;
-
-		if (m_AllPlayerInfo[m_PlayerID].isReady == 0)
-		{
-			newReadyStatus = 1;
-		}
-
-		sendQueue.Enqueue(newReadyStatus);
 	}
 
 	public void SendStartGame()
@@ -124,8 +115,6 @@ public class ClientLobbyComponent : MonoBehaviour
 
 		// ***** Receive data *****
 		HandleReceiveData(ref connection, ref driver, m_AllPlayerInfo);
-
-		driver.ScheduleUpdate().Complete();
 
 		// ***** Process data *****
 

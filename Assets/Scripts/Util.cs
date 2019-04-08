@@ -37,6 +37,7 @@ namespace Util
 	{
 		NONE = 0,
 		SHOOTER,
-		MATCH3
+		MATCH3,
+		PLAYER_TYPES
 	}
 }
