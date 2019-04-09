@@ -25,7 +25,7 @@ public class ServerLobbyComponent : MonoBehaviour
 	public List<LobbyPlayerInfo> m_PlayerList;
 
 	// Byte to send and the player ID
-	private Queue<KeyValuePair<byte, int>> individualSendQueue;
+	public List<Queue<byte>> individualSendQueues;
 	private Queue<byte> allSendQueue;
 
 	// Command and the player ID
@@ -37,7 +37,14 @@ public class ServerLobbyComponent : MonoBehaviour
 	{
 		//Debug.Log("ServerLobbyComponent::Start Called");
 		m_PlayerList = new List<LobbyPlayerInfo>(MAX_NUM_PLAYERS);
-		individualSendQueue = new Queue<KeyValuePair<byte, int>>();
+
+		// Initialize send queues for all possible players
+		individualSendQueues = new List<Queue<byte>>(MAX_NUM_PLAYERS);
+		for (int i = 0; i < MAX_NUM_PLAYERS; ++i)
+		{
+			individualSendQueues.Add(new Queue<byte>());
+		}
+
 		allSendQueue = new Queue<byte>();
 		commandProcessingQueue = new Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>>();
 	}
@@ -171,6 +178,7 @@ public class ServerLobbyComponent : MonoBehaviour
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.GET_ID)
 			{
 				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " sent request for its ID");
+				/*
 				using (var writer = new DataStreamWriter(16, Allocator.Temp))
 				{
 					writer.Write((byte)LOBBY_SERVER_COMMANDS.SET_ID);
@@ -178,6 +186,10 @@ public class ServerLobbyComponent : MonoBehaviour
 
 					connections[index].Send(driver, writer);
 				}
+				*/
+
+				individualSendQueues[index].Enqueue((byte)LOBBY_SERVER_COMMANDS.SET_ID);
+				individualSendQueues[index].Enqueue((byte)index);
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
 			{
@@ -221,7 +233,9 @@ public class ServerLobbyComponent : MonoBehaviour
 					int numShootersFound = 0;
 					int numMatch3Found = 0;
 
-					LobbyPlayerInfo currPlayer = playerList[processCommand.Value];
+					int currPlayerID = processCommand.Value;
+
+					LobbyPlayerInfo currPlayer = playerList[currPlayerID];
 
 					PLAYER_TYPE newplayerType = (PLAYER_TYPE)((int)(currPlayer.playerType + 1) % (int)PLAYER_TYPE.PLAYER_TYPES);
 
@@ -229,7 +243,7 @@ public class ServerLobbyComponent : MonoBehaviour
 					for (int playerNum = 0; playerNum < connections.Length; ++playerNum)
 					{
 						// Skip over self
-						if (processCommand.Value == playerNum)
+						if (currPlayerID == playerNum)
 						{
 							continue;
 						}
@@ -262,20 +276,20 @@ public class ServerLobbyComponent : MonoBehaviour
 						newplayerType = (PLAYER_TYPE)((int)(newplayerType + 1) % (int)PLAYER_TYPE.PLAYER_TYPES);
 					}
 
-
 					currPlayer.playerType = newplayerType;
 
-					Debug.Log("ServerLobbyComponent::ProcessData Client " + processCommand.Value + " player type was set to " + currPlayer.playerType.ToString());
+					Debug.Log("ServerLobbyComponent::ProcessData Client " + currPlayerID + " player type was set to " + currPlayer.playerType.ToString());
 				}
 			}
 			
 		}
 	}
 
-	// For now, send entire lobby state to all players
+	
 	private void HandleSendData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
 	{
 		// Send player state to all players
+		// For now, send entire lobby state to all players
 		for (int index = 0; index < connections.Length; ++index)
 		{
 			if (!connections.IsCreated)
@@ -311,6 +325,35 @@ public class ServerLobbyComponent : MonoBehaviour
 				connections[index].Send(driver, writer);
 			}
 		}
+
+		// Send messages meant for individual players
+		for (int index = 0; index < connections.Length; ++index)
+		{
+			Queue<byte> playerQueue = individualSendQueues[index];
+
+			if (playerQueue.Count > 0)
+			{
+				// Send eveyrthing in the queue
+				using (var writer = new DataStreamWriter(playerQueue.Count, Allocator.Temp))
+				{
+					while (playerQueue.Count > 0)
+					{
+						byte data = playerQueue.Dequeue();
+
+						if (!connections[index].IsCreated)
+						{
+							Debug.Log("ServerLobbyComponent::HandleReceiveData connections[" + index + "] was not created");
+							Assert.IsTrue(true);
+						}
+
+						writer.Write(data);
+					}
+
+					connections[index].Send(driver, writer);
+				}
+			}
+		}
+		
 
 		// Send things in the queue meant for all players
 		if (allSendQueue.Count > 0)
