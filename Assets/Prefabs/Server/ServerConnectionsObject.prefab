@@ -61,5 +61,5 @@ MonoBehaviour:
     type: 3}
   serverGameObj: {fileID: 2874985308233358436, guid: 04647e13a5cb47f4292f383bfe7337c9,
     type: 3}
-  connectTimeoutMs: 30000
-  disconnectTimeoutMs: 30000
+  connectTimeoutMs: 5000
+  disconnectTimeoutMs: 5000

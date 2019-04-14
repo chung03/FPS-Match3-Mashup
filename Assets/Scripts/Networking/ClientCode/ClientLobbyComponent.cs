@@ -21,7 +21,6 @@ public class ClientLobbyComponent : MonoBehaviour
 
 	// This stores the infor for all players, including this one.
 	private List<LobbyPlayerInfo> m_AllPlayerInfo;
-	private Queue<byte> sendQueue;
 
 	// A Pair of Dictionaries to make it easier to map Index and PlayerID
 	// ID -> Connection Index
@@ -30,8 +29,7 @@ public class ClientLobbyComponent : MonoBehaviour
 	private Dictionary<int, int> IndexToIdDictionary;
 
 	private ClientConnectionsComponent connectionsComponent;
-
-	private float timeSinceLastHeartBeat = 0;
+	private ClientLobbySend clientLobbySend;
 
 	[SerializeField]
 	private GameObject lobbyUIObj;
@@ -52,7 +50,6 @@ public class ClientLobbyComponent : MonoBehaviour
 		lobbyUIInstance.GetComponent<LobbyUIBehaviour>().SetUI(connectionsComponent.IsHost());
 		lobbyUIInstance.GetComponent<LobbyUIBehaviour>().Init(this);
 
-		sendQueue = new Queue<byte>();
 
 		IdToIndexDictionary = new Dictionary<int, int>();
 		IndexToIdDictionary = new Dictionary<int, int>();
@@ -62,26 +59,27 @@ public class ClientLobbyComponent : MonoBehaviour
 	{
 		//Debug.Log("ClientLobbyComponent::Init Called");
 		connectionsComponent = connHolder;
+		clientLobbySend = GetComponent<ClientLobbySend>();
 	}
 
 	public void ChangeTeam()
 	{
-		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM);
+		clientLobbySend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM);
 	}
 
 	public void ChangeReadyStatus()
 	{
-		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.READY);
+		clientLobbySend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.READY);
 	}
 
 	public void ChangePlayerType()
 	{
-		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE);
+		clientLobbySend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE);
 	}
 
 	public void SendStartGame()
 	{
-		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.START_GAME);
+		clientLobbySend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.START_GAME);
 	}
 
 	void Update()
@@ -110,7 +108,7 @@ public class ClientLobbyComponent : MonoBehaviour
 		// ***** Accept Player Input ****
 
 		// ***** Send data *****
-		HandleSendData(ref connection, ref driver, m_AllPlayerInfo);
+		clientLobbySend.SendDataIfReady(ref connection, ref driver, m_AllPlayerInfo);
 	}
 
 	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> allPlayerInfo)
@@ -127,7 +125,7 @@ public class ClientLobbyComponent : MonoBehaviour
 				Debug.Log("ClientLobbyComponent::HandleReceiveData We are now connected to the server");
 
 				// Get ID
-				sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.GET_ID);
+				clientLobbySend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.GET_ID);
 			}
 			else if (cmd == NetworkEvent.Type.Data)
 			{
@@ -313,33 +311,6 @@ public class ClientLobbyComponent : MonoBehaviour
 		{
 			GameObject playerObj = teamObj.transform.Find(PLAYER_PREFIX + (i + 1)).gameObject;
 			playerObj.SetActive(false);
-		}
-	}
-
-	private void HandleSendData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> allPlayerInfo)
-	{
-		// Heart beat every once in a while to prevent disconnects for no reason
-		if (timeSinceLastHeartBeat * 1000 + 2000 <= Time.time * 1000)
-		{
-			timeSinceLastHeartBeat = Time.time;
-			sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.HEARTBEAT);
-		}
-		
-
-		if (sendQueue.Count <= 0)
-		{
-			return;
-		}
-
-		// Send eveyrthing in the queue
-		using (var writer = new DataStreamWriter(sendQueue.Count, Allocator.Temp))
-		{
-			while (sendQueue.Count > 0)
-			{
-				writer.Write(sendQueue.Dequeue());
-			}
-
-			connection.Send(driver, writer);
 		}
 	}
 }

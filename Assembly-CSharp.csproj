@@ -64,6 +64,7 @@
     <Compile Include="Assets\Scripts\Networking\ClientCode\ClientConnectionsComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\ClientGameComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\ClientLobbyComponent.cs" />
+    <Compile Include="Assets\Scripts\Networking\ClientCode\ClientLobbySend.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\ClientReadGameJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\ClientReadLobbyJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\ClientSendGameJob.cs" />

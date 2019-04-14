@@ -47,5 +47,5 @@ MonoBehaviour:
     type: 3}
   clientGameObj: {fileID: 3471701973108298168, guid: d57cee835e7472b43abce97672ac7a66,
     type: 3}
-  connectTimeoutMs: 30000
-  disconnectTimeoutMs: 30000
+  connectTimeoutMs: 5000
+  disconnectTimeoutMs: 5000
