@@ -23,6 +23,12 @@ public class ClientLobbyComponent : MonoBehaviour
 	private List<LobbyPlayerInfo> m_AllPlayerInfo;
 	private Queue<byte> sendQueue;
 
+	// A Pair of Dictionaries to make it easier to map Index and PlayerID
+	// ID -> Connection Index
+	private Dictionary<int, int> IdToIndexDictionary;
+	// Connection Index -> ID
+	private Dictionary<int, int> IndexToIdDictionary;
+
 	private ClientConnectionsComponent connectionsComponent;
 
 	[SerializeField]
@@ -33,18 +39,11 @@ public class ClientLobbyComponent : MonoBehaviour
 	private void Start()
 	{
 		//Debug.Log("ClientLobbyComponent::Start Called");
-		m_PlayerID = 0;
+		m_PlayerID = -1;
 		m_AllPlayerInfo = new List<LobbyPlayerInfo>(ServerLobbyComponent.MAX_NUM_PLAYERS);
-
 		for (int index = 0; index < ServerLobbyComponent.MAX_NUM_PLAYERS; ++index)
 		{
-			m_AllPlayerInfo.Add(new LobbyPlayerInfo());
-			// m_AllPlayerInfo[index].team = (byte)(index / (ServerLobbyComponent.MAX_NUM_PLAYERS / 2));
-			m_AllPlayerInfo[index].team = 99;
-			// Debug.LogWarning("ClientLobbyComponent::Start m_AllPlayerInfo[" + index + "].team = " + m_AllPlayerInfo[index].team);
-			m_AllPlayerInfo[index].name = "Player " + (index + 1);
-
-			m_AllPlayerInfo[index].playerType = PLAYER_TYPE.NONE;
+			m_AllPlayerInfo.Add(null);
 		}
 
 		lobbyUIInstance = Instantiate(lobbyUIObj);
@@ -52,6 +51,9 @@ public class ClientLobbyComponent : MonoBehaviour
 		lobbyUIInstance.GetComponent<LobbyUIBehaviour>().Init(this);
 
 		sendQueue = new Queue<byte>();
+
+		IdToIndexDictionary = new Dictionary<int, int>();
+		IndexToIdDictionary = new Dictionary<int, int>();
 	}
 
 	public void Init(ClientConnectionsComponent connHolder)
@@ -63,29 +65,11 @@ public class ClientLobbyComponent : MonoBehaviour
 	public void ChangeTeam()
 	{
 		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM);
-
-		byte newTeam = 0;
-
-		if (m_AllPlayerInfo[m_PlayerID].team == 0)
-		{
-			newTeam = 1;
-		}
-
-		sendQueue.Enqueue(newTeam);
 	}
 
 	public void ChangeReadyStatus()
 	{
 		sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.READY);
-
-		byte newReadyStatus = 0;
-
-		if (m_AllPlayerInfo[m_PlayerID].isReady == 0)
-		{
-			newReadyStatus = 1;
-		}
-
-		sendQueue.Enqueue(newReadyStatus);
 	}
 
 	public void ChangePlayerType()
@@ -150,7 +134,7 @@ public class ClientLobbyComponent : MonoBehaviour
 			else if (cmd == NetworkEvent.Type.Disconnect)
 			{
 				Debug.Log("ClientLobbyComponent::HandleReceiveData Client got disconnected from server");
-				connection = default(NetworkConnection);
+				connection = default;
 			}
 		}
 	}
@@ -178,7 +162,8 @@ public class ClientLobbyComponent : MonoBehaviour
 				byte readyStatus = bytes[i];
 				++i;
 
-				playerList[m_PlayerID].isReady = readyStatus;
+				int playerIndex = IdToIndexDictionary[m_PlayerID];
+				playerList[playerIndex].isReady = readyStatus;
 
 				Debug.Log("ClientLobbyComponent::ReadServerBytes Client ready state set to " + readyStatus);
 			}
@@ -187,7 +172,8 @@ public class ClientLobbyComponent : MonoBehaviour
 				byte newTeam = bytes[i];
 				++i;
 
-				playerList[m_PlayerID].team = newTeam;
+				int playerIndex = IdToIndexDictionary[m_PlayerID];
+				playerList[playerIndex].team = newTeam;
 
 				Debug.Log("ClientLobbyComponent::ReadServerBytes Client team was set to " + newTeam);
 			}
@@ -202,28 +188,69 @@ public class ClientLobbyComponent : MonoBehaviour
 			}
 			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES)
 			{
+				byte numPlayers = bytes[i];
+				++i;
+
 				// Do a for loop iterating over the bytes using the same counter
-				for (int player = 0; player < ServerLobbyComponent.MAX_NUM_PLAYERS; ++player)
+				for (int player = 0; player < numPlayers; ++player)
 				{
 					// Unsafely assuming that everything is working as expected and there are no attackers.
-					byte isPlayerInSlot = bytes[i];
+					Debug.Log("ClientLobbyComponent::ReadServerBytes Data for client " + player + " received");
+
+					byte isReady = bytes[i];
+					++i;
+					byte team = bytes[i];
+					++i;
+					byte playerType = bytes[i];
+					++i;
+					byte playerId = bytes[i];
 					++i;
 
-					if (isPlayerInSlot != 0)
+					if (playerList[player] == null)
 					{
-						Debug.Log("ClientLobbyComponent::ReadServerBytes Data for client " + player + " received");
-
-						byte isReady = bytes[i];
-						++i;
-						byte team = bytes[i];
-						++i;
-						byte playerType = bytes[i];
-						++i;
-
-						playerList[player].isReady = isReady;
-						playerList[player].team = team;
-						playerList[player].playerType = (PLAYER_TYPE)playerType;
+						playerList[player] = new LobbyPlayerInfo();
 					}
+
+					playerList[player].isReady = isReady;
+					playerList[player].team = team;
+					playerList[player].playerType = (PLAYER_TYPE)playerType;
+					playerList[player].playerID = playerId;
+					playerList[player].name = "Player " + playerId;
+
+					/*
+					if (IdToIndexDictionary.ContainsKey(playerId))
+					{
+						IdToIndexDictionary.Remove(playerId);
+					}
+
+					if (IndexToIdDictionary.ContainsKey(player))
+					{
+						IndexToIdDictionary.Remove(player);
+					}
+
+					IdToIndexDictionary.Add(playerId, player);
+					IndexToIdDictionary.Add(player, playerId);
+					*/
+				}
+
+				for (int player = numPlayers; player < ServerLobbyComponent.MAX_NUM_PLAYERS; ++player)
+				{
+					playerList[player] = null;
+				}
+
+				// Update Dictionaries after all the player data has been received
+				IdToIndexDictionary.Clear();
+				IndexToIdDictionary.Clear();
+
+				for (int index = 0; index < playerList.Count; ++index)
+				{
+					if (playerList[index] == null)
+					{
+						continue;
+					}
+
+					IdToIndexDictionary.Add(playerList[index].playerID, index);
+					IndexToIdDictionary.Add(index, playerList[index].playerID);
 				}
 			}
 			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.START_GAME)
@@ -264,7 +291,7 @@ public class ClientLobbyComponent : MonoBehaviour
 		int numTeamFound = 0;
 		for (int i = 0; i < ServerLobbyComponent.MAX_NUM_PLAYERS; ++i)
 		{
-			if (m_AllPlayerInfo[i].team == team)
+			if (m_AllPlayerInfo[i] != null && m_AllPlayerInfo[i].team == team)
 			{
 				numTeamFound++;
 

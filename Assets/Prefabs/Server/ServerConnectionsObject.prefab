@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 187219855577777902}
   - component: {fileID: 5877919420702077148}
   m_Layer: 0
-  m_Name: ServerObject
+  m_Name: ServerConnectionsObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -61,3 +61,5 @@ MonoBehaviour:
     type: 3}
   serverGameObj: {fileID: 2874985308233358436, guid: 04647e13a5cb47f4292f383bfe7337c9,
     type: 3}
+  connectTimeoutMs: 30000
+  disconnectTimeoutMs: 30000

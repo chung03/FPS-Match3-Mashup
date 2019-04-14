@@ -21,11 +21,21 @@ public class ClientConnectionsComponent : MonoBehaviour
 	[SerializeField]
 	private GameObject clientGameObj;
 
+	[SerializeField]
+	private int connectTimeoutMs = 5000;
+
+	[SerializeField]
+	private int disconnectTimeoutMs = 5000;
+
 	private void Start()
 	{
+		NetworkConfigParameter config = new NetworkConfigParameter();
+		config.connectTimeoutMS = connectTimeoutMs;
+		config.disconnectTimeoutMS = disconnectTimeoutMs;
+
 		//Debug.Log("ClientConnectionsComponent::Start called");
-		m_Driver = new UdpCNetworkDriver(new INetworkParameter[0]);
-		m_Connection = default(NetworkConnection);
+		m_Driver = new UdpCNetworkDriver(config);
+		m_Connection = default;
 
 		var endpoint = new IPEndPoint(IPAddress.Loopback, 9000);
 		m_Connection = m_Driver.Connect(endpoint);

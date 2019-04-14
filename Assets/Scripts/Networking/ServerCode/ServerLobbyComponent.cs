@@ -24,6 +24,12 @@ public class ServerLobbyComponent : MonoBehaviour
 
 	public List<LobbyPlayerInfo> m_PlayerList;
 
+	// A Pair of Dictionaries to make it easier to map Index and PlayerID
+	// ID -> Connection Index
+	private Dictionary<byte, int> IdToIndexDictionary;
+	// Connection Index -> ID
+	private Dictionary<int, byte> IndexToIdDictionary;
+
 	// Byte to send and the player ID
 	public List<Queue<byte>> individualSendQueues;
 	private Queue<byte> allSendQueue;
@@ -32,6 +38,9 @@ public class ServerLobbyComponent : MonoBehaviour
 	private Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>> commandProcessingQueue;
 
 	private ServerConnectionsComponent connectionsComponent;
+
+	int numTeam1Players = 0;
+	int numTeam2Players = 0;
 	 
 	private void Start()
 	{
@@ -47,6 +56,8 @@ public class ServerLobbyComponent : MonoBehaviour
 
 		allSendQueue = new Queue<byte>();
 		commandProcessingQueue = new Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>>();
+		IdToIndexDictionary = new Dictionary<byte, int>();
+		IndexToIdDictionary = new Dictionary<int, byte>();
 	}
 
 
@@ -81,24 +92,69 @@ public class ServerLobbyComponent : MonoBehaviour
 		//Debug.Log("ServerLobbyComponent::HandleConnections Called");
 
 		// Clean up connections
+		bool connectionsChanged = false;
 		for (int i = 0; i < connections.Length; i++)
 		{
 			if (!connections[i].IsCreated)
 			{
 				Debug.Log("ServerLobbyComponent::HandleConnections Removing a connection");
+				connectionsChanged = true;
+
+				individualSendQueues[i] = new Queue<byte>();
 
 				connections.RemoveAtSwapBack(i);
 				playerList.RemoveAtSwapBack(i);
 				--i;
 			}
 		}
+
+		// Update the dictionary with new IDs
+		if (connectionsChanged)
+		{
+			IdToIndexDictionary.Clear();
+			IndexToIdDictionary.Clear();
+
+			for (int i = 0; i < playerList.Count; i++)
+			{
+				IdToIndexDictionary.Add(playerList[i].playerID, i);
+				IndexToIdDictionary.Add(i, playerList[i].playerID);
+			}
+		}
+
 		// Accept new connections
 		NetworkConnection c;
-		while ((c = driver.Accept()) != default(NetworkConnection))
+		while ((c = driver.Accept()) != default)
 		{
+			if (connections.Length >= MAX_NUM_PLAYERS)
+			{
+				Debug.Log("ServerLobbyComponent::HandleConnections Too many connections, rejecting latest one");
+				driver.Disconnect(c);
+				continue;
+			}
+
+			Debug.Log("ServerLobbyComponent::HandleConnections Accepted a connection");
+
 			connections.Add(c);
 			playerList.Add(new LobbyPlayerInfo());
-			Debug.Log("ServerLobbyComponent::HandleConnections Accepted a connection");
+			playerList[playerList.Count - 1].playerID = connectionsComponent.GetNextPlayerID();
+			IdToIndexDictionary.Add(playerList[playerList.Count - 1].playerID, playerList.Count - 1);
+			IndexToIdDictionary.Add(playerList.Count - 1, playerList[playerList.Count - 1].playerID);
+
+			// Automatically put the player on an empty team. Put on team 1 first if possible, otherwise put on team 2.
+			if (numTeam1Players < 3)
+			{
+				playerList[playerList.Count - 1].team = 0;
+				++numTeam1Players;
+			}
+			else if (numTeam2Players < 3)
+			{
+				playerList[playerList.Count - 1].team = 1;
+				++numTeam2Players;
+			}
+			else
+			{
+				Debug.Log("ServerLobbyComponent::HandleConnections SHOULD NOT BE IN THIS STATE! TEAMS ARE FULL BUT THERE ARE LESS THAN MAX NUMBER OF PLAYERS CONNECTED? NOT POSSIBLE");
+			}
 		}
 	}
 
@@ -127,7 +183,7 @@ public class ServerLobbyComponent : MonoBehaviour
 				else if (cmd == NetworkEvent.Type.Disconnect)
 				{
 					Debug.Log("ServerLobbyComponent::HandleReceiveData Client disconnected from server");
-					connections[index] = default(NetworkConnection);
+					connections[index] = default;
 				}
 				else
 				{
@@ -154,22 +210,36 @@ public class ServerLobbyComponent : MonoBehaviour
 
 			if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.READY)
 			{
-				byte readyStatus = bytes[i];
-				++i;
+				if (playerList[index].isReady == 0)
+				{
+					playerList[index].isReady = 1;
+				}
+				else
+				{
+					playerList[index].isReady = 0;
+				}
 
-				playerList[index].isReady = readyStatus;
-
-
-				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " ready state set to " + readyStatus);
+				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " ready state set to " + playerList[index].isReady);
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM)
 			{
-				byte newTeam = bytes[i];
-				++i;
+				if (playerList[index].team == 0 && numTeam2Players < 3)
+				{
+					playerList[index].team = 1;
+					++numTeam1Players;
+					--numTeam2Players;
 
-				playerList[index].team = newTeam;
+					Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " team was set to 1");
+				}
+				else if (playerList[index].team == 1 && numTeam1Players < 3)
+				{
+					playerList[index].team = 0;
+					--numTeam1Players;
+					++numTeam2Players;
 
-				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " team was set to " + newTeam);
+					Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " team was set to 0");
+				}
+
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE)
 			{
@@ -180,7 +250,7 @@ public class ServerLobbyComponent : MonoBehaviour
 				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " sent request for its ID");
 
 				individualSendQueues[index].Enqueue((byte)LOBBY_SERVER_COMMANDS.SET_ID);
-				individualSendQueues[index].Enqueue((byte)index);
+				individualSendQueues[index].Enqueue(IndexToIdDictionary[index]);
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
 			{
@@ -224,28 +294,28 @@ public class ServerLobbyComponent : MonoBehaviour
 					int numShootersFound = 0;
 					int numMatch3Found = 0;
 
-					int currPlayerID = processCommand.Value;
+					int currPlayerIndex = processCommand.Value;
 
-					LobbyPlayerInfo currPlayer = playerList[currPlayerID];
+					LobbyPlayerInfo currPlayer = playerList[currPlayerIndex];
 
 					PLAYER_TYPE newplayerType = (PLAYER_TYPE)((int)(currPlayer.playerType + 1) % (int)PLAYER_TYPE.PLAYER_TYPES);
 
 					// Get number of types of players on this player's team
-					for (int playerNum = 0; playerNum < connections.Length; ++playerNum)
+					for (int playerIndex = 0; playerIndex < playerList.Count; ++playerIndex)
 					{
 						// Skip over self
-						if (currPlayerID == playerNum)
+						if (currPlayerIndex == playerIndex)
 						{
 							continue;
 						}
 
-						if (playerList[playerNum].team == currPlayer.team)
+						if (playerList[playerIndex].team == currPlayer.team)
 						{
-							if (playerList[playerNum].playerType == PLAYER_TYPE.SHOOTER)
+							if (playerList[playerIndex].playerType == PLAYER_TYPE.SHOOTER)
 							{
 								++numShootersFound;
 							}
-							else if (playerList[playerNum].playerType == PLAYER_TYPE.MATCH3)
+							else if (playerList[playerIndex].playerType == PLAYER_TYPE.MATCH3)
 							{
 								++numMatch3Found;
 							}
@@ -269,7 +339,7 @@ public class ServerLobbyComponent : MonoBehaviour
 
 					currPlayer.playerType = newplayerType;
 
-					Debug.Log("ServerLobbyComponent::ProcessData Client " + currPlayerID + " player type was set to " + currPlayer.playerType.ToString());
+					Debug.Log("ServerLobbyComponent::ProcessData Client " + currPlayerIndex + " player type was set to " + currPlayer.playerType.ToString());
 				}
 			}
 			
@@ -290,27 +360,19 @@ public class ServerLobbyComponent : MonoBehaviour
 			}
 
 			// Send state of all players
-			using (var writer = new DataStreamWriter(16, Allocator.Temp))
+			using (var writer = new DataStreamWriter(MAX_NUM_PLAYERS * 5 * sizeof(byte), Allocator.Temp))
 			{
 				writer.Write((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES);
+				writer.Write((byte)playerList.Count);
 
 				// Send data for present players
 				for ( int playerNum = 0; playerNum < playerList.Count; playerNum++)
 				{
-					// Tell Client this player is really there
-					writer.Write((byte)1);
-
 					// Write player info
-					writer.Write((byte)playerList[playerNum].isReady);
-					writer.Write((byte)playerList[playerNum].team);
+					writer.Write(playerList[playerNum].isReady);
+					writer.Write(playerList[playerNum].team);
 					writer.Write((byte)playerList[playerNum].playerType);
-				}
-
-				// Send data saying that some player slots aren't filled
-				for (int playerNum = playerList.Count; playerNum < MAX_NUM_PLAYERS; playerNum++)
-				{
-					// Tell Client this player is not there
-					writer.Write((byte)0);
+					writer.Write(playerList[playerNum].playerID);
 				}
 
 				connections[index].Send(driver, writer);
