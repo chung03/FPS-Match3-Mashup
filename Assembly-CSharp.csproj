@@ -75,6 +75,7 @@
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerConnectionsComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerGameComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerLobbyComponent.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\ServerLobbySend.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerUI.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerUtils.cs" />
     <Compile Include="Assets\Scripts\Networking\SingleThread\Client.cs" />

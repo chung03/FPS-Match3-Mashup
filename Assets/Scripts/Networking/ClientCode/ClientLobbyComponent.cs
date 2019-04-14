@@ -216,21 +216,6 @@ public class ClientLobbyComponent : MonoBehaviour
 					playerList[player].playerType = (PLAYER_TYPE)playerType;
 					playerList[player].playerID = playerId;
 					playerList[player].name = "Player " + playerId;
-
-					/*
-					if (IdToIndexDictionary.ContainsKey(playerId))
-					{
-						IdToIndexDictionary.Remove(playerId);
-					}
-
-					if (IndexToIdDictionary.ContainsKey(player))
-					{
-						IndexToIdDictionary.Remove(player);
-					}
-
-					IdToIndexDictionary.Add(playerId, player);
-					IndexToIdDictionary.Add(player, playerId);
-					*/
 				}
 
 				for (int player = numPlayers; player < ServerLobbyComponent.MAX_NUM_PLAYERS; ++player)
