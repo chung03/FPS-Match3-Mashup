@@ -31,6 +31,8 @@ public class ClientLobbyComponent : MonoBehaviour
 
 	private ClientConnectionsComponent connectionsComponent;
 
+	private float timeSinceLastHeartBeat = 0;
+
 	[SerializeField]
 	private GameObject lobbyUIObj;
 	private GameObject lobbyUIInstance;
@@ -242,6 +244,10 @@ public class ClientLobbyComponent : MonoBehaviour
 			{
 				SceneManager.LoadScene(PLAY_SCENE);
 			}
+			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.HEARTBEAT)
+			{
+				Debug.Log("ClientLobbyComponent::ReadServerBytes Received heartbeat from server");
+			}
 		}
 	}
 
@@ -312,6 +318,14 @@ public class ClientLobbyComponent : MonoBehaviour
 
 	private void HandleSendData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> allPlayerInfo)
 	{
+		// Heart beat every once in a while to prevent disconnects for no reason
+		if (timeSinceLastHeartBeat * 1000 + 2000 <= Time.time * 1000)
+		{
+			timeSinceLastHeartBeat = Time.time;
+			sendQueue.Enqueue((byte)LOBBY_CLIENT_REQUESTS.HEARTBEAT);
+		}
+		
+
 		if (sendQueue.Count <= 0)
 		{
 			return;

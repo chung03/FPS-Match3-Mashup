@@ -22,7 +22,8 @@ namespace Util
 		READY,
 		SET_ID,
 		SET_ALL_PLAYER_STATES,
-		START_GAME
+		START_GAME,
+		HEARTBEAT
 	}
 
 	public enum LOBBY_CLIENT_REQUESTS
@@ -31,7 +32,8 @@ namespace Util
 		READY,
 		GET_ID,
 		CHANGE_PLAYER_TYPE,
-		START_GAME
+		START_GAME,
+		HEARTBEAT
 	}
 
 	public enum PLAYER_TYPE

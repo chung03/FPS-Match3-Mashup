@@ -266,6 +266,11 @@ public class ServerLobbyComponent : MonoBehaviour
 			{
 				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int> (LOBBY_SERVER_PROCESS.START_GAME, SEND_ALL_PLAYERS));
 			}
+			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.HEARTBEAT)
+			{
+				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " sent heartbeat");
+				serverLobbySend.SendIndividualPlayerDataWhenReady(index, (byte)LOBBY_SERVER_COMMANDS.HEARTBEAT);
+			}
 		}
 	}
 
