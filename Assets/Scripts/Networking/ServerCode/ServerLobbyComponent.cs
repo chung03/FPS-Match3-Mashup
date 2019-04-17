@@ -22,6 +22,7 @@ public class ServerLobbyComponent : MonoBehaviour
 	public static readonly int MAX_NUM_PLAYERS = 6;
 	public static readonly int SEND_ALL_PLAYERS = -1;
 
+	// Current Player States
 	public List<LobbyPlayerInfo> m_PlayerList;
 
 	// A Pair of Dictionaries to make it easier to map Index and PlayerID
@@ -43,7 +44,7 @@ public class ServerLobbyComponent : MonoBehaviour
 	{
 		//Debug.Log("ServerLobbyComponent::Start Called");
 		m_PlayerList = new List<LobbyPlayerInfo>(MAX_NUM_PLAYERS);
-		
+
 		IdToIndexDictionary = new Dictionary<byte, int>();
 		IndexToIdDictionary = new Dictionary<int, byte>();
 

@@ -15,6 +15,9 @@ public class ServerLobbySend : MonoBehaviour
 	// Byte to send and the player ID
 	public List<Queue<byte>> individualSendQueues;
 	private Queue<byte> allSendQueue;
+	
+	// Used for calculating deltas and ultimately save on network bandwidth
+	public List<LobbyPlayerInfo> m_PreviousStatePlayerList;
 
 	[SerializeField]
 	private float sendFrequencyMs = 50;
@@ -31,6 +34,8 @@ public class ServerLobbySend : MonoBehaviour
 		}
 
 		allSendQueue = new Queue<byte>();
+
+		m_PreviousStatePlayerList = new List<LobbyPlayerInfo>(ServerLobbyComponent.MAX_NUM_PLAYERS);
 	}
 
     // Is kind of like an update, but is called by other code
@@ -46,7 +51,7 @@ public class ServerLobbySend : MonoBehaviour
 		timeSinceLastSend = Time.time;
 		
 		// Send player state to all players
-		// For now, send entire lobby state to all players
+		// Calculate and send Delta
 		for (int index = 0; index < connections.Length; ++index)
 		{
 			if (!connections.IsCreated)
@@ -74,6 +79,9 @@ public class ServerLobbySend : MonoBehaviour
 				connections[index].Send(driver, writer);
 			}
 		}
+		
+		// Save previous state so that we can create deltas later
+		m_PreviousStatePlayerList = DeepClone(playerList);
 
 		// Send messages meant for individual players
 		for (int index = 0; index < connections.Length; ++index)
@@ -143,5 +151,17 @@ public class ServerLobbySend : MonoBehaviour
 	public void SendDataToAllPlayersWhenReady(byte data)
 	{
 		allSendQueue.Enqueue(data);
+	}
+
+	private List<LobbyPlayerInfo> DeepClone(List<LobbyPlayerInfo> list)
+	{
+		List<LobbyPlayerInfo> ret = new List<LobbyPlayerInfo>();
+
+		foreach (LobbyPlayerInfo player in list)
+		{
+			ret.Add(player.Clone());
+		}
+
+		return ret;
 	}
 }

@@ -1,6 +1,4 @@
-﻿using Unity.Collections;
-
-namespace Util
+﻿namespace Util
 {
 	public enum NETWORK_DATA_TYPE
 	{
@@ -14,6 +12,27 @@ namespace Util
 		public string name;
 		public PLAYER_TYPE playerType;
 		public byte playerID;
+
+		public LobbyPlayerInfo Clone()
+		{
+			LobbyPlayerInfo ret = new LobbyPlayerInfo();
+			ret.team = team;
+			ret.isReady = isReady;
+
+			if (name != null)
+			{
+				ret.name = System.String.Copy(name);
+			}
+			else
+			{
+				ret.name = null;
+			}
+
+			ret.playerType = playerType;
+			ret.playerID = playerID;
+
+			return ret;
+		}
 	}
 
 	public enum LOBBY_SERVER_COMMANDS
@@ -42,5 +61,14 @@ namespace Util
 		SHOOTER,
 		MATCH3,
 		PLAYER_TYPES
+	}
+
+	public class CONSTANTS
+	{
+		public const byte TEAM_MASK = 1;
+		public const byte READY_MASK = 2;
+		public const byte PLAYER_TYPE_MASK = 4;
+		public const byte PLAYER_ID_MASK = 8;
+		public const byte NAME_MASK = 16;
 	}
 }
