@@ -56,7 +56,7 @@ public class ServerLobbySend : MonoBehaviour
 		{
 			if (!connections.IsCreated)
 			{
-				Debug.Log("ServerLobbyComponent::HandleReceiveData connections[" + index + "] was not created");
+				Debug.Log("ServerLobbySend::SendDataIfReady connections[" + index + "] was not created");
 				Assert.IsTrue(true);
 			}
 
@@ -66,14 +66,69 @@ public class ServerLobbySend : MonoBehaviour
 				writer.Write((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES);
 				writer.Write((byte)playerList.Count);
 
-				// Send data for present players
-				for (int playerNum = 0; playerNum < playerList.Count; playerNum++)
+				// Figure out diffs for each player that was here before
+				byte[] playerDiffFlags = new byte[Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count)];
+				for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
+				{
+					playerDiffFlags[playerNum] = 0;
+					if (playerList[playerNum].playerID != m_PreviousStatePlayerList[playerNum].playerID)
+					{
+						playerDiffFlags[playerNum] |= CONSTANTS.PLAYER_ID_MASK;
+					}
+
+					if (playerList[playerNum].playerType != m_PreviousStatePlayerList[playerNum].playerType)
+					{
+						playerDiffFlags[playerNum] |= CONSTANTS.PLAYER_TYPE_MASK;
+					}
+
+					if (playerList[playerNum].isReady != m_PreviousStatePlayerList[playerNum].isReady)
+					{
+						playerDiffFlags[playerNum] |= CONSTANTS.READY_MASK;
+					}
+
+					if (playerList[playerNum].team != m_PreviousStatePlayerList[playerNum].team)
+					{
+						playerDiffFlags[playerNum] |= CONSTANTS.TEAM_MASK;
+					}
+				}
+
+				// Send data for players that were here before
+				for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
+				{
+					// Tell Client what changed
+					writer.Write(playerDiffFlags[playerNum]);
+
+					// Send necessary data. Go from most significant bit to least
+					if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_ID_MASK) > 0)
+					{
+						writer.Write(playerList[playerNum].playerID);
+					}
+
+					if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_TYPE_MASK) > 0)
+					{
+						writer.Write((byte)playerList[playerNum].playerType);
+					}
+
+					if ((playerDiffFlags[playerNum] & CONSTANTS.READY_MASK) > 0)
+					{
+						writer.Write(playerList[playerNum].isReady);
+					}
+
+					if ((playerDiffFlags[playerNum] & CONSTANTS.TEAM_MASK) > 0)
+					{
+						writer.Write(playerList[playerNum].team);
+					}
+				}
+
+				// Send full data for new players
+				for (int playerNum = m_PreviousStatePlayerList.Count; playerNum < playerList.Count; playerNum++)
 				{
 					// Write player info
+					writer.Write(CONSTANTS.PLAYER_ID_MASK | CONSTANTS.PLAYER_TYPE_MASK | CONSTANTS.READY_MASK | CONSTANTS.TEAM_MASK);
+					writer.Write(playerList[playerNum].playerID);
+					writer.Write((byte)playerList[playerNum].playerType);
 					writer.Write(playerList[playerNum].isReady);
 					writer.Write(playerList[playerNum].team);
-					writer.Write((byte)playerList[playerNum].playerType);
-					writer.Write(playerList[playerNum].playerID);
 				}
 
 				connections[index].Send(driver, writer);
@@ -83,6 +138,13 @@ public class ServerLobbySend : MonoBehaviour
 		// Save previous state so that we can create deltas later
 		m_PreviousStatePlayerList = DeepClone(playerList);
 
+		HandleIndividualPlayerSend(ref connections, ref driver);
+
+		HandleAllPlayerSend(ref connections, ref driver);
+	}
+
+	private void HandleIndividualPlayerSend(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
+	{
 		// Send messages meant for individual players
 		for (int index = 0; index < connections.Length; ++index)
 		{
@@ -99,7 +161,7 @@ public class ServerLobbySend : MonoBehaviour
 
 						if (!connections[index].IsCreated)
 						{
-							Debug.Log("ServerLobbyComponent::HandleReceiveData connections[" + index + "] was not created");
+							Debug.Log("ServerLobbySend::HandleIndividualPlayerSend connections[" + index + "] was not created");
 							Assert.IsTrue(true);
 						}
 
@@ -110,8 +172,10 @@ public class ServerLobbySend : MonoBehaviour
 				}
 			}
 		}
+	}
 
-
+	private void HandleAllPlayerSend(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
+	{
 		// Send things in the queue meant for all players
 		if (allSendQueue.Count > 0)
 		{
@@ -126,7 +190,7 @@ public class ServerLobbySend : MonoBehaviour
 					{
 						if (!connections.IsCreated)
 						{
-							Debug.Log("ServerLobbyComponent::HandleReceiveData connections[" + index + "] was not created");
+							Debug.Log("ServerLobbySend::HandleAllPlayerSend connections[" + index + "] was not created");
 							Assert.IsTrue(true);
 						}
 
