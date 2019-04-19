@@ -11,6 +11,8 @@ using UnityEngine.Assertions;
 using Util;
 using UnityEngine.SceneManagement;
 
+using System.Text;
+
 
 public class ClientLobbyComponent : MonoBehaviour
 {
@@ -249,6 +251,24 @@ public class ClientLobbyComponent : MonoBehaviour
 			byte playerDiffMask = bytes[index + bytesRead];
 			++bytesRead;
 
+			if ((playerDiffMask & CONSTANTS.NAME_MASK) > 0)
+			{
+				// Get length of name
+				byte nameBytesLength = bytes[index + bytesRead];
+				++bytesRead;
+
+				// Extract name into byte array
+				byte[] nameAsBytes = new byte[nameBytesLength];
+				for (int nameIndex = 0; nameIndex < nameBytesLength; ++nameIndex)
+				{
+					nameAsBytes[nameIndex] = bytes[index + bytesRead];
+					++bytesRead;
+				}
+
+				// Convert from bytes to string
+				playerList[player].name = Encoding.UTF8.GetString(nameAsBytes);
+			}
+
 			if ((playerDiffMask & CONSTANTS.PLAYER_ID_MASK) > 0)
 			{
 				playerList[player].playerID = bytes[index + bytesRead];
@@ -272,8 +292,6 @@ public class ClientLobbyComponent : MonoBehaviour
 				playerList[player].team = bytes[index + bytesRead];
 				++bytesRead;
 			}
-
-			playerList[player].name = "Player " + playerList[player].playerID;
 		}
 
 		for (int player = numPlayers; player < ServerLobbyComponent.MAX_NUM_PLAYERS; ++player)

@@ -145,6 +145,7 @@ public class ServerLobbyComponent : MonoBehaviour
 			connections.Add(c);
 			playerList.Add(new LobbyPlayerInfo());
 			playerList[playerList.Count - 1].playerID = connectionsComponent.GetNextPlayerID();
+			playerList[playerList.Count - 1].name = "Player " + playerList[playerList.Count - 1].playerID;
 			IdToIndexDictionary.Add(playerList[playerList.Count - 1].playerID, playerList.Count - 1);
 			IndexToIdDictionary.Add(playerList.Count - 1, playerList[playerList.Count - 1].playerID);
 
@@ -203,7 +204,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		}
 	}
 
-	private void ReadClientBytes(int index, List<LobbyPlayerInfo> playerList, byte[] bytes)
+	private void ReadClientBytes(int playerIndex, List<LobbyPlayerInfo> playerList, byte[] bytes)
 	{
 		Debug.Log("ServerLobbyComponent::ReadClientBytes bytes.Length = " + bytes.Length);
 
@@ -218,50 +219,50 @@ public class ServerLobbyComponent : MonoBehaviour
 
 			if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.READY)
 			{
-				if (playerList[index].isReady == 0)
+				if (playerList[playerIndex].isReady == 0)
 				{
-					playerList[index].isReady = 1;
+					playerList[playerIndex].isReady = 1;
 				}
 				else
 				{
-					playerList[index].isReady = 0;
+					playerList[playerIndex].isReady = 0;
 				}
 
-				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " ready state set to " + playerList[index].isReady);
+				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " ready state set to " + playerList[playerIndex].isReady);
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM)
 			{
-				if (playerList[index].team == 0 && numTeam2Players < 3)
+				if (playerList[playerIndex].team == 0 && numTeam2Players < 3)
 				{
-					playerList[index].team = 1;
+					playerList[playerIndex].team = 1;
 					--numTeam1Players;
 					++numTeam2Players;
 
-					Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " team was set to 1");
+					Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " team was set to 1");
 				}
-				else if (playerList[index].team == 1 && numTeam1Players < 3)
+				else if (playerList[playerIndex].team == 1 && numTeam1Players < 3)
 				{
-					playerList[index].team = 0;
+					playerList[playerIndex].team = 0;
 					++numTeam1Players;
 					--numTeam2Players;
 
-					Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " team was set to 0");
+					Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " team was set to 0");
 				}
 				else
 				{
-					Debug.Log("ServerLobbyComponent::ReadClientBytes SHOULD NOT HAPPEN! Client " + index + " tried to change teams but something strange happened. playerList[index].team = " + playerList[index].team + ", numTeam1Players = " + numTeam1Players + ", numTeam2Players = " + numTeam2Players);
+					Debug.Log("ServerLobbyComponent::ReadClientBytes SHOULD NOT HAPPEN! Client " + playerIndex + " tried to change teams but something strange happened. playerList[index].team = " + playerList[playerIndex].team + ", numTeam1Players = " + numTeam1Players + ", numTeam2Players = " + numTeam2Players);
 				}
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE)
 			{
-				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.CHANGE_PLAYER_TYPE, index));
+				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.CHANGE_PLAYER_TYPE, playerIndex));
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.GET_ID)
 			{
-				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " sent request for its ID");
+				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " sent request for its ID");
 
-				serverLobbySend.SendIndividualPlayerDataWhenReady(index, (byte)LOBBY_SERVER_COMMANDS.SET_ID);
-				serverLobbySend.SendIndividualPlayerDataWhenReady(index, IndexToIdDictionary[index]);
+				serverLobbySend.SendIndividualPlayerDataWhenReady(playerIndex, (byte)LOBBY_SERVER_COMMANDS.SET_ID);
+				serverLobbySend.SendIndividualPlayerDataWhenReady(playerIndex, IndexToIdDictionary[playerIndex]);
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
 			{
@@ -269,8 +270,8 @@ public class ServerLobbyComponent : MonoBehaviour
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.HEARTBEAT)
 			{
-				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + index + " sent heartbeat");
-				serverLobbySend.SendIndividualPlayerDataWhenReady(index, (byte)LOBBY_SERVER_COMMANDS.HEARTBEAT);
+				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " sent heartbeat");
+				serverLobbySend.SendIndividualPlayerDataWhenReady(playerIndex, (byte)LOBBY_SERVER_COMMANDS.HEARTBEAT);
 			}
 		}
 	}

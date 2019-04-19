@@ -10,6 +10,8 @@ using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Ne
 using UnityEngine.Assertions;
 using Util;
 
+using System.Text;
+
 public class ServerLobbySend : MonoBehaviour
 {
 	// Byte to send and the player ID
@@ -73,6 +75,12 @@ public class ServerLobbySend : MonoBehaviour
 		for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
 		{
 			playerDiffFlags[playerNum] = 0;
+
+			if (playerList[playerNum].name.CompareTo(m_PreviousStatePlayerList[playerNum].name) != 0)
+			{
+				playerDiffFlags[playerNum] |= CONSTANTS.NAME_MASK;
+			}
+			
 			if (playerList[playerNum].playerID != m_PreviousStatePlayerList[playerNum].playerID)
 			{
 				playerDiffFlags[playerNum] |= CONSTANTS.PLAYER_ID_MASK;
@@ -104,6 +112,19 @@ public class ServerLobbySend : MonoBehaviour
 			SendDataToAllPlayersWhenReady(playerDiffFlags[playerNum]);
 
 			// Send necessary data. Go from most significant bit to least
+			if ((playerDiffFlags[playerNum] & CONSTANTS.NAME_MASK) > 0)
+			{
+				byte[] nameAsBytes = Encoding.UTF8.GetBytes(playerList[playerNum].name);
+	
+				// Send length of name, and then send name
+				SendDataToAllPlayersWhenReady((byte)nameAsBytes.Length);
+
+				for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
+				{
+					SendDataToAllPlayersWhenReady(nameAsBytes[byteIndex]);
+				}
+			}
+
 			if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_ID_MASK) > 0)
 			{
 				SendDataToAllPlayersWhenReady(playerList[playerNum].playerID);
@@ -129,7 +150,18 @@ public class ServerLobbySend : MonoBehaviour
 		for (int playerNum = m_PreviousStatePlayerList.Count; playerNum < playerList.Count; playerNum++)
 		{
 			// Write player info
-			SendDataToAllPlayersWhenReady(CONSTANTS.PLAYER_ID_MASK | CONSTANTS.PLAYER_TYPE_MASK | CONSTANTS.READY_MASK | CONSTANTS.TEAM_MASK);
+			SendDataToAllPlayersWhenReady(CONSTANTS.NAME_MASK | CONSTANTS.PLAYER_ID_MASK | CONSTANTS.PLAYER_TYPE_MASK | CONSTANTS.READY_MASK | CONSTANTS.TEAM_MASK);
+
+			byte[] nameAsBytes = Encoding.UTF8.GetBytes(playerList[playerNum].name);
+
+			// Send length of name, and then send name
+			SendDataToAllPlayersWhenReady((byte)nameAsBytes.Length);
+
+			for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
+			{
+				SendDataToAllPlayersWhenReady(nameAsBytes[byteIndex]);
+			}
+
 			SendDataToAllPlayersWhenReady(playerList[playerNum].playerID);
 			SendDataToAllPlayersWhenReady((byte)playerList[playerNum].playerType);
 			SendDataToAllPlayersWhenReady(playerList[playerNum].isReady);
