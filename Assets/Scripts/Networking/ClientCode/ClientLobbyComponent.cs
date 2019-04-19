@@ -10,7 +10,7 @@ using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Ne
 using UnityEngine.Assertions;
 using Util;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+
 
 public class ClientLobbyComponent : MonoBehaviour
 {
@@ -33,7 +33,7 @@ public class ClientLobbyComponent : MonoBehaviour
 
 	[SerializeField]
 	private GameObject lobbyUIObj;
-	private GameObject lobbyUIInstance;
+	private LobbyUIBehaviour lobbyUIInstance;
 
 
 	private void Start()
@@ -46,9 +46,9 @@ public class ClientLobbyComponent : MonoBehaviour
 			m_AllPlayerInfo.Add(null);
 		}
 
-		lobbyUIInstance = Instantiate(lobbyUIObj);
-		lobbyUIInstance.GetComponent<LobbyUIBehaviour>().SetUI(connectionsComponent.IsHost());
-		lobbyUIInstance.GetComponent<LobbyUIBehaviour>().Init(this);
+		lobbyUIInstance = Instantiate(lobbyUIObj).GetComponent<LobbyUIBehaviour>();
+		lobbyUIInstance.SetUI(connectionsComponent.IsHost());
+		lobbyUIInstance.Init(this);
 
 
 		IdToIndexDictionary = new Dictionary<int, int>();
@@ -100,12 +100,8 @@ public class ClientLobbyComponent : MonoBehaviour
 		// ***** Receive data *****
 		HandleReceiveData(ref connection, ref driver, m_AllPlayerInfo);
 
-		// ***** Process data *****
-
 		// ***** Update UI ****
-		UpdateUI();
-
-		// ***** Accept Player Input ****
+		lobbyUIInstance.UpdateUI(m_AllPlayerInfo);
 
 		// ***** Send data *****
 		clientLobbySend.SendDataIfReady(ref connection, ref driver, m_AllPlayerInfo);
@@ -260,71 +256,6 @@ public class ClientLobbyComponent : MonoBehaviour
 			{
 				Debug.Log("ClientLobbyComponent::ReadServerBytes Received heartbeat from server");
 			}
-		}
-	}
-
-	private void UpdateUI()
-	{
-		// Prototype hack to get UI up and running.
-		// Should be replaced with more efficient and maintainable code later
-
-		const string PLAYER_STATS = "PlayerStats";
-		const string TEAM_1_STATS = "Team1Stats";
-		const string TEAM_2_STATS = "Team2Stats";
-
-		GameObject playerStatsObj = lobbyUIInstance.transform.Find(PLAYER_STATS).gameObject;
-
-		GameObject team1Obj = playerStatsObj.transform.Find(TEAM_1_STATS).gameObject;
-		GameObject team2Obj = playerStatsObj.transform.Find(TEAM_2_STATS).gameObject;
-
-		// Go through all players looking for team players and then updating UI.
-		SetTeamUI(team1Obj, 0);
-		SetTeamUI(team2Obj, 1);
-	}
-
-	private void SetTeamUI(GameObject teamObj, int team)
-	{
-		const string PLAYER_PREFIX = "Player ";
-
-		const string NAME_TEXT = "Name Text";
-		const string READY_TEXT = "Ready Text";
-		const string PLAYER_TYPE_TEXT = "Player Type Text";
-
-		// Go through all players looking for team 2 players and then updating UI.
-		int numTeamFound = 0;
-		for (int i = 0; i < ServerLobbyComponent.MAX_NUM_PLAYERS; ++i)
-		{
-			if (m_AllPlayerInfo[i] != null && m_AllPlayerInfo[i].team == team)
-			{
-				numTeamFound++;
-
-				// Set UI element active in case it was disabled before
-				GameObject playerObj = teamObj.transform.Find(PLAYER_PREFIX + numTeamFound).gameObject;
-				playerObj.SetActive(true);
-
-				GameObject readyTextObj = playerObj.transform.Find(READY_TEXT).gameObject;
-				if (m_AllPlayerInfo[i].isReady == 0)
-				{
-					readyTextObj.GetComponent<Text>().text = "Not Ready";
-				}
-				else
-				{
-					readyTextObj.GetComponent<Text>().text = "Ready";
-				}
-
-				GameObject nameTextObj = playerObj.transform.Find(NAME_TEXT).gameObject;
-				nameTextObj.GetComponent<Text>().text = m_AllPlayerInfo[i].name;
-
-				GameObject playerTypeTextObj = playerObj.transform.Find(PLAYER_TYPE_TEXT).gameObject;
-				playerTypeTextObj.GetComponent<Text>().text = m_AllPlayerInfo[i].playerType.ToString();
-			}
-		}
-
-		// Disable unused player slots to make UI easier to debug and understand at a glance
-		for (int i = numTeamFound; i < ServerLobbyComponent.MAX_NUM_PLAYERS / 2; ++i)
-		{
-			GameObject playerObj = teamObj.transform.Find(PLAYER_PREFIX + (i + 1)).gameObject;
-			playerObj.SetActive(false);
 		}
 	}
 }
