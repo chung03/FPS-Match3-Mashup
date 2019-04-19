@@ -142,7 +142,6 @@ public class ClientLobbyComponent : MonoBehaviour
 	{
 		var readerCtx = default(DataStreamReader.Context);
 
-
 		Debug.Log("ClientLobbyComponent::ReadServerBytes stream.Length = " + stream.Length);
 
 		byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
@@ -158,98 +157,19 @@ public class ClientLobbyComponent : MonoBehaviour
 
 			if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.READY)
 			{
-				byte readyStatus = bytes[i];
-				++i;
-
-				int playerIndex = IdToIndexDictionary[m_PlayerID];
-				playerList[playerIndex].isReady = readyStatus;
-
-				Debug.Log("ClientLobbyComponent::ReadServerBytes Client ready state set to " + readyStatus);
+				i += HandleReadyCommand(i, bytes, playerList);
 			}
 			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.CHANGE_TEAM)
 			{
-				byte newTeam = bytes[i];
-				++i;
-
-				int playerIndex = IdToIndexDictionary[m_PlayerID];
-				playerList[playerIndex].team = newTeam;
-
-				Debug.Log("ClientLobbyComponent::ReadServerBytes Client team was set to " + newTeam);
+				i += HandleChangeTeamCommand(i, bytes, playerList);
 			}
 			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.SET_ID)
 			{
-				byte newID = bytes[i];
-				++i;
-
-				m_PlayerID = newID;
-
-				Debug.Log("ClientLobbyComponent::ReadServerBytes Client ID was set to " + m_PlayerID);
+				i += HandleSetIdCommand(i, bytes, playerList);
 			}
 			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES)
 			{
-				byte numPlayers = bytes[i];
-				++i;
-
-				// Do a for loop iterating over the bytes using the same counter
-				for (int player = 0; player < numPlayers; ++player)
-				{
-					// Unsafely assuming that everything is working as expected and there are no attackers.
-					Debug.Log("ClientLobbyComponent::ReadServerBytes Data for client " + player + " received");
-
-					if (playerList[player] == null)
-					{
-						playerList[player] = new LobbyPlayerInfo();
-					}
-
-					byte playerDiffMask = bytes[i];
-					++i;
-
-					if ((playerDiffMask & CONSTANTS.PLAYER_ID_MASK) > 0)
-					{
-						playerList[player].playerID = bytes[i];
-						++i;
-					}
-
-					if ((playerDiffMask & CONSTANTS.PLAYER_TYPE_MASK) > 0)
-					{
-						playerList[player].playerType = (PLAYER_TYPE)bytes[i];
-						++i;
-					}
-
-					if ((playerDiffMask & CONSTANTS.READY_MASK) > 0)
-					{
-						playerList[player].isReady = bytes[i];
-						++i;
-					}
-
-					if ((playerDiffMask & CONSTANTS.TEAM_MASK) > 0)
-					{
-						playerList[player].team = bytes[i];
-						++i;
-					}
-
-					playerList[player].name = "Player " + playerList[player].playerID;
-				}
-
-				for (int player = numPlayers; player < ServerLobbyComponent.MAX_NUM_PLAYERS; ++player)
-				{
-					playerList[player] = null;
-				}
-
-				// Update Dictionaries after all the player data has been received
-				IdToIndexDictionary.Clear();
-				IndexToIdDictionary.Clear();
-
-				for (int index = 0; index < playerList.Count; ++index)
-				{
-					if (playerList[index] == null)
-					{
-						continue;
-					}
-
-					IdToIndexDictionary.Add(playerList[index].playerID, index);
-					IndexToIdDictionary.Add(index, playerList[index].playerID);
-				}
+				i += HandlePlayerStatesCommand(i, bytes, playerList);
 			}
 			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.START_GAME)
 			{
@@ -260,5 +180,122 @@ public class ClientLobbyComponent : MonoBehaviour
 				Debug.Log("ClientLobbyComponent::ReadServerBytes Received heartbeat from server");
 			}
 		}
+	}
+
+	// Returns the number of bytes read from the bytes array
+	private int HandleReadyCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	{
+		int bytesRead = 0;
+
+		byte readyStatus = bytes[index];
+		++bytesRead;
+
+		int playerIndex = IdToIndexDictionary[m_PlayerID];
+		playerList[playerIndex].isReady = readyStatus;
+
+		Debug.Log("ClientLobbyComponent::HandleReadyCommand Client ready state set to " + readyStatus);
+
+		return bytesRead;
+	}
+
+	private int HandleChangeTeamCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	{
+		int bytesRead = 0;
+
+		byte newTeam = bytes[index];
+		++bytesRead;
+
+		int playerIndex = IdToIndexDictionary[m_PlayerID];
+		playerList[playerIndex].team = newTeam;
+
+		Debug.Log("ClientLobbyComponent::HandleChangeTeamCommand Client team was set to " + newTeam);
+
+		return bytesRead;
+	}
+
+	private int HandleSetIdCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	{
+		int bytesRead = 0;
+
+		byte newID = bytes[index];
+		++bytesRead;
+
+		m_PlayerID = newID;
+
+		Debug.Log("ClientLobbyComponent::HandleSetIdCommand Client ID was set to " + m_PlayerID);
+
+		return bytesRead;
+	}
+
+
+	private int HandlePlayerStatesCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	{
+		int bytesRead = 0;
+
+		byte numPlayers = bytes[index];
+		++bytesRead;
+
+		// Do a for loop iterating over the bytes using the same counter
+		for (int player = 0; player < numPlayers; ++player)
+		{
+			// Unsafely assuming that everything is working as expected and there are no attackers.
+			Debug.Log("ClientLobbyComponent::HandlePlayerStatesCommand Data for client " + player + " received");
+
+			if (playerList[player] == null)
+			{
+				playerList[player] = new LobbyPlayerInfo();
+			}
+
+			byte playerDiffMask = bytes[index + bytesRead];
+			++bytesRead;
+
+			if ((playerDiffMask & CONSTANTS.PLAYER_ID_MASK) > 0)
+			{
+				playerList[player].playerID = bytes[index + bytesRead];
+				++bytesRead;
+			}
+
+			if ((playerDiffMask & CONSTANTS.PLAYER_TYPE_MASK) > 0)
+			{
+				playerList[player].playerType = (PLAYER_TYPE)bytes[index + bytesRead];
+				++bytesRead;
+			}
+
+			if ((playerDiffMask & CONSTANTS.READY_MASK) > 0)
+			{
+				playerList[player].isReady = bytes[index + bytesRead];
+				++bytesRead;
+			}
+
+			if ((playerDiffMask & CONSTANTS.TEAM_MASK) > 0)
+			{
+				playerList[player].team = bytes[index + bytesRead];
+				++bytesRead;
+			}
+
+			playerList[player].name = "Player " + playerList[player].playerID;
+		}
+
+		for (int player = numPlayers; player < ServerLobbyComponent.MAX_NUM_PLAYERS; ++player)
+		{
+			playerList[player] = null;
+		}
+
+		// Update Dictionaries after all the player data has been received
+		IdToIndexDictionary.Clear();
+		IndexToIdDictionary.Clear();
+
+		for (int playerIndex = 0; playerIndex < playerList.Count; ++playerIndex)
+		{
+			if (playerList[playerIndex] == null)
+			{
+				continue;
+			}
+
+			IdToIndexDictionary.Add(playerList[playerIndex].playerID, playerIndex);
+			IndexToIdDictionary.Add(playerIndex, playerList[playerIndex].playerID);
+		}
+
+		return bytesRead;
 	}
 }
