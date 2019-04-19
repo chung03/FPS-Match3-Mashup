@@ -61,7 +61,9 @@ public class ClientLobbyComponent : MonoBehaviour
 		connectionsComponent = connHolder;
 		clientLobbySend = GetComponent<ClientLobbySend>();
 	}
-
+	
+	///////////////////////////////////////////////
+	// These functions are for hooking into the lobby UI
 	public void ChangeTeam()
 	{
 		clientLobbySend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM);
@@ -81,6 +83,7 @@ public class ClientLobbyComponent : MonoBehaviour
 	{
 		clientLobbySend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.START_GAME);
 	}
+	///////////////////////////////////////////////
 
 	void Update()
 	{
