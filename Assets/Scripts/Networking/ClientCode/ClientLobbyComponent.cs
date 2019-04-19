@@ -197,25 +197,39 @@ public class ClientLobbyComponent : MonoBehaviour
 					// Unsafely assuming that everything is working as expected and there are no attackers.
 					Debug.Log("ClientLobbyComponent::ReadServerBytes Data for client " + player + " received");
 
-					byte isReady = bytes[i];
-					++i;
-					byte team = bytes[i];
-					++i;
-					byte playerType = bytes[i];
-					++i;
-					byte playerId = bytes[i];
-					++i;
-
 					if (playerList[player] == null)
 					{
 						playerList[player] = new LobbyPlayerInfo();
 					}
 
-					playerList[player].isReady = isReady;
-					playerList[player].team = team;
-					playerList[player].playerType = (PLAYER_TYPE)playerType;
-					playerList[player].playerID = playerId;
-					playerList[player].name = "Player " + playerId;
+					byte playerDiffMask = bytes[i];
+					++i;
+
+					if ((playerDiffMask & CONSTANTS.PLAYER_ID_MASK) > 0)
+					{
+						playerList[player].playerID = bytes[i];
+						++i;
+					}
+
+					if ((playerDiffMask & CONSTANTS.PLAYER_TYPE_MASK) > 0)
+					{
+						playerList[player].playerType = (PLAYER_TYPE)bytes[i];
+						++i;
+					}
+
+					if ((playerDiffMask & CONSTANTS.READY_MASK) > 0)
+					{
+						playerList[player].isReady = bytes[i];
+						++i;
+					}
+
+					if ((playerDiffMask & CONSTANTS.TEAM_MASK) > 0)
+					{
+						playerList[player].team = bytes[i];
+						++i;
+					}
+
+					playerList[player].name = "Player " + playerList[player].playerID;
 				}
 
 				for (int player = numPlayers; player < ServerLobbyComponent.MAX_NUM_PLAYERS; ++player)

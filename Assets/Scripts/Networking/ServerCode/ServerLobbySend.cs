@@ -49,98 +49,95 @@ public class ServerLobbySend : MonoBehaviour
 		}
 
 		timeSinceLastSend = Time.time;
-		
-		// Send player state to all players
-		// Calculate and send Delta
-		for (int index = 0; index < connections.Length; ++index)
-		{
-			if (!connections.IsCreated)
-			{
-				Debug.Log("ServerLobbySend::SendDataIfReady connections[" + index + "] was not created");
-				Assert.IsTrue(true);
-			}
 
-			// Send state of all players
-			using (var writer = new DataStreamWriter(ServerLobbyComponent.MAX_NUM_PLAYERS * 5 * sizeof(byte), Allocator.Temp))
-			{
-				writer.Write((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES);
-				writer.Write((byte)playerList.Count);
-
-				// Figure out diffs for each player that was here before
-				byte[] playerDiffFlags = new byte[Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count)];
-				for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
-				{
-					playerDiffFlags[playerNum] = 0;
-					if (playerList[playerNum].playerID != m_PreviousStatePlayerList[playerNum].playerID)
-					{
-						playerDiffFlags[playerNum] |= CONSTANTS.PLAYER_ID_MASK;
-					}
-
-					if (playerList[playerNum].playerType != m_PreviousStatePlayerList[playerNum].playerType)
-					{
-						playerDiffFlags[playerNum] |= CONSTANTS.PLAYER_TYPE_MASK;
-					}
-
-					if (playerList[playerNum].isReady != m_PreviousStatePlayerList[playerNum].isReady)
-					{
-						playerDiffFlags[playerNum] |= CONSTANTS.READY_MASK;
-					}
-
-					if (playerList[playerNum].team != m_PreviousStatePlayerList[playerNum].team)
-					{
-						playerDiffFlags[playerNum] |= CONSTANTS.TEAM_MASK;
-					}
-				}
-
-				// Send data for players that were here before
-				for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
-				{
-					// Tell Client what changed
-					writer.Write(playerDiffFlags[playerNum]);
-
-					// Send necessary data. Go from most significant bit to least
-					if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_ID_MASK) > 0)
-					{
-						writer.Write(playerList[playerNum].playerID);
-					}
-
-					if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_TYPE_MASK) > 0)
-					{
-						writer.Write((byte)playerList[playerNum].playerType);
-					}
-
-					if ((playerDiffFlags[playerNum] & CONSTANTS.READY_MASK) > 0)
-					{
-						writer.Write(playerList[playerNum].isReady);
-					}
-
-					if ((playerDiffFlags[playerNum] & CONSTANTS.TEAM_MASK) > 0)
-					{
-						writer.Write(playerList[playerNum].team);
-					}
-				}
-
-				// Send full data for new players
-				for (int playerNum = m_PreviousStatePlayerList.Count; playerNum < playerList.Count; playerNum++)
-				{
-					// Write player info
-					writer.Write(CONSTANTS.PLAYER_ID_MASK | CONSTANTS.PLAYER_TYPE_MASK | CONSTANTS.READY_MASK | CONSTANTS.TEAM_MASK);
-					writer.Write(playerList[playerNum].playerID);
-					writer.Write((byte)playerList[playerNum].playerType);
-					writer.Write(playerList[playerNum].isReady);
-					writer.Write(playerList[playerNum].team);
-				}
-
-				connections[index].Send(driver, writer);
-			}
-		}
-		
-		// Save previous state so that we can create deltas later
-		m_PreviousStatePlayerList = DeepClone(playerList);
+		HandlePlayerDiff(ref connections, ref driver, playerList);
 
 		HandleIndividualPlayerSend(ref connections, ref driver);
 
 		HandleAllPlayerSend(ref connections, ref driver);
+	}
+
+	private void HandlePlayerDiff(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+	{
+		// No players, so nothing to do
+		if (playerList.Count <= 0)
+		{
+			return;
+		}
+
+		// Send player state to all players
+		// Calculate and send Delta
+
+		// Figure out diffs for each player that was here before
+		byte[] playerDiffFlags = new byte[Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count)];
+		for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
+		{
+			playerDiffFlags[playerNum] = 0;
+			if (playerList[playerNum].playerID != m_PreviousStatePlayerList[playerNum].playerID)
+			{
+				playerDiffFlags[playerNum] |= CONSTANTS.PLAYER_ID_MASK;
+			}
+
+			if (playerList[playerNum].playerType != m_PreviousStatePlayerList[playerNum].playerType)
+			{
+				playerDiffFlags[playerNum] |= CONSTANTS.PLAYER_TYPE_MASK;
+			}
+
+			if (playerList[playerNum].isReady != m_PreviousStatePlayerList[playerNum].isReady)
+			{
+				playerDiffFlags[playerNum] |= CONSTANTS.READY_MASK;
+			}
+
+			if (playerList[playerNum].team != m_PreviousStatePlayerList[playerNum].team)
+			{
+				playerDiffFlags[playerNum] |= CONSTANTS.TEAM_MASK;
+			}
+		}
+
+		SendDataToAllPlayersWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES);
+		SendDataToAllPlayersWhenReady((byte)playerList.Count);
+
+		// Send data for players that were here before
+		for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
+		{
+			// Tell Client what changed
+			SendDataToAllPlayersWhenReady(playerDiffFlags[playerNum]);
+
+			// Send necessary data. Go from most significant bit to least
+			if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_ID_MASK) > 0)
+			{
+				SendDataToAllPlayersWhenReady(playerList[playerNum].playerID);
+			}
+
+			if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_TYPE_MASK) > 0)
+			{
+				SendDataToAllPlayersWhenReady((byte)playerList[playerNum].playerType);
+			}
+
+			if ((playerDiffFlags[playerNum] & CONSTANTS.READY_MASK) > 0)
+			{
+				SendDataToAllPlayersWhenReady(playerList[playerNum].isReady);
+			}
+
+			if ((playerDiffFlags[playerNum] & CONSTANTS.TEAM_MASK) > 0)
+			{
+				SendDataToAllPlayersWhenReady(playerList[playerNum].team);
+			}
+		}
+
+		// Send full data for new players
+		for (int playerNum = m_PreviousStatePlayerList.Count; playerNum < playerList.Count; playerNum++)
+		{
+			// Write player info
+			SendDataToAllPlayersWhenReady(CONSTANTS.PLAYER_ID_MASK | CONSTANTS.PLAYER_TYPE_MASK | CONSTANTS.READY_MASK | CONSTANTS.TEAM_MASK);
+			SendDataToAllPlayersWhenReady(playerList[playerNum].playerID);
+			SendDataToAllPlayersWhenReady((byte)playerList[playerNum].playerType);
+			SendDataToAllPlayersWhenReady(playerList[playerNum].isReady);
+			SendDataToAllPlayersWhenReady(playerList[playerNum].team);
+		}
+
+		// Save previous state so that we can create deltas later
+		m_PreviousStatePlayerList = DeepClone(playerList);
 	}
 
 	private void HandleIndividualPlayerSend(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
@@ -176,30 +173,34 @@ public class ServerLobbySend : MonoBehaviour
 
 	private void HandleAllPlayerSend(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
 	{
-		// Send things in the queue meant for all players
-		if (allSendQueue.Count > 0)
+		// If the queue is empty, then nothing to do
+		if (allSendQueue.Count <= 0)
 		{
-			// Send eveyrthing in the queue
-			using (var writer = new DataStreamWriter(allSendQueue.Count, Allocator.Temp))
-			{
-				while (allSendQueue.Count > 0)
-				{
-					byte byteToSend = allSendQueue.Dequeue();
-
-					for (int index = 0; index < connections.Length; ++index)
-					{
-						if (!connections.IsCreated)
-						{
-							Debug.Log("ServerLobbySend::HandleAllPlayerSend connections[" + index + "] was not created");
-							Assert.IsTrue(true);
-						}
-
-						writer.Write(byteToSend);
-						connections[index].Send(driver, writer);
-					}
-				}
-			}
+			return;
 		}
+
+		byte[] byteArray = allSendQueue.ToArray();
+		
+		for (int connectionIndex = 0; connectionIndex < connections.Length; ++connectionIndex)
+		{
+			if (!connections.IsCreated)
+			{
+				Debug.Log("ServerLobbySend::HandleAllPlayerSend connection[" + connectionIndex + "] was not created");
+				Assert.IsTrue(true);
+			}
+			// Send eveyrthing in the queue
+			using (var writer = new DataStreamWriter(byteArray.Length, Allocator.Temp))
+			{
+				for (int byteIndex = 0; byteIndex < byteArray.Length; ++byteIndex)
+				{
+					writer.Write(byteArray[byteIndex]);
+				}
+
+				connections[connectionIndex].Send(driver, writer);
+			}	
+		}
+
+		allSendQueue.Clear();
 	}
 
 	public void SendIndividualPlayerDataWhenReady(int connectionIndex, byte data)
