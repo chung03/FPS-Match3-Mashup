@@ -250,6 +250,40 @@ public class ServerLobbySend : MonoBehaviour
 		allSendQueue.Enqueue(data);
 	}
 
+	public void SendCurrentPlayerStateDataToNewPlayerWhenReady(int connectionIndex)
+	{
+		// Nothing to send if no players
+		if (m_PreviousStatePlayerList.Count <= 0)
+		{
+			return;
+		}
+
+		SendIndividualPlayerDataWhenReady(connectionIndex, (byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES);
+		SendIndividualPlayerDataWhenReady(connectionIndex, (byte)m_PreviousStatePlayerList.Count);
+
+		// Send full data for new players
+		for (int playerNum = 0; playerNum < m_PreviousStatePlayerList.Count; playerNum++)
+		{
+			// Write player info
+			SendIndividualPlayerDataWhenReady(connectionIndex, CONSTANTS.NAME_MASK | CONSTANTS.PLAYER_ID_MASK | CONSTANTS.PLAYER_TYPE_MASK | CONSTANTS.READY_MASK | CONSTANTS.TEAM_MASK);
+
+			byte[] nameAsBytes = Encoding.UTF8.GetBytes(m_PreviousStatePlayerList[playerNum].name);
+
+			// Send length of name, and then send name
+			SendIndividualPlayerDataWhenReady(connectionIndex, (byte)nameAsBytes.Length);
+
+			for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
+			{
+				SendIndividualPlayerDataWhenReady(connectionIndex, nameAsBytes[byteIndex]);
+			}
+
+			SendIndividualPlayerDataWhenReady(connectionIndex, m_PreviousStatePlayerList[playerNum].playerID);
+			SendIndividualPlayerDataWhenReady(connectionIndex, (byte)m_PreviousStatePlayerList[playerNum].playerType);
+			SendIndividualPlayerDataWhenReady(connectionIndex, m_PreviousStatePlayerList[playerNum].isReady);
+			SendIndividualPlayerDataWhenReady(connectionIndex, m_PreviousStatePlayerList[playerNum].team);
+		}
+	}
+
 	private List<LobbyPlayerInfo> DeepClone(List<LobbyPlayerInfo> list)
 	{
 		List<LobbyPlayerInfo> ret = new List<LobbyPlayerInfo>();

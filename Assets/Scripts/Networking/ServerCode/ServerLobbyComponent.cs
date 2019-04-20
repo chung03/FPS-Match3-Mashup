@@ -164,6 +164,9 @@ public class ServerLobbyComponent : MonoBehaviour
 			{
 				Debug.Log("ServerLobbyComponent::HandleConnections SHOULD NOT BE IN THIS STATE! TEAMS ARE FULL BUT THERE ARE LESS THAN MAX NUMBER OF PLAYERS CONNECTED? NOT POSSIBLE. numTeam1Players = " + numTeam1Players + ", numTeam2Players = " + numTeam2Players);
 			}
+
+			// Send all current player data to the new connection
+			serverLobbySend.SendCurrentPlayerStateDataToNewPlayerWhenReady(connections.Length - 1);
 		}
 	}
 
