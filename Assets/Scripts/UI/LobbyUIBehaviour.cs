@@ -15,29 +15,12 @@ public class LobbyUIBehaviour : MonoBehaviour
 
 	private ClientLobbyComponent client;
 
-	// Start is called before the first frame update
-	private void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    private void Update()
-    {
-        
-    }
-
 	public void SetUI(bool isServer)
 	{
 		if (isServer)
 		{
 			startGameButton.SetActive(true);
 		}
-	}
-
-	public void AddPlayer(int team)
-	{
-
 	}
 
 	public void Init(ClientLobbyComponent _client)
@@ -74,7 +57,7 @@ public class LobbyUIBehaviour : MonoBehaviour
 
 		// Go through all players looking for team 2 players and then updating UI.
 		int numTeamFound = 0;
-		for (int i = 0; i < ServerLobbyComponent.MAX_NUM_PLAYERS; ++i)
+		for (int i = 0; i < CONSTANTS.MAX_NUM_PLAYERS; ++i)
 		{
 			if (allPlayerInfo[i] != null && allPlayerInfo[i].team == team)
 			{
@@ -103,7 +86,7 @@ public class LobbyUIBehaviour : MonoBehaviour
 		}
 
 		// Disable unused player slots to make UI easier to debug and understand at a glance
-		for (int i = numTeamFound; i < ServerLobbyComponent.MAX_NUM_PLAYERS / 2; ++i)
+		for (int i = numTeamFound; i < CONSTANTS.MAX_NUM_PLAYERS / 2; ++i)
 		{
 			GameObject playerObj = teamObj.transform.Find(PLAYER_PREFIX + (i + 1)).gameObject;
 			playerObj.SetActive(false);

@@ -19,9 +19,6 @@ public class ServerLobbyComponent : MonoBehaviour
 		CHANGE_PLAYER_TYPE
 	}
 
-	public static readonly int MAX_NUM_PLAYERS = 6;
-	public static readonly int SEND_ALL_PLAYERS = -1;
-
 	// Current Player States
 	public List<LobbyPlayerInfo> m_PlayerList;
 
@@ -43,7 +40,7 @@ public class ServerLobbyComponent : MonoBehaviour
 	private void Start()
 	{
 		//Debug.Log("ServerLobbyComponent::Start Called");
-		m_PlayerList = new List<LobbyPlayerInfo>(MAX_NUM_PLAYERS);
+		m_PlayerList = new List<LobbyPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 
 		IdToIndexDictionary = new Dictionary<byte, int>();
 		IndexToIdDictionary = new Dictionary<int, byte>();
@@ -133,7 +130,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		NetworkConnection c;
 		while ((c = driver.Accept()) != default)
 		{
-			if (connections.Length >= MAX_NUM_PLAYERS)
+			if (connections.Length >= CONSTANTS.MAX_NUM_PLAYERS)
 			{
 				Debug.Log("ServerLobbyComponent::HandleConnections Too many connections, rejecting latest one");
 				driver.Disconnect(c);
@@ -269,7 +266,7 @@ public class ServerLobbyComponent : MonoBehaviour
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
 			{
-				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int> (LOBBY_SERVER_PROCESS.START_GAME, SEND_ALL_PLAYERS));
+				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int> (LOBBY_SERVER_PROCESS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS));
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.HEARTBEAT)
 			{
@@ -285,7 +282,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		{
 			KeyValuePair<LOBBY_SERVER_PROCESS, int> processCommand = commandProcessingQueue.Dequeue();
 
-			if (processCommand.Value == SEND_ALL_PLAYERS)
+			if (processCommand.Value == CONSTANTS.SEND_ALL_PLAYERS)
 			{
 				if (processCommand.Key == LOBBY_SERVER_PROCESS.START_GAME)
 				{

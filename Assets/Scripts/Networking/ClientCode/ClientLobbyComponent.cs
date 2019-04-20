@@ -42,8 +42,8 @@ public class ClientLobbyComponent : MonoBehaviour
 	{
 		//Debug.Log("ClientLobbyComponent::Start Called");
 		m_PlayerID = -1;
-		m_AllPlayerInfo = new List<LobbyPlayerInfo>(ServerLobbyComponent.MAX_NUM_PLAYERS);
-		for (int index = 0; index < ServerLobbyComponent.MAX_NUM_PLAYERS; ++index)
+		m_AllPlayerInfo = new List<LobbyPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		for (int index = 0; index < CONSTANTS.MAX_NUM_PLAYERS; ++index)
 		{
 			m_AllPlayerInfo.Add(null);
 		}
@@ -294,7 +294,7 @@ public class ClientLobbyComponent : MonoBehaviour
 			}
 		}
 
-		for (int player = numPlayers; player < ServerLobbyComponent.MAX_NUM_PLAYERS; ++player)
+		for (int player = numPlayers; player < CONSTANTS.MAX_NUM_PLAYERS; ++player)
 		{
 			playerList[player] = null;
 		}

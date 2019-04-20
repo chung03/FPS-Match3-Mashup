@@ -65,10 +65,15 @@
 
 	public class CONSTANTS
 	{
+		// Masks for diffs in the lobby player state
 		public const byte TEAM_MASK = 1;
 		public const byte READY_MASK = 2;
 		public const byte PLAYER_TYPE_MASK = 4;
 		public const byte PLAYER_ID_MASK = 8;
 		public const byte NAME_MASK = 16;
+
+		public const int SEND_ALL_PLAYERS = -1;
+
+		public const int MAX_NUM_PLAYERS = 6;
 	}
 }

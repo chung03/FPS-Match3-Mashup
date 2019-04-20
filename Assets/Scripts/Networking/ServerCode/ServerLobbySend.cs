@@ -29,15 +29,15 @@ public class ServerLobbySend : MonoBehaviour
     private void Start()
     {
 		// Initialize send queues for all possible players
-		individualSendQueues = new List<Queue<byte>>(ServerLobbyComponent.MAX_NUM_PLAYERS);
-		for (int i = 0; i < ServerLobbyComponent.MAX_NUM_PLAYERS; ++i)
+		individualSendQueues = new List<Queue<byte>>(CONSTANTS.MAX_NUM_PLAYERS);
+		for (int i = 0; i < CONSTANTS.MAX_NUM_PLAYERS; ++i)
 		{
 			individualSendQueues.Add(new Queue<byte>());
 		}
 
 		allSendQueue = new Queue<byte>();
 
-		m_PreviousStatePlayerList = new List<LobbyPlayerInfo>(ServerLobbyComponent.MAX_NUM_PLAYERS);
+		m_PreviousStatePlayerList = new List<LobbyPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 	}
 
     // Is kind of like an update, but is called by other code
@@ -250,6 +250,8 @@ public class ServerLobbySend : MonoBehaviour
 		allSendQueue.Enqueue(data);
 	}
 
+	// Send current player states to a new connection.
+	// This will bring the connection up to date and able to use the deltas in the next update
 	public void SendCurrentPlayerStateDataToNewPlayerWhenReady(int connectionIndex)
 	{
 		// Nothing to send if no players
