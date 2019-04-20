@@ -4,7 +4,7 @@ using UnityEngine;
 using Util;
 using UnityEngine.UI;
 
-public class LobbyUIBehaviour : MonoBehaviour
+public class GameUIBehaviour : MonoBehaviour
 {
 	[SerializeField]
 	private GameObject startGameButton;
@@ -12,7 +12,7 @@ public class LobbyUIBehaviour : MonoBehaviour
 	[SerializeField]
 	private GameObject[] teamStats;
 
-	private ClientLobbyComponent client;
+	private ClientGameComponent client;
 
 	public void SetUI(bool isServer)
 	{
@@ -22,7 +22,7 @@ public class LobbyUIBehaviour : MonoBehaviour
 		}
 	}
 
-	public void Init(ClientLobbyComponent _client)
+	public void Init(ClientGameComponent _client)
 	{
 		client = _client;
 	}

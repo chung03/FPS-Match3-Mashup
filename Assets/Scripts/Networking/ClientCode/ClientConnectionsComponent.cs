@@ -72,7 +72,7 @@ public class ClientConnectionsComponent : MonoBehaviour
 		else if (scene.name == "PlayScene")
 		{
 			GameObject client = Instantiate(clientGameObj);
-			// client.GetComponent<ClientGameComponent>().Init(this);
+			client.GetComponent<ClientGameComponent>().Init(this);
 		}
 	}
 

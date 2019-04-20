@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 using Unity.Networking.Transport;
@@ -9,7 +8,6 @@ using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Ne
 
 using UnityEngine.Assertions;
 using Util;
-using UnityEngine.SceneManagement;
 
 public class ServerLobbyComponent : MonoBehaviour
 {
