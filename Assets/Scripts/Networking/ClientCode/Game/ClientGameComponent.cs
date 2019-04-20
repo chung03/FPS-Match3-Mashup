@@ -31,8 +31,8 @@ public class ClientGameComponent : MonoBehaviour
 	private ClientGameSend clientGameSend;
 
 	[SerializeField]
-	private GameObject lobbyUIObj;
-	private GameUIBehaviour lobbyUIInstance;
+	private GameObject gameUIObj;
+	private GameUIBehaviour gameUIInstance;
 
 
 	private void Start()
@@ -45,9 +45,9 @@ public class ClientGameComponent : MonoBehaviour
 			m_AllPlayerInfo.Add(null);
 		}
 
-		lobbyUIInstance = Instantiate(lobbyUIObj).GetComponent<GameUIBehaviour>();
-		lobbyUIInstance.SetUI(connectionsComponent.IsHost());
-		lobbyUIInstance.Init(this);
+		gameUIInstance = Instantiate(gameUIObj).GetComponent<GameUIBehaviour>();
+		gameUIInstance.SetUI(connectionsComponent.IsHost());
+		gameUIInstance.Init(this);
 
 
 		IdToIndexDictionary = new Dictionary<int, int>();
@@ -103,7 +103,7 @@ public class ClientGameComponent : MonoBehaviour
 		HandleReceiveData(ref connection, ref driver, m_AllPlayerInfo);
 
 		// ***** Update UI ****
-		lobbyUIInstance.UpdateUI(m_AllPlayerInfo);
+		gameUIInstance.UpdateUI(m_AllPlayerInfo);
 
 		// ***** Send data *****
 		clientGameSend.SendDataIfReady(ref connection, ref driver, m_AllPlayerInfo);
