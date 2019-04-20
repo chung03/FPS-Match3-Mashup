@@ -102,71 +102,52 @@ public class ServerLobbySend : MonoBehaviour
 			}
 		}
 
-		SendDataToAllPlayersWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES);
-		SendDataToAllPlayersWhenReady((byte)playerList.Count);
+		SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, CONSTANTS.SEND_ALL_PLAYERS);
+		SendDataToPlayerWhenReady((byte)playerList.Count, CONSTANTS.SEND_ALL_PLAYERS);
 
 		// Send data for players that were here before
 		for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
 		{
 			// Tell Client what changed
-			SendDataToAllPlayersWhenReady(playerDiffFlags[playerNum]);
+			SendDataToPlayerWhenReady(playerDiffFlags[playerNum], CONSTANTS.SEND_ALL_PLAYERS);
 
 			// Send necessary data. Go from most significant bit to least
 			if ((playerDiffFlags[playerNum] & CONSTANTS.NAME_MASK) > 0)
 			{
 				byte[] nameAsBytes = Encoding.UTF8.GetBytes(playerList[playerNum].name);
-	
+
 				// Send length of name, and then send name
-				SendDataToAllPlayersWhenReady((byte)nameAsBytes.Length);
+				SendDataToPlayerWhenReady((byte)nameAsBytes.Length, CONSTANTS.SEND_ALL_PLAYERS);
 
 				for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
 				{
-					SendDataToAllPlayersWhenReady(nameAsBytes[byteIndex]);
+					SendDataToPlayerWhenReady(nameAsBytes[byteIndex], CONSTANTS.SEND_ALL_PLAYERS);
 				}
 			}
 
 			if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_ID_MASK) > 0)
 			{
-				SendDataToAllPlayersWhenReady(playerList[playerNum].playerID);
+				SendDataToPlayerWhenReady(playerList[playerNum].playerID, CONSTANTS.SEND_ALL_PLAYERS);
 			}
 
 			if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_TYPE_MASK) > 0)
 			{
-				SendDataToAllPlayersWhenReady((byte)playerList[playerNum].playerType);
+				SendDataToPlayerWhenReady((byte)playerList[playerNum].playerType, CONSTANTS.SEND_ALL_PLAYERS);
 			}
 
 			if ((playerDiffFlags[playerNum] & CONSTANTS.READY_MASK) > 0)
 			{
-				SendDataToAllPlayersWhenReady(playerList[playerNum].isReady);
+				SendDataToPlayerWhenReady(playerList[playerNum].isReady, CONSTANTS.SEND_ALL_PLAYERS);
 			}
 
 			if ((playerDiffFlags[playerNum] & CONSTANTS.TEAM_MASK) > 0)
 			{
-				SendDataToAllPlayersWhenReady(playerList[playerNum].team);
+				SendDataToPlayerWhenReady(playerList[playerNum].team, CONSTANTS.SEND_ALL_PLAYERS);
 			}
 		}
 
 		// Send full data for new players
-		for (int playerNum = m_PreviousStatePlayerList.Count; playerNum < playerList.Count; playerNum++)
-		{
-			// Write player info
-			SendDataToAllPlayersWhenReady(CONSTANTS.NAME_MASK | CONSTANTS.PLAYER_ID_MASK | CONSTANTS.PLAYER_TYPE_MASK | CONSTANTS.READY_MASK | CONSTANTS.TEAM_MASK);
-
-			byte[] nameAsBytes = Encoding.UTF8.GetBytes(playerList[playerNum].name);
-
-			// Send length of name, and then send name
-			SendDataToAllPlayersWhenReady((byte)nameAsBytes.Length);
-
-			for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
-			{
-				SendDataToAllPlayersWhenReady(nameAsBytes[byteIndex]);
-			}
-
-			SendDataToAllPlayersWhenReady(playerList[playerNum].playerID);
-			SendDataToAllPlayersWhenReady((byte)playerList[playerNum].playerType);
-			SendDataToAllPlayersWhenReady(playerList[playerNum].isReady);
-			SendDataToAllPlayersWhenReady(playerList[playerNum].team);
-		}
+		SendFullPlayerState(playerList, CONSTANTS.SEND_ALL_PLAYERS, m_PreviousStatePlayerList.Count, playerList.Count);
 
 		// Save previous state so that we can create deltas later
 		m_PreviousStatePlayerList = DeepClone(playerList);
@@ -235,19 +216,21 @@ public class ServerLobbySend : MonoBehaviour
 		allSendQueue.Clear();
 	}
 
-	public void SendIndividualPlayerDataWhenReady(int connectionIndex, byte data)
-	{
-		individualSendQueues[connectionIndex].Enqueue(data);
-	}
-
 	public void ResetIndividualPlayerQueue(int index)
 	{
 		individualSendQueues[index] = new Queue<byte>();
 	}
 
-	public void SendDataToAllPlayersWhenReady(byte data)
+	public void SendDataToPlayerWhenReady(byte data, int connectionIndex)
 	{
-		allSendQueue.Enqueue(data);
+		if (connectionIndex == CONSTANTS.SEND_ALL_PLAYERS)
+		{
+			allSendQueue.Enqueue(data);
+		}
+		else
+		{
+			individualSendQueues[connectionIndex].Enqueue(data);
+		}
 	}
 
 	// Send current player states to a new connection.
@@ -260,29 +243,33 @@ public class ServerLobbySend : MonoBehaviour
 			return;
 		}
 
-		SendIndividualPlayerDataWhenReady(connectionIndex, (byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES);
-		SendIndividualPlayerDataWhenReady(connectionIndex, (byte)m_PreviousStatePlayerList.Count);
+		SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, connectionIndex);
+		SendDataToPlayerWhenReady((byte)m_PreviousStatePlayerList.Count, connectionIndex);
+		SendFullPlayerState(m_PreviousStatePlayerList, connectionIndex, 0, m_PreviousStatePlayerList.Count);
+	}
 
+	private void SendFullPlayerState(List<LobbyPlayerInfo> playerList, int connectionIndex, int beginningIndex, int endIndex)
+	{
 		// Send full data for new players
-		for (int playerNum = 0; playerNum < m_PreviousStatePlayerList.Count; playerNum++)
+		for (int playerNum = beginningIndex; playerNum < endIndex; playerNum++)
 		{
 			// Write player info
-			SendIndividualPlayerDataWhenReady(connectionIndex, CONSTANTS.NAME_MASK | CONSTANTS.PLAYER_ID_MASK | CONSTANTS.PLAYER_TYPE_MASK | CONSTANTS.READY_MASK | CONSTANTS.TEAM_MASK);
+			SendDataToPlayerWhenReady(CONSTANTS.NAME_MASK | CONSTANTS.PLAYER_ID_MASK | CONSTANTS.PLAYER_TYPE_MASK | CONSTANTS.READY_MASK | CONSTANTS.TEAM_MASK, connectionIndex);
 
-			byte[] nameAsBytes = Encoding.UTF8.GetBytes(m_PreviousStatePlayerList[playerNum].name);
+			byte[] nameAsBytes = Encoding.UTF8.GetBytes(playerList[playerNum].name);
 
 			// Send length of name, and then send name
-			SendIndividualPlayerDataWhenReady(connectionIndex, (byte)nameAsBytes.Length);
+			SendDataToPlayerWhenReady((byte)nameAsBytes.Length, connectionIndex);
 
 			for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
 			{
-				SendIndividualPlayerDataWhenReady(connectionIndex, nameAsBytes[byteIndex]);
+				SendDataToPlayerWhenReady(nameAsBytes[byteIndex], connectionIndex);
 			}
 
-			SendIndividualPlayerDataWhenReady(connectionIndex, m_PreviousStatePlayerList[playerNum].playerID);
-			SendIndividualPlayerDataWhenReady(connectionIndex, (byte)m_PreviousStatePlayerList[playerNum].playerType);
-			SendIndividualPlayerDataWhenReady(connectionIndex, m_PreviousStatePlayerList[playerNum].isReady);
-			SendIndividualPlayerDataWhenReady(connectionIndex, m_PreviousStatePlayerList[playerNum].team);
+			SendDataToPlayerWhenReady(playerList[playerNum].playerID, connectionIndex);
+			SendDataToPlayerWhenReady((byte)playerList[playerNum].playerType, connectionIndex);
+			SendDataToPlayerWhenReady(playerList[playerNum].isReady, connectionIndex);
+			SendDataToPlayerWhenReady(playerList[playerNum].team, connectionIndex);
 		}
 	}
 

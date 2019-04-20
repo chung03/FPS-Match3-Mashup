@@ -261,8 +261,8 @@ public class ServerLobbyComponent : MonoBehaviour
 			{
 				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " sent request for its ID");
 
-				serverLobbySend.SendIndividualPlayerDataWhenReady(playerIndex, (byte)LOBBY_SERVER_COMMANDS.SET_ID);
-				serverLobbySend.SendIndividualPlayerDataWhenReady(playerIndex, IndexToIdDictionary[playerIndex]);
+				serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ID, playerIndex);
+				serverLobbySend.SendDataToPlayerWhenReady(IndexToIdDictionary[playerIndex], playerIndex);
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
 			{
@@ -271,7 +271,7 @@ public class ServerLobbyComponent : MonoBehaviour
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.HEARTBEAT)
 			{
 				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " sent heartbeat");
-				serverLobbySend.SendIndividualPlayerDataWhenReady(playerIndex, (byte)LOBBY_SERVER_COMMANDS.HEARTBEAT);
+				serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.HEARTBEAT, playerIndex);
 			}
 		}
 	}
@@ -299,7 +299,7 @@ public class ServerLobbyComponent : MonoBehaviour
 
 					if (isReadytoStart)
 					{
-						serverLobbySend.SendDataToAllPlayersWhenReady((byte)LOBBY_SERVER_COMMANDS.START_GAME);
+						serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS);
 					}
 				}
 			}
