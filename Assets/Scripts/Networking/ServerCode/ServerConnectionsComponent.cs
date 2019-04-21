@@ -9,12 +9,16 @@ using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Ne
 
 using UnityEngine.SceneManagement;
 
+using Util;
+
 public class ServerConnectionsComponent : MonoBehaviour
 {
 	public static readonly int MAX_NUM_PLAYERS = 6;
 
 	public UdpCNetworkDriver m_Driver;
 	public NativeList<NetworkConnection> m_Connections;
+
+	List<PersistentPlayerInfo> persistencePlayerInfo;
 
 	private byte nextPlayerID = 1;
 
@@ -91,5 +95,22 @@ public class ServerConnectionsComponent : MonoBehaviour
 	public byte GetNextPlayerID()
 	{
 		return nextPlayerID++;
+	}
+
+	// Only supposed to be called from ServerLobby to set info for connections
+	public void SaveGameInfo(List<LobbyPlayerInfo> playerList)
+	{
+		persistencePlayerInfo = new List<PersistentPlayerInfo>();
+
+		for (int i = 0; i < playerList.Count; ++i)
+		{
+			PersistentPlayerInfo info = new PersistentPlayerInfo();
+			info.name = playerList[i].name;
+			info.playerID = playerList[i].playerID;
+			info.playerType = playerList[i].playerType;
+			info.team = playerList[i].team;
+
+			persistencePlayerInfo.Add(info);
+		}
 	}
 }

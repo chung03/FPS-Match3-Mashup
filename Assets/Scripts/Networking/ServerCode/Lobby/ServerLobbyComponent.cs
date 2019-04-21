@@ -297,6 +297,7 @@ public class ServerLobbyComponent : MonoBehaviour
 
 					if (isReadytoStart)
 					{
+						connectionsComponent.SaveGameInfo(playerList);
 						serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS);
 					}
 				}
