@@ -14,6 +14,7 @@ public class ClientConnectionsComponent : MonoBehaviour
 	public NetworkConnection m_Connection;
 
 	private bool m_IsHost = false;
+	private int m_PlayerID;
 
 	[SerializeField]
 	private GameObject clientLobbyObj;
@@ -80,5 +81,10 @@ public class ClientConnectionsComponent : MonoBehaviour
 	{
 		SceneManager.sceneLoaded += OnSceneLoaded;
 		m_IsHost = _isHost;
+	}
+
+	public void SavePlayerID(int playerID)
+	{
+		m_PlayerID = playerID;
 	}
 }

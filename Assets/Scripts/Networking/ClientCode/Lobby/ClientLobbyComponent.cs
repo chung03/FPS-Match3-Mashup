@@ -172,6 +172,7 @@ public class ClientLobbyComponent : MonoBehaviour
 			}
 			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.START_GAME)
 			{
+				connectionsComponent.SavePlayerID(m_PlayerID);
 				SceneManager.LoadScene(PLAY_SCENE);
 			}
 			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.HEARTBEAT)
