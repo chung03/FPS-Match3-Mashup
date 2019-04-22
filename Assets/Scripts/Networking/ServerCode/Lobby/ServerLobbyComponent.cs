@@ -8,6 +8,7 @@ using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Ne
 
 using UnityEngine.Assertions;
 using Util;
+using System.Text;
 
 public class ServerLobbyComponent : MonoBehaviour
 {
@@ -265,6 +266,24 @@ public class ServerLobbyComponent : MonoBehaviour
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
 			{
 				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int> (LOBBY_SERVER_PROCESS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS));
+			}
+			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_NAME)
+			{
+				int nameLength = bytes[i];
+				++i;
+
+				byte[] nameBytes = new byte[nameLength];
+
+				
+				for (int nameIndex = 0; nameIndex < nameLength; ++nameIndex)
+				{
+					nameBytes[nameIndex] = bytes[i];
+					++i;
+				}
+
+				playerList[playerIndex].name = Encoding.UTF8.GetString(nameBytes);
+
+				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " name set to " + playerList[playerIndex].name);
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.HEARTBEAT)
 			{

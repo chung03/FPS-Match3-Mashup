@@ -78,6 +78,19 @@ public class ClientLobbyComponent : MonoBehaviour
 		clientLobbySend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE);
 	}
 
+	public void ChangeName(string _name)
+	{
+		clientLobbySend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.CHANGE_NAME);
+
+		byte[] nameBytes = Encoding.UTF8.GetBytes(_name);
+
+		clientLobbySend.SendDataWhenReady((byte)nameBytes.Length);
+		for (int i = 0; i < nameBytes.Length; ++i)
+		{
+			clientLobbySend.SendDataWhenReady(nameBytes[i]);
+		}
+	}
+
 	public void SendStartGame()
 	{
 		clientLobbySend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.START_GAME);

@@ -10,9 +10,17 @@ public class LobbyUIBehaviour : MonoBehaviour
 	private GameObject startGameButton;
 
 	[SerializeField]
+	private GameObject nameInputField;
+
+	[SerializeField]
 	private GameObject[] teamStats;
 
 	private ClientLobbyComponent client;
+
+	private void Start()
+	{
+		nameInputField.GetComponent<InputField>().onEndEdit.AddListener(OnSetName);
+	}
 
 	public void SetUI(bool isServer)
 	{
@@ -110,5 +118,10 @@ public class LobbyUIBehaviour : MonoBehaviour
 	public void OnStartGameClick()
 	{
 		client.SendStartGame();
+	}
+
+	public void OnSetName(string newName)
+	{
+		client.ChangeName(newName);
 	}
 }
