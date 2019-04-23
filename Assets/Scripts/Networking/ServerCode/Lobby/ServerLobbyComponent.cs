@@ -269,19 +269,7 @@ public class ServerLobbyComponent : MonoBehaviour
 			}
 			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_NAME)
 			{
-				int nameLength = bytes[i];
-				++i;
-
-				byte[] nameBytes = new byte[nameLength];
-
-				
-				for (int nameIndex = 0; nameIndex < nameLength; ++nameIndex)
-				{
-					nameBytes[nameIndex] = bytes[i];
-					++i;
-				}
-
-				playerList[playerIndex].name = Encoding.UTF8.GetString(nameBytes);
+				playerList[playerIndex].name = DataUtils.ReadString(ref i, bytes);
 
 				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " name set to " + playerList[playerIndex].name);
 			}

@@ -1,4 +1,6 @@
-﻿namespace LobbyUtils
+﻿using System.Text;
+
+namespace LobbyUtils
 {
 	public enum NETWORK_DATA_TYPE
 	{
@@ -43,7 +45,7 @@
 		public byte playerID;
 	}
 
-		public enum LOBBY_SERVER_COMMANDS
+	public enum LOBBY_SERVER_COMMANDS
 	{
 		CHANGE_TEAM = 1,
 		READY,
@@ -84,5 +86,30 @@
 		public const int SEND_ALL_PLAYERS = -1;
 
 		public const int MAX_NUM_PLAYERS = 6;
+	}
+
+	public class DataUtils
+	{
+		public static string ReadString(ref int index, byte[] bytes)
+		{
+			int bytesRead = 0;
+
+			// Get length of name
+			byte nameBytesLength = bytes[index + bytesRead];
+			++bytesRead;
+
+			// Extract name into byte array
+			byte[] nameAsBytes = new byte[nameBytesLength];
+			for (int nameIndex = 0; nameIndex < nameBytesLength; ++nameIndex)
+			{
+				nameAsBytes[nameIndex] = bytes[index + bytesRead];
+				++bytesRead;
+			}
+
+			index += bytesRead;
+
+			// Convert from bytes to string
+			return Encoding.UTF8.GetString(nameAsBytes);
+		}
 	}
 }

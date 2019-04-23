@@ -264,20 +264,8 @@ public class ClientLobbyComponent : MonoBehaviour
 
 			if ((playerDiffMask & CONSTANTS.NAME_MASK) > 0)
 			{
-				// Get length of name
-				byte nameBytesLength = bytes[index + bytesRead];
-				++bytesRead;
-
-				// Extract name into byte array
-				byte[] nameAsBytes = new byte[nameBytesLength];
-				for (int nameIndex = 0; nameIndex < nameBytesLength; ++nameIndex)
-				{
-					nameAsBytes[nameIndex] = bytes[index + bytesRead];
-					++bytesRead;
-				}
-
 				// Convert from bytes to string
-				playerList[player].name = Encoding.UTF8.GetString(nameAsBytes);
+				playerList[player].name = DataUtils.ReadString(ref index, bytes);
 			}
 
 			if ((playerDiffMask & CONSTANTS.PLAYER_ID_MASK) > 0)
