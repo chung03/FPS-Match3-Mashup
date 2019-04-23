@@ -95,21 +95,21 @@ namespace LobbyUtils
 			int bytesRead = 0;
 
 			// Get length of name
-			byte nameBytesLength = bytes[index + bytesRead];
+			byte stringBytesLength = bytes[index + bytesRead];
 			++bytesRead;
 
 			// Extract name into byte array
-			byte[] nameAsBytes = new byte[nameBytesLength];
-			for (int nameIndex = 0; nameIndex < nameBytesLength; ++nameIndex)
+			byte[] stringAsBytes = new byte[stringBytesLength];
+			for (int stringIndex = 0; stringIndex < stringBytesLength; ++stringIndex)
 			{
-				nameAsBytes[nameIndex] = bytes[index + bytesRead];
+				stringAsBytes[stringIndex] = bytes[index + bytesRead];
 				++bytesRead;
 			}
 
 			index += bytesRead;
 
 			// Convert from bytes to string
-			return Encoding.UTF8.GetString(nameAsBytes);
+			return Encoding.UTF8.GetString(stringAsBytes);
 		}
 	}
 }
