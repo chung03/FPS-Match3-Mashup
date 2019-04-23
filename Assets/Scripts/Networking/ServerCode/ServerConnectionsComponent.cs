@@ -9,7 +9,7 @@ using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Ne
 
 using UnityEngine.SceneManagement;
 
-using Util;
+using LobbyUtils;
 
 public class ServerConnectionsComponent : MonoBehaviour
 {

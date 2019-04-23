@@ -6,7 +6,7 @@ using Unity.Jobs;
 using UnityEngine.Assertions;
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
-using Util;
+using LobbyUtils;
 
 namespace ServerJobs
 {

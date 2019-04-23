@@ -1,4 +1,4 @@
-﻿namespace Util
+﻿namespace LobbyUtils
 {
 	public enum NETWORK_DATA_TYPE
 	{

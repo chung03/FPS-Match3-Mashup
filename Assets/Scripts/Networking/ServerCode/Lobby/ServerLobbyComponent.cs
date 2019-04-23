@@ -7,7 +7,7 @@ using Unity.Collections;
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
 using UnityEngine.Assertions;
-using Util;
+using LobbyUtils;
 using System.Text;
 
 public class ServerLobbyComponent : MonoBehaviour

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Util {
+namespace LobbyUtils {
 	public struct LobbyDataStruct
 	{
 		public byte m_Name;

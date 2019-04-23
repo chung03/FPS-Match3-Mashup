@@ -5,7 +5,7 @@ using Unity.Networking.Transport;
 
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
-using Util;
+using LobbyUtils;
 using UnityEngine.SceneManagement;
 
 using System.Text;
