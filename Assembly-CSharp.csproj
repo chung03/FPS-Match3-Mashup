@@ -86,6 +86,7 @@
     <Compile Include="Assets\Scripts\UI\GameUIBehaviour.cs" />
     <Compile Include="Assets\Scripts\UI\LobbyUIBehaviour.cs" />
     <Compile Include="Assets\Scripts\UI\ModeChooseBehaviour.cs" />
+    <Compile Include="Assets\Scripts\UI\SearchUIBehaviour.cs" />
     <Reference Include="Unity.Collections">
       <HintPath>D:/Game Dev/Unity Experiments/Networking/Library/ScriptAssemblies/Unity.Collections.dll</HintPath>
     </Reference>
