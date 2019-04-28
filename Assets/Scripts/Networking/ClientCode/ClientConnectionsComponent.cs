@@ -15,6 +15,7 @@ public class ClientConnectionsComponent : MonoBehaviour
 
 	private bool m_IsHost = false;
 	private int m_PlayerID;
+	private IPAddress ipAddress;
 
 	[SerializeField]
 	private GameObject clientLobbyObj;
@@ -38,7 +39,8 @@ public class ClientConnectionsComponent : MonoBehaviour
 		m_Driver = new UdpCNetworkDriver(config);
 		m_Connection = default;
 
-		var endpoint = new IPEndPoint(IPAddress.Loopback, 9000);
+		//var endpoint = new IPEndPoint(IPAddress.Loopback, 9000);
+		var endpoint = new IPEndPoint(ipAddress, 9000);
 		m_Connection = m_Driver.Connect(endpoint);
 	}
 
@@ -77,10 +79,12 @@ public class ClientConnectionsComponent : MonoBehaviour
 		}
 	}
 
-	public void Init(bool _isHost)
+	public void Init(bool _isHost, IPAddress _ipAddress)
 	{
 		SceneManager.sceneLoaded += OnSceneLoaded;
 		m_IsHost = _isHost;
+
+		ipAddress = _ipAddress;
 	}
 
 	public void SavePlayerID(int playerID)

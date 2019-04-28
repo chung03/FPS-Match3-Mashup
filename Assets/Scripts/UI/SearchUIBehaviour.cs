@@ -38,7 +38,7 @@ public class SearchUIBehaviour : MonoBehaviour
 	{
 		GameObject newClient = Instantiate(clientObject);
 		//newClient.GetComponent<ClientConnectionsComponent>().Init(false, IPAddress.Parse(ipString), 9000);
-		newClient.GetComponent<ClientConnectionsComponent>().Init(false);
+		newClient.GetComponent<ClientConnectionsComponent>().Init(false, IPAddress.Parse(ipString));
 		DontDestroyOnLoad(newClient);
 
 

@@ -243,10 +243,10 @@ public class ClientLobbyComponent : MonoBehaviour
 
 	private int HandlePlayerStatesCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
 	{
-		int bytesRead = 0;
+		int initialIndex = index;
 
 		byte numPlayers = bytes[index];
-		++bytesRead;
+		++index;
 
 		// Do a for loop iterating over the bytes using the same counter
 		for (int player = 0; player < numPlayers; ++player)
@@ -259,8 +259,8 @@ public class ClientLobbyComponent : MonoBehaviour
 				playerList[player] = new LobbyPlayerInfo();
 			}
 
-			byte playerDiffMask = bytes[index + bytesRead];
-			++bytesRead;
+			byte playerDiffMask = bytes[index];
+			++index;
 
 			if ((playerDiffMask & CONSTANTS.NAME_MASK) > 0)
 			{
@@ -270,26 +270,26 @@ public class ClientLobbyComponent : MonoBehaviour
 
 			if ((playerDiffMask & CONSTANTS.PLAYER_ID_MASK) > 0)
 			{
-				playerList[player].playerID = bytes[index + bytesRead];
-				++bytesRead;
+				playerList[player].playerID = bytes[index];
+				++index;
 			}
 
 			if ((playerDiffMask & CONSTANTS.PLAYER_TYPE_MASK) > 0)
 			{
-				playerList[player].playerType = (PLAYER_TYPE)bytes[index + bytesRead];
-				++bytesRead;
+				playerList[player].playerType = (PLAYER_TYPE)bytes[index];
+				++index;
 			}
 
 			if ((playerDiffMask & CONSTANTS.READY_MASK) > 0)
 			{
-				playerList[player].isReady = bytes[index + bytesRead];
-				++bytesRead;
+				playerList[player].isReady = bytes[index];
+				++index;
 			}
 
 			if ((playerDiffMask & CONSTANTS.TEAM_MASK) > 0)
 			{
-				playerList[player].team = bytes[index + bytesRead];
-				++bytesRead;
+				playerList[player].team = bytes[index];
+				++index;
 			}
 		}
 
@@ -313,6 +313,6 @@ public class ClientLobbyComponent : MonoBehaviour
 			IndexToIdDictionary.Add(playerIndex, playerList[playerIndex].playerID);
 		}
 
-		return bytesRead;
+		return index - initialIndex;
 	}
 }
