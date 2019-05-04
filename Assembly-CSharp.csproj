@@ -60,6 +60,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\GameUtil.cs" />
     <Compile Include="Assets\Scripts\LobbyUtil.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\ClientConnectionsComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Game\ClientGameComponent.cs" />

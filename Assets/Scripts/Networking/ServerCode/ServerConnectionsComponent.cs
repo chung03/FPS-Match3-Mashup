@@ -54,6 +54,10 @@ public class ServerConnectionsComponent : MonoBehaviour
 		}
 
 		m_Connections = new NativeList<NetworkConnection>(MAX_NUM_PLAYERS, Allocator.Persistent);
+
+		//var broadcastEndpoint = new IPEndPoint(IPAddress.Broadcast, 6677);
+		//m_Driver.Bind(broadcastEndpoint);
+		//m_Driver.Listen();
 	}
 
 	private void OnDestroy()
@@ -112,5 +116,11 @@ public class ServerConnectionsComponent : MonoBehaviour
 
 			persistencePlayerInfo.Add(info);
 		}
+	}
+
+	// Only supposed to be called from ServerGame to get info for connections
+	public List<PersistentPlayerInfo> GetGameInfo()
+	{
+		return persistencePlayerInfo;
 	}
 }

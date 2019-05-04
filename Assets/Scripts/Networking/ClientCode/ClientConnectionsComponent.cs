@@ -12,6 +12,7 @@ public class ClientConnectionsComponent : MonoBehaviour
 {
 	public UdpCNetworkDriver m_Driver;
 	public NetworkConnection m_Connection;
+	public NetworkConnection m_BroadcastConnection;
 
 	private bool m_IsHost = false;
 	private int m_PlayerID;
@@ -38,10 +39,14 @@ public class ClientConnectionsComponent : MonoBehaviour
 		//Debug.Log("ClientConnectionsComponent::Start called");
 		m_Driver = new UdpCNetworkDriver(config);
 		m_Connection = default;
+		m_BroadcastConnection = default;
 
 		//var endpoint = new IPEndPoint(IPAddress.Loopback, 9000);
 		var endpoint = new IPEndPoint(ipAddress, 9000);
 		m_Connection = m_Driver.Connect(endpoint);
+
+		//var broadcastEndpoint = new IPEndPoint(IPAddress.Broadcast, 6677);
+		//m_BroadcastConnection = m_Driver.Connect(broadcastEndpoint);
 	}
 
 	private void OnDestroy()

@@ -7,18 +7,18 @@ using Unity.Collections;
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
 using UnityEngine.Assertions;
-using LobbyUtils;
+using GameUtils;
 
 public class ServerGameComponent : MonoBehaviour
 {
-	private enum LOBBY_SERVER_PROCESS
+	private enum GAME_SERVER_PROCESS
 	{
 		START_GAME,
 		CHANGE_PLAYER_TYPE
 	}
 
 	// Current Player States
-	public List<LobbyPlayerInfo> m_PlayerList;
+	public List<GamePlayerInfo> m_PlayerList;
 
 	// A Pair of Dictionaries to make it easier to map Index and PlayerID
 	// ID -> Connection Index
@@ -27,7 +27,7 @@ public class ServerGameComponent : MonoBehaviour
 	private Dictionary<int, byte> IndexToIdDictionary;
 
 	// Command and the player ID
-	private Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>> commandProcessingQueue;
+	private Queue<KeyValuePair<GAME_SERVER_PROCESS, int>> commandProcessingQueue;
 
 	private ServerConnectionsComponent connectionsComponent;
 	private ServerGameSend serverGameSend;
@@ -38,12 +38,12 @@ public class ServerGameComponent : MonoBehaviour
 	private void Start()
 	{
 		//Debug.Log("ServerGameComponent::Start Called");
-		m_PlayerList = new List<LobbyPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		m_PlayerList = new List<GamePlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 
 		IdToIndexDictionary = new Dictionary<byte, int>();
 		IndexToIdDictionary = new Dictionary<int, byte>();
 
-		commandProcessingQueue = new Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>>();
+		commandProcessingQueue = new Queue<KeyValuePair<GAME_SERVER_PROCESS, int>>();
 	}
 
 
@@ -52,6 +52,8 @@ public class ServerGameComponent : MonoBehaviour
 		//Debug.Log("ServerGameComponent::Init Called");
 		connectionsComponent = connHolder;
 		serverGameSend = GetComponent<ServerGameSend>();
+
+
 	}
 
 	void Update()
@@ -74,7 +76,7 @@ public class ServerGameComponent : MonoBehaviour
 		serverGameSend.SendDataIfReady(ref connections, ref driver, m_PlayerList);
 	}
 
-	private void HandleConnections(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+	private void HandleConnections(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<GamePlayerInfo> playerList)
 	{
 		//Debug.Log("ServerGameComponent::HandleConnections Called");
 
@@ -138,7 +140,7 @@ public class ServerGameComponent : MonoBehaviour
 			Debug.Log("ServerGameComponent::HandleConnections Accepted a connection");
 
 			connections.Add(c);
-			playerList.Add(new LobbyPlayerInfo());
+			playerList.Add(new GamePlayerInfo());
 			playerList[playerList.Count - 1].playerID = connectionsComponent.GetNextPlayerID();
 			playerList[playerList.Count - 1].name = "Player " + playerList[playerList.Count - 1].playerID;
 			IdToIndexDictionary.Add(playerList[playerList.Count - 1].playerID, playerList.Count - 1);
@@ -165,7 +167,7 @@ public class ServerGameComponent : MonoBehaviour
 		}
 	}
 
-	private void HandleReceiveData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+	private void HandleReceiveData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<GamePlayerInfo> playerList)
 	{
 		for (int index = 0; index < connections.Length; ++index)
 		{
@@ -202,7 +204,7 @@ public class ServerGameComponent : MonoBehaviour
 		}
 	}
 
-	private void ReadClientBytes(int playerIndex, List<LobbyPlayerInfo> playerList, byte[] bytes)
+	private void ReadClientBytes(int playerIndex, List<GamePlayerInfo> playerList, byte[] bytes)
 	{
 		Debug.Log("ServerGameComponent::ReadClientBytes bytes.Length = " + bytes.Length);
 
@@ -215,7 +217,7 @@ public class ServerGameComponent : MonoBehaviour
 
 			Debug.Log("ServerGameComponent::ReadClientBytes Got " + clientCmd + " from the Client");
 
-			if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.READY)
+			if (clientCmd == (byte)GAME_CLIENT_REQUESTS.READY)
 			{
 				if (playerList[playerIndex].isReady == 0)
 				{
@@ -228,7 +230,7 @@ public class ServerGameComponent : MonoBehaviour
 
 				Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " ready state set to " + playerList[playerIndex].isReady);
 			}
-			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM)
+			else if (clientCmd == (byte)GAME_CLIENT_REQUESTS.CHANGE_TEAM)
 			{
 				if (playerList[playerIndex].team == 0 && numTeam2Players < 3)
 				{
@@ -251,38 +253,38 @@ public class ServerGameComponent : MonoBehaviour
 					Debug.Log("ServerGameComponent::ReadClientBytes SHOULD NOT HAPPEN! Client " + playerIndex + " tried to change teams but something strange happened. playerList[index].team = " + playerList[playerIndex].team + ", numTeam1Players = " + numTeam1Players + ", numTeam2Players = " + numTeam2Players);
 				}
 			}
-			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE)
+			else if (clientCmd == (byte)GAME_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE)
 			{
-				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.CHANGE_PLAYER_TYPE, playerIndex));
+				commandProcessingQueue.Enqueue(new KeyValuePair<GAME_SERVER_PROCESS, int>(GAME_SERVER_PROCESS.CHANGE_PLAYER_TYPE, playerIndex));
 			}
-			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.GET_ID)
+			else if (clientCmd == (byte)GAME_CLIENT_REQUESTS.GET_ID)
 			{
 				Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " sent request for its ID");
 
-				serverGameSend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ID, playerIndex);
+				serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.SET_ID, playerIndex);
 				serverGameSend.SendDataToPlayerWhenReady(IndexToIdDictionary[playerIndex], playerIndex);
 			}
-			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
+			else if (clientCmd == (byte)GAME_CLIENT_REQUESTS.START_GAME)
 			{
-				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS));
+				commandProcessingQueue.Enqueue(new KeyValuePair<GAME_SERVER_PROCESS, int>(GAME_SERVER_PROCESS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS));
 			}
-			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.HEARTBEAT)
+			else if (clientCmd == (byte)GAME_CLIENT_REQUESTS.HEARTBEAT)
 			{
 				Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " sent heartbeat");
-				serverGameSend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.HEARTBEAT, playerIndex);
+				serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.HEARTBEAT, playerIndex);
 			}
 		}
 	}
 
-	private void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+	private void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<GamePlayerInfo> playerList)
 	{
 		while (commandProcessingQueue.Count > 0)
 		{
-			KeyValuePair<LOBBY_SERVER_PROCESS, int> processCommand = commandProcessingQueue.Dequeue();
+			KeyValuePair<GAME_SERVER_PROCESS, int> processCommand = commandProcessingQueue.Dequeue();
 
 			if (processCommand.Value == CONSTANTS.SEND_ALL_PLAYERS)
 			{
-				if (processCommand.Key == LOBBY_SERVER_PROCESS.START_GAME)
+				if (processCommand.Key == GAME_SERVER_PROCESS.START_GAME)
 				{
 					bool isReadytoStart = true;
 
@@ -297,21 +299,21 @@ public class ServerGameComponent : MonoBehaviour
 
 					if (isReadytoStart)
 					{
-						serverGameSend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS);
+						serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS);
 					}
 				}
 			}
 			else
 			{
 				// Make sure that changing player types doesn't result in some invalid team configuration
-				if (processCommand.Key == LOBBY_SERVER_PROCESS.CHANGE_PLAYER_TYPE)
+				if (processCommand.Key == GAME_SERVER_PROCESS.CHANGE_PLAYER_TYPE)
 				{
 					int numShootersFound = 0;
 					int numMatch3Found = 0;
 
 					int currPlayerIndex = processCommand.Value;
 
-					LobbyPlayerInfo currPlayer = playerList[currPlayerIndex];
+					GamePlayerInfo currPlayer = playerList[currPlayerIndex];
 
 					PLAYER_TYPE newplayerType = (PLAYER_TYPE)((int)(currPlayer.playerType + 1) % (int)PLAYER_TYPE.PLAYER_TYPES);
 

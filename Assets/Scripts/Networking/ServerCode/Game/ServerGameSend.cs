@@ -8,7 +8,7 @@ using Unity.Collections;
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
 using UnityEngine.Assertions;
-using LobbyUtils;
+using GameUtils;
 
 using System.Text;
 
@@ -19,7 +19,7 @@ public class ServerGameSend : MonoBehaviour
 	private Queue<byte> allSendQueue;
 	
 	// Used for calculating deltas and ultimately save on network bandwidth
-	public List<LobbyPlayerInfo> m_PreviousStatePlayerList;
+	public List<GamePlayerInfo> m_PreviousStatePlayerList;
 
 	[SerializeField]
 	private float sendFrequencyMs = 50;
@@ -37,12 +37,12 @@ public class ServerGameSend : MonoBehaviour
 
 		allSendQueue = new Queue<byte>();
 
-		m_PreviousStatePlayerList = new List<LobbyPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		m_PreviousStatePlayerList = new List<GamePlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 	}
 
     // Is kind of like an update, but is called by other code
-	// This is writen so that the ServerLobbyComponent can ensure that all data is ready before trying to send
-    public void SendDataIfReady(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+	// This is writen so that the ServerGameComponent can ensure that all data is ready before trying to send
+    public void SendDataIfReady(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<GamePlayerInfo> playerList)
     {
 		// Not time to send yet.
 		if (timeSinceLastSend * 1000 + sendFrequencyMs > Time.time * 1000)
@@ -59,7 +59,7 @@ public class ServerGameSend : MonoBehaviour
 		HandleAllPlayerSend(ref connections, ref driver);
 	}
 
-	private void HandlePlayerDiff(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+	private void HandlePlayerDiff(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<GamePlayerInfo> playerList)
 	{
 		// No players, so nothing to do
 		if (playerList.Count <= 0)
@@ -102,7 +102,7 @@ public class ServerGameSend : MonoBehaviour
 			}
 		}
 
-		SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, CONSTANTS.SEND_ALL_PLAYERS);
+		SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, CONSTANTS.SEND_ALL_PLAYERS);
 		SendDataToPlayerWhenReady((byte)playerList.Count, CONSTANTS.SEND_ALL_PLAYERS);
 
 		// Send data for players that were here before
@@ -171,7 +171,7 @@ public class ServerGameSend : MonoBehaviour
 
 						if (!connections[index].IsCreated)
 						{
-							Debug.Log("ServerLobbySend::HandleIndividualPlayerSend connections[" + index + "] was not created");
+							Debug.Log("ServerGameSend::HandleIndividualPlayerSend connections[" + index + "] was not created");
 							Assert.IsTrue(true);
 						}
 
@@ -198,7 +198,7 @@ public class ServerGameSend : MonoBehaviour
 		{
 			if (!connections.IsCreated)
 			{
-				Debug.Log("ServerLobbySend::HandleAllPlayerSend connection[" + connectionIndex + "] was not created");
+				Debug.Log("ServerGameSend::HandleAllPlayerSend connection[" + connectionIndex + "] was not created");
 				Assert.IsTrue(true);
 			}
 			// Send eveyrthing in the queue
@@ -243,12 +243,12 @@ public class ServerGameSend : MonoBehaviour
 			return;
 		}
 
-		SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, connectionIndex);
+		SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, connectionIndex);
 		SendDataToPlayerWhenReady((byte)m_PreviousStatePlayerList.Count, connectionIndex);
 		SendFullPlayerState(m_PreviousStatePlayerList, connectionIndex, 0, m_PreviousStatePlayerList.Count);
 	}
 
-	private void SendFullPlayerState(List<LobbyPlayerInfo> playerList, int connectionIndex, int beginningIndex, int endIndex)
+	private void SendFullPlayerState(List<GamePlayerInfo> playerList, int connectionIndex, int beginningIndex, int endIndex)
 	{
 		// Send full data for new players
 		for (int playerNum = beginningIndex; playerNum < endIndex; playerNum++)
@@ -273,11 +273,11 @@ public class ServerGameSend : MonoBehaviour
 		}
 	}
 
-	private List<LobbyPlayerInfo> DeepClone(List<LobbyPlayerInfo> list)
+	private List<GamePlayerInfo> DeepClone(List<GamePlayerInfo> list)
 	{
-		List<LobbyPlayerInfo> ret = new List<LobbyPlayerInfo>();
+		List<GamePlayerInfo> ret = new List<GamePlayerInfo>();
 
-		foreach (LobbyPlayerInfo player in list)
+		foreach (GamePlayerInfo player in list)
 		{
 			ret.Add(player.Clone());
 		}

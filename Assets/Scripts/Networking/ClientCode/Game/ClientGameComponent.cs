@@ -5,7 +5,7 @@ using Unity.Networking.Transport;
 
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
-using LobbyUtils;
+using GameUtils;
 using UnityEngine.SceneManagement;
 
 using System.Text;
@@ -19,7 +19,7 @@ public class ClientGameComponent : MonoBehaviour
 	private int m_PlayerID;
 
 	// This stores the infor for all players, including this one.
-	private List<LobbyPlayerInfo> m_AllPlayerInfo;
+	private List<GamePlayerInfo> m_AllPlayerInfo;
 
 	// A Pair of Dictionaries to make it easier to map Index and PlayerID
 	// ID -> Connection Index
@@ -39,7 +39,7 @@ public class ClientGameComponent : MonoBehaviour
 	{
 		//Debug.Log("ClientGameComponent::Start Called");
 		m_PlayerID = -1;
-		m_AllPlayerInfo = new List<LobbyPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		m_AllPlayerInfo = new List<GamePlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 		for (int index = 0; index < CONSTANTS.MAX_NUM_PLAYERS; ++index)
 		{
 			m_AllPlayerInfo.Add(null);
@@ -65,22 +65,22 @@ public class ClientGameComponent : MonoBehaviour
 	// These functions are for hooking into the lobby UI
 	public void ChangeTeam()
 	{
-		clientGameSend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM);
+		clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.CHANGE_TEAM);
 	}
 
 	public void ChangeReadyStatus()
 	{
-		clientGameSend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.READY);
+		clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.READY);
 	}
 
 	public void ChangePlayerType()
 	{
-		clientGameSend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE);
+		clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE);
 	}
 
 	public void SendStartGame()
 	{
-		clientGameSend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.START_GAME);
+		clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.START_GAME);
 	}
 	///////////////////////////////////////////////
 
@@ -109,7 +109,7 @@ public class ClientGameComponent : MonoBehaviour
 		clientGameSend.SendDataIfReady(ref connection, ref driver, m_AllPlayerInfo);
 	}
 
-	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> allPlayerInfo)
+	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<GamePlayerInfo> allPlayerInfo)
 	{
 		//Debug.Log("ClientGameComponent::HandleReceiveData Called");
 
@@ -123,7 +123,7 @@ public class ClientGameComponent : MonoBehaviour
 				Debug.Log("ClientGameComponent::HandleReceiveData We are now connected to the server");
 
 				// Get ID
-				clientGameSend.SendDataWhenReady((byte)LOBBY_CLIENT_REQUESTS.GET_ID);
+				clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.GET_ID);
 			}
 			else if (cmd == NetworkEvent.Type.Data)
 			{
@@ -137,7 +137,7 @@ public class ClientGameComponent : MonoBehaviour
 		}
 	}
 
-	private void ReadServerBytes(List<LobbyPlayerInfo> playerList, DataStreamReader stream)
+	private void ReadServerBytes(List<GamePlayerInfo> playerList, DataStreamReader stream)
 	{
 		var readerCtx = default(DataStreamReader.Context);
 
@@ -154,27 +154,27 @@ public class ClientGameComponent : MonoBehaviour
 
 			Debug.Log("ClientGameComponent::ReadServerBytes Got " + serverCmd + " from the Server");
 
-			if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.READY)
+			if (serverCmd == (byte)GAME_SERVER_COMMANDS.READY)
 			{
 				i += HandleReadyCommand(i, bytes, playerList);
 			}
-			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.CHANGE_TEAM)
+			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.CHANGE_TEAM)
 			{
 				i += HandleChangeTeamCommand(i, bytes, playerList);
 			}
-			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.SET_ID)
+			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.SET_ID)
 			{
 				i += HandleSetIdCommand(i, bytes, playerList);
 			}
-			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES)
+			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.SET_ALL_PLAYER_STATES)
 			{
 				i += HandlePlayerStatesCommand(i, bytes, playerList);
 			}
-			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.START_GAME)
+			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.START_GAME)
 			{
 				SceneManager.LoadScene(PLAY_SCENE);
 			}
-			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.HEARTBEAT)
+			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.HEARTBEAT)
 			{
 				Debug.Log("ClientGameComponent::ReadServerBytes Received heartbeat from server");
 			}
@@ -182,7 +182,7 @@ public class ClientGameComponent : MonoBehaviour
 	}
 
 	// Returns the number of bytes read from the bytes array
-	private int HandleReadyCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	private int HandleReadyCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
 	{
 		int bytesRead = 0;
 
@@ -197,7 +197,7 @@ public class ClientGameComponent : MonoBehaviour
 		return bytesRead;
 	}
 
-	private int HandleChangeTeamCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	private int HandleChangeTeamCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
 	{
 		int bytesRead = 0;
 
@@ -212,7 +212,7 @@ public class ClientGameComponent : MonoBehaviour
 		return bytesRead;
 	}
 
-	private int HandleSetIdCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	private int HandleSetIdCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
 	{
 		int bytesRead = 0;
 
@@ -227,7 +227,7 @@ public class ClientGameComponent : MonoBehaviour
 	}
 
 
-	private int HandlePlayerStatesCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	private int HandlePlayerStatesCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
 	{
 		int bytesRead = 0;
 
@@ -242,7 +242,7 @@ public class ClientGameComponent : MonoBehaviour
 
 			if (playerList[player] == null)
 			{
-				playerList[player] = new LobbyPlayerInfo();
+				playerList[player] = new GamePlayerInfo();
 			}
 
 			byte playerDiffMask = bytes[index + bytesRead];
