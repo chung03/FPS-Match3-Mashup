@@ -11,6 +11,7 @@ using UnityEngine.SceneManagement;
 public class ClientConnectionsComponent : MonoBehaviour
 {
 	public UdpCNetworkDriver m_Driver;
+	public UdpCNetworkDriver m_BroadcastDriver;
 	public NetworkConnection m_Connection;
 	public NetworkConnection m_BroadcastConnection;
 
@@ -38,6 +39,7 @@ public class ClientConnectionsComponent : MonoBehaviour
 
 		//Debug.Log("ClientConnectionsComponent::Start called");
 		m_Driver = new UdpCNetworkDriver(config);
+		m_BroadcastDriver = new UdpCNetworkDriver(config);
 		m_Connection = default;
 		m_BroadcastConnection = default;
 
@@ -45,8 +47,10 @@ public class ClientConnectionsComponent : MonoBehaviour
 		var endpoint = new IPEndPoint(ipAddress, 9000);
 		m_Connection = m_Driver.Connect(endpoint);
 
-		//var broadcastEndpoint = new IPEndPoint(IPAddress.Broadcast, 6677);
-		//m_BroadcastConnection = m_Driver.Connect(broadcastEndpoint);
+		/*
+		var broadcastEndpoint = new IPEndPoint(IPAddress.Any, 6677);
+		m_BroadcastConnection = m_BroadcastDriver.Connect(broadcastEndpoint);
+		*/
 	}
 
 	private void OnDestroy()

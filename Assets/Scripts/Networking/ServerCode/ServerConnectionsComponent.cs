@@ -16,6 +16,7 @@ public class ServerConnectionsComponent : MonoBehaviour
 	public static readonly int MAX_NUM_PLAYERS = 6;
 
 	public UdpCNetworkDriver m_Driver;
+	public UdpCNetworkDriver m_BroadcastDriver;
 	public NativeList<NetworkConnection> m_Connections;
 
 	List<PersistentPlayerInfo> persistencePlayerInfo;
@@ -54,10 +55,18 @@ public class ServerConnectionsComponent : MonoBehaviour
 		}
 
 		m_Connections = new NativeList<NetworkConnection>(MAX_NUM_PLAYERS, Allocator.Persistent);
-
-		//var broadcastEndpoint = new IPEndPoint(IPAddress.Broadcast, 6677);
-		//m_Driver.Bind(broadcastEndpoint);
-		//m_Driver.Listen();
+		
+		/*
+		m_BroadcastDriver = new UdpCNetworkDriver(config);
+		if (m_BroadcastDriver.Bind(new IPEndPoint(IPAddress.Any, 6677)) != 0)
+		{
+			Debug.Log("ServerConnectionsComponent::Start Failed to bind to port 6677");
+		}
+		else
+		{
+			m_BroadcastDriver.Listen();
+		}
+		*/
 	}
 
 	private void OnDestroy()
