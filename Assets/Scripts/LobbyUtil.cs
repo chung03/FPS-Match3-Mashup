@@ -46,10 +46,8 @@ namespace LobbyUtils
 			return ret;
 		}
 
-		public byte[] GetDeltaBytes()
+		private byte CalculateDiffMask()
 		{
-			List<byte> deltaBytes = new List<byte>();
-
 			byte playerDiffFlags = 0;
 
 			if (name.CompareTo(previousState.name) != 0)
@@ -76,6 +74,41 @@ namespace LobbyUtils
 			{
 				playerDiffFlags |= CONSTANTS.TEAM_MASK;
 			}
+
+			return playerDiffFlags;
+		}
+
+		public List<byte> GetDeltaBytes(bool getFullState)
+		{
+			List<byte> deltaBytes = new List<byte>();
+
+			// If no previous state to compare against or specifically requested, then send full state
+			if (previousState == null || getFullState)
+			{
+				deltaBytes.Add(CONSTANTS.NAME_MASK | CONSTANTS.PLAYER_ID_MASK | CONSTANTS.PLAYER_TYPE_MASK | CONSTANTS.READY_MASK | CONSTANTS.TEAM_MASK);
+				byte[] nameAsBytes = Encoding.UTF8.GetBytes(name);
+
+				// Send length of name, and then send name
+				deltaBytes.Add((byte)nameAsBytes.Length);
+
+				for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
+				{
+					deltaBytes.Add(nameAsBytes[byteIndex]);
+				}
+
+				deltaBytes.Add(playerID);
+				deltaBytes.Add((byte)playerType);
+				deltaBytes.Add(isReady);
+				deltaBytes.Add(team);
+
+				return deltaBytes;
+			}
+
+			// Get Differences Now
+			byte playerDiffFlags = CalculateDiffMask();
+
+			// Prepare to send data now
+			deltaBytes.Add(playerDiffFlags);
 
 			if ((playerDiffFlags & CONSTANTS.NAME_MASK) > 0)
 			{
@@ -113,7 +146,7 @@ namespace LobbyUtils
 			previousState = Clone();
 			isDirty = false;
 
-			return deltaBytes.ToArray();
+			return deltaBytes;
 		}
 
 		public void ApplyDelta(byte[] delta)

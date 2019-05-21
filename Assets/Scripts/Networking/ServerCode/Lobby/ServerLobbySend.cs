@@ -70,80 +70,16 @@ public class ServerLobbySend : MonoBehaviour
 		// Send player state to all players
 		// Calculate and send Delta
 
-		// Figure out diffs for each player that was here before
-		byte[] playerDiffFlags = new byte[Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count)];
-		for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
-		{
-			playerDiffFlags[playerNum] = 0;
-
-			if (playerList[playerNum].name.CompareTo(m_PreviousStatePlayerList[playerNum].name) != 0)
-			{
-				playerDiffFlags[playerNum] |= CONSTANTS.NAME_MASK;
-			}
-			
-			if (playerList[playerNum].playerID != m_PreviousStatePlayerList[playerNum].playerID)
-			{
-				playerDiffFlags[playerNum] |= CONSTANTS.PLAYER_ID_MASK;
-			}
-
-			if (playerList[playerNum].playerType != m_PreviousStatePlayerList[playerNum].playerType)
-			{
-				playerDiffFlags[playerNum] |= CONSTANTS.PLAYER_TYPE_MASK;
-			}
-
-			if (playerList[playerNum].isReady != m_PreviousStatePlayerList[playerNum].isReady)
-			{
-				playerDiffFlags[playerNum] |= CONSTANTS.READY_MASK;
-			}
-
-			if (playerList[playerNum].team != m_PreviousStatePlayerList[playerNum].team)
-			{
-				playerDiffFlags[playerNum] |= CONSTANTS.TEAM_MASK;
-			}
-		}
-
 		SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, CONSTANTS.SEND_ALL_PLAYERS);
 		SendDataToPlayerWhenReady((byte)playerList.Count, CONSTANTS.SEND_ALL_PLAYERS);
 
 		// Send data for players that were here before
 		for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
 		{
+			List<byte> deltaInfo = playerList[playerNum].GetDeltaBytes(false);
+
 			// Tell Client what changed
-			SendDataToPlayerWhenReady(playerDiffFlags[playerNum], CONSTANTS.SEND_ALL_PLAYERS);
-
-			// Send necessary data. Go from most significant bit to least
-			if ((playerDiffFlags[playerNum] & CONSTANTS.NAME_MASK) > 0)
-			{
-				byte[] nameAsBytes = Encoding.UTF8.GetBytes(playerList[playerNum].name);
-
-				// Send length of name, and then send name
-				SendDataToPlayerWhenReady((byte)nameAsBytes.Length, CONSTANTS.SEND_ALL_PLAYERS);
-
-				for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
-				{
-					SendDataToPlayerWhenReady(nameAsBytes[byteIndex], CONSTANTS.SEND_ALL_PLAYERS);
-				}
-			}
-
-			if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_ID_MASK) > 0)
-			{
-				SendDataToPlayerWhenReady(playerList[playerNum].playerID, CONSTANTS.SEND_ALL_PLAYERS);
-			}
-
-			if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_TYPE_MASK) > 0)
-			{
-				SendDataToPlayerWhenReady((byte)playerList[playerNum].playerType, CONSTANTS.SEND_ALL_PLAYERS);
-			}
-
-			if ((playerDiffFlags[playerNum] & CONSTANTS.READY_MASK) > 0)
-			{
-				SendDataToPlayerWhenReady(playerList[playerNum].isReady, CONSTANTS.SEND_ALL_PLAYERS);
-			}
-
-			if ((playerDiffFlags[playerNum] & CONSTANTS.TEAM_MASK) > 0)
-			{
-				SendDataToPlayerWhenReady(playerList[playerNum].team, CONSTANTS.SEND_ALL_PLAYERS);
-			}
+			SendDataToPlayerWhenReady(deltaInfo, CONSTANTS.SEND_ALL_PLAYERS);
 		}
 
 		// Send full data for new players
@@ -233,6 +169,14 @@ public class ServerLobbySend : MonoBehaviour
 		}
 	}
 
+	public void SendDataToPlayerWhenReady(List<byte> data, int connectionIndex)
+	{
+		foreach (byte _byte in data)
+		{
+			SendDataToPlayerWhenReady(_byte, connectionIndex);
+		}
+	}
+
 	// Send current player states to a new connection.
 	// This will bring the connection up to date and able to use the deltas in the next update
 	public void SendCurrentPlayerStateDataToNewPlayerWhenReady(int connectionIndex)
@@ -253,23 +197,9 @@ public class ServerLobbySend : MonoBehaviour
 		// Send full data for new players
 		for (int playerNum = beginningIndex; playerNum < endIndex; playerNum++)
 		{
-			// Write player info
-			SendDataToPlayerWhenReady(CONSTANTS.NAME_MASK | CONSTANTS.PLAYER_ID_MASK | CONSTANTS.PLAYER_TYPE_MASK | CONSTANTS.READY_MASK | CONSTANTS.TEAM_MASK, connectionIndex);
+			List<byte> deltaInfo = playerList[playerNum].GetDeltaBytes(true);
 
-			byte[] nameAsBytes = Encoding.UTF8.GetBytes(playerList[playerNum].name);
-
-			// Send length of name, and then send name
-			SendDataToPlayerWhenReady((byte)nameAsBytes.Length, connectionIndex);
-
-			for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
-			{
-				SendDataToPlayerWhenReady(nameAsBytes[byteIndex], connectionIndex);
-			}
-
-			SendDataToPlayerWhenReady(playerList[playerNum].playerID, connectionIndex);
-			SendDataToPlayerWhenReady((byte)playerList[playerNum].playerType, connectionIndex);
-			SendDataToPlayerWhenReady(playerList[playerNum].isReady, connectionIndex);
-			SendDataToPlayerWhenReady(playerList[playerNum].team, connectionIndex);
+			SendDataToPlayerWhenReady(deltaInfo, connectionIndex);
 		}
 	}
 

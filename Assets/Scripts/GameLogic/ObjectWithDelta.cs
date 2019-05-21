@@ -1,6 +1,8 @@
-﻿public interface ObjectWithDelta
+﻿using System.Collections.Generic;
+
+public interface ObjectWithDelta
 {
-	byte[] GetDeltaBytes();
+	List<byte> GetDeltaBytes(bool getFullState);
 	bool IsDirty();
 	int GetObjectId();
 	void ApplyDelta(byte[] delta);
