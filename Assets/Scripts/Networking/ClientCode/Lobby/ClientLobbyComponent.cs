@@ -259,38 +259,16 @@ public class ClientLobbyComponent : MonoBehaviour
 				playerList[player] = new LobbyPlayerInfo();
 			}
 
-			byte playerDiffMask = bytes[index];
+			byte playerDeltaSize = bytes[index];
 			++index;
 
-			if ((playerDiffMask & CONSTANTS.NAME_MASK) > 0)
-			{
-				// Convert from bytes to string
-				playerList[player].name = DataUtils.ReadString(ref index, bytes);
-			}
+			byte[] deltaBytes = new byte[playerDeltaSize];
 
-			if ((playerDiffMask & CONSTANTS.PLAYER_ID_MASK) > 0)
-			{
-				playerList[player].playerID = bytes[index];
-				++index;
-			}
+			System.Array.Copy(bytes, index, deltaBytes, 0, playerDeltaSize);
 
-			if ((playerDiffMask & CONSTANTS.PLAYER_TYPE_MASK) > 0)
-			{
-				playerList[player].playerType = (PLAYER_TYPE)bytes[index];
-				++index;
-			}
+			playerList[player].ApplyDelta(deltaBytes);
 
-			if ((playerDiffMask & CONSTANTS.READY_MASK) > 0)
-			{
-				playerList[player].isReady = bytes[index];
-				++index;
-			}
-
-			if ((playerDiffMask & CONSTANTS.TEAM_MASK) > 0)
-			{
-				playerList[player].team = bytes[index];
-				++index;
-			}
+			index += playerDeltaSize;
 		}
 
 		for (int player = numPlayers; player < CONSTANTS.MAX_NUM_PLAYERS; ++player)

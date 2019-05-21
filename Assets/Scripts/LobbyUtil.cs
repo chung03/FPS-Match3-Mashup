@@ -100,51 +100,53 @@ namespace LobbyUtils
 				deltaBytes.Add((byte)playerType);
 				deltaBytes.Add(isReady);
 				deltaBytes.Add(team);
-
-				return deltaBytes;
 			}
-
-			// Get Differences Now
-			byte playerDiffFlags = CalculateDiffMask();
-
-			// Prepare to send data now
-			deltaBytes.Add(playerDiffFlags);
-
-			if ((playerDiffFlags & CONSTANTS.NAME_MASK) > 0)
+			else
 			{
-				byte[] nameAsBytes = Encoding.UTF8.GetBytes(name);
+				// Get Differences Now
+				byte playerDiffFlags = CalculateDiffMask();
 
-				// Send length of name, and then send name
-				deltaBytes.Add((byte)nameAsBytes.Length);
+				// Prepare to send data now
+				deltaBytes.Add(playerDiffFlags);
 
-				for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
+				if ((playerDiffFlags & CONSTANTS.NAME_MASK) > 0)
 				{
-					deltaBytes.Add(nameAsBytes[byteIndex]);
+					byte[] nameAsBytes = Encoding.UTF8.GetBytes(name);
+
+					// Send length of name, and then send name
+					deltaBytes.Add((byte)nameAsBytes.Length);
+
+					for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
+					{
+						deltaBytes.Add(nameAsBytes[byteIndex]);
+					}
 				}
-			}
 
-			if ((playerDiffFlags & CONSTANTS.PLAYER_ID_MASK) > 0)
-			{
-				deltaBytes.Add(playerID);
-			}
+				if ((playerDiffFlags & CONSTANTS.PLAYER_ID_MASK) > 0)
+				{
+					deltaBytes.Add(playerID);
+				}
 
-			if ((playerDiffFlags & CONSTANTS.PLAYER_TYPE_MASK) > 0)
-			{
-				deltaBytes.Add((byte)playerType);
-			}
+				if ((playerDiffFlags & CONSTANTS.PLAYER_TYPE_MASK) > 0)
+				{
+					deltaBytes.Add((byte)playerType);
+				}
 
-			if ((playerDiffFlags & CONSTANTS.READY_MASK) > 0)
-			{
-				deltaBytes.Add(isReady);
-			}
+				if ((playerDiffFlags & CONSTANTS.READY_MASK) > 0)
+				{
+					deltaBytes.Add(isReady);
+				}
 
-			if ((playerDiffFlags & CONSTANTS.TEAM_MASK) > 0)
-			{
-				deltaBytes.Add(team);
+				if ((playerDiffFlags & CONSTANTS.TEAM_MASK) > 0)
+				{
+					deltaBytes.Add(team);
+				}
 			}
 
 			previousState = Clone();
 			isDirty = false;
+
+			deltaBytes.Insert(0, (byte)deltaBytes.Count);
 
 			return deltaBytes;
 		}
