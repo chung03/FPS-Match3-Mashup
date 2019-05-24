@@ -34,6 +34,8 @@ public class ClientLobbyComponent : MonoBehaviour
 	private GameObject lobbyUIObj;
 	private LobbyUIBehaviour lobbyUIInstance;
 
+	private delegate int HandleIncomingBytes(int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo);
+	private Dictionary<int, HandleIncomingBytes> CommandToFunctionDictionary;
 
 	private void Start()
 	{
@@ -52,6 +54,15 @@ public class ClientLobbyComponent : MonoBehaviour
 
 		IdToIndexDictionary = new Dictionary<int, int>();
 		IndexToIdDictionary = new Dictionary<int, int>();
+
+		// Initialize the byteHandling Table
+		CommandToFunctionDictionary = new Dictionary<int, HandleIncomingBytes>();
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.READY, HandleReadyCommand);
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.CHANGE_TEAM, HandleChangeTeamCommand);
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.SET_ID, HandleSetIdCommand);
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, HandlePlayerStatesCommand);
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.START_GAME, HandleStartCommand);
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.HEARTBEAT, HandleHeartBeat);
 	}
 
 	public void Init(ClientConnectionsComponent connHolder)
@@ -167,32 +178,22 @@ public class ClientLobbyComponent : MonoBehaviour
 
 			Debug.Log("ClientLobbyComponent::ReadServerBytes Got " + serverCmd + " from the Server");
 
-			if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.READY)
-			{
-				i += HandleReadyCommand(i, bytes, playerList);
-			}
-			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.CHANGE_TEAM)
-			{
-				i += HandleChangeTeamCommand(i, bytes, playerList);
-			}
-			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.SET_ID)
-			{
-				i += HandleSetIdCommand(i, bytes, playerList);
-			}
-			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES)
-			{
-				i += HandlePlayerStatesCommand(i, bytes, playerList);
-			}
-			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.START_GAME)
-			{
-				connectionsComponent.SavePlayerID(m_PlayerID);
-				SceneManager.LoadScene(PLAY_SCENE);
-			}
-			else if (serverCmd == (byte)LOBBY_SERVER_COMMANDS.HEARTBEAT)
-			{
-				Debug.Log("ClientLobbyComponent::ReadServerBytes Received heartbeat from server");
-			}
+			i += CommandToFunctionDictionary[serverCmd](i, bytes, playerList);
 		}
+	}
+
+	// Returns the number of bytes read from the bytes array
+	private int HandleStartCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	{
+		connectionsComponent.SavePlayerID(m_PlayerID);
+		SceneManager.LoadScene(PLAY_SCENE);
+		return 0;
+	}
+
+	private int HandleHeartBeat(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	{
+		Debug.Log("ClientLobbyComponent::ReadServerBytes Received heartbeat from server");
+		return 0;
 	}
 
 	// Returns the number of bytes read from the bytes array
