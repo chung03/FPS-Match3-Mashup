@@ -8,7 +8,6 @@ using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Ne
 
 using UnityEngine.Assertions;
 using LobbyUtils;
-using System.Text;
 
 public class ServerLobbyComponent : MonoBehaviour
 {
@@ -35,7 +34,10 @@ public class ServerLobbyComponent : MonoBehaviour
 
 	int numTeam1Players = 0;
 	int numTeam2Players = 0;
-	 
+
+	private delegate void HandleIncomingBytes(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex);
+	private Dictionary<int, HandleIncomingBytes> CommandToFunctionDictionary;
+
 	private void Start()
 	{
 		//Debug.Log("ServerLobbyComponent::Start Called");
@@ -45,6 +47,15 @@ public class ServerLobbyComponent : MonoBehaviour
 		IndexToIdDictionary = new Dictionary<int, byte>();
 
 		commandProcessingQueue = new Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>>();
+
+		CommandToFunctionDictionary = new Dictionary<int, HandleIncomingBytes>();
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.READY, ChangePlayerReady);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM, ChangePlayerTeam);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE, ChangePlayerType);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.GET_ID, GetPlayerID);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.START_GAME, StartGame);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_NAME, ChangePlayerName);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.HEARTBEAT, HeartBeat);
 	}
 
 
@@ -216,69 +227,77 @@ public class ServerLobbyComponent : MonoBehaviour
 
 			Debug.Log("ServerLobbyComponent::ReadClientBytes Got " + clientCmd + " from the Client");
 
-			if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.READY)
-			{
-				if (playerList[playerIndex].isReady == 0)
-				{
-					playerList[playerIndex].isReady = 1;
-				}
-				else
-				{
-					playerList[playerIndex].isReady = 0;
-				}
-
-				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " ready state set to " + playerList[playerIndex].isReady);
-			}
-			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM)
-			{
-				if (playerList[playerIndex].team == 0 && numTeam2Players < 3)
-				{
-					playerList[playerIndex].team = 1;
-					--numTeam1Players;
-					++numTeam2Players;
-
-					Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " team was set to 1");
-				}
-				else if (playerList[playerIndex].team == 1 && numTeam1Players < 3)
-				{
-					playerList[playerIndex].team = 0;
-					++numTeam1Players;
-					--numTeam2Players;
-
-					Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " team was set to 0");
-				}
-				else
-				{
-					Debug.Log("ServerLobbyComponent::ReadClientBytes SHOULD NOT HAPPEN! Client " + playerIndex + " tried to change teams but something strange happened. playerList[index].team = " + playerList[playerIndex].team + ", numTeam1Players = " + numTeam1Players + ", numTeam2Players = " + numTeam2Players);
-				}
-			}
-			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE)
-			{
-				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.CHANGE_PLAYER_TYPE, playerIndex));
-			}
-			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.GET_ID)
-			{
-				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " sent request for its ID");
-
-				serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ID, playerIndex);
-				serverLobbySend.SendDataToPlayerWhenReady(IndexToIdDictionary[playerIndex], playerIndex);
-			}
-			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.START_GAME)
-			{
-				commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int> (LOBBY_SERVER_PROCESS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS));
-			}
-			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.CHANGE_NAME)
-			{
-				playerList[playerIndex].name = DataUtils.ReadString(ref i, bytes);
-
-				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " name set to " + playerList[playerIndex].name);
-			}
-			else if (clientCmd == (byte)LOBBY_CLIENT_REQUESTS.HEARTBEAT)
-			{
-				Debug.Log("ServerLobbyComponent::ReadClientBytes Client " + playerIndex + " sent heartbeat");
-				serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.HEARTBEAT, playerIndex);
-			}
+			CommandToFunctionDictionary[clientCmd](ref i, bytes, playerList, playerIndex);
 		}
+	}
+
+	private void ChangePlayerReady(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	{
+		if (playerInfo[playerIndex].isReady == 0)
+		{
+			playerInfo[playerIndex].isReady = 1;
+		}
+		else
+		{
+			playerInfo[playerIndex].isReady = 0;
+		}
+
+		Debug.Log("ServerLobbyComponent::ChangePlayerReady Player " + playerInfo[playerIndex].playerID + " ready state set to " + playerInfo[playerIndex].isReady);
+	}
+
+	private void ChangePlayerTeam(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	{
+		if (playerInfo[playerIndex].team == 0 && numTeam2Players < 3)
+		{
+			playerInfo[playerIndex].team = 1;
+			--numTeam1Players;
+			++numTeam2Players;
+
+			Debug.Log("ServerLobbyComponent::ChangePlayerTeam Client " + playerInfo[playerIndex].playerID + " team was set to 1");
+		}
+		else if (playerInfo[playerIndex].team == 1 && numTeam1Players < 3)
+		{
+			playerInfo[playerIndex].team = 0;
+			++numTeam1Players;
+			--numTeam2Players;
+
+			Debug.Log("ServerLobbyComponent::ChangePlayerTeam Client " + playerInfo[playerIndex].playerID + " team was set to 0");
+		}
+		else
+		{
+			Debug.Log("ServerLobbyComponent::ChangePlayerTeam SHOULD NOT HAPPEN! Player " + playerInfo[playerIndex].playerID + " tried to change teams but something strange happened. players team = " + playerInfo[playerIndex].team + ", numTeam1Players = " + numTeam1Players + ", numTeam2Players = " + numTeam2Players);
+		}
+	}
+
+	private void ChangePlayerType(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	{
+		commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.CHANGE_PLAYER_TYPE, playerIndex));
+	}
+
+	private void GetPlayerID(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	{
+		Debug.Log("ServerLobbyComponent::GetPlayerID Client " + playerIndex + " sent request for its ID");
+
+		serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ID, playerIndex);
+		serverLobbySend.SendDataToPlayerWhenReady(IndexToIdDictionary[playerIndex], playerIndex);
+	}
+
+	private void StartGame(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	{
+		commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS));
+	}
+
+	private void ChangePlayerName(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	{
+		playerInfo[playerIndex].name = DataUtils.ReadString(ref index, bytes);
+
+		Debug.Log("ServerLobbyComponent::ChangePlayerName Client " + playerIndex + " name set to " + playerInfo[playerIndex].name);
+	}
+
+	private void HeartBeat(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	{
+		Debug.Log("ServerLobbyComponent::HeartBeat Client " + playerIndex + " sent heartbeat");
+		serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.HEARTBEAT, playerIndex);
 	}
 
 	private void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
