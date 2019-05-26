@@ -60,11 +60,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\GameLogic\FPS\FPSLook.cs" />
+    <Compile Include="Assets\Scripts\GameLogic\FPS\FPSMove.cs" />
+    <Compile Include="Assets\Scripts\GameLogic\FPS\FPSPlayer.cs" />
+    <Compile Include="Assets\Scripts\GameLogic\FPS\FPSPlayerInput.cs" />
+    <Compile Include="Assets\Scripts\GameLogic\GameStateTracker.cs" />
+    <Compile Include="Assets\Scripts\GameLogic\Match3Player.cs" />
+    <Compile Include="Assets\Scripts\GameLogic\ObjectWithDelta.cs" />
     <Compile Include="Assets\Scripts\GameUtil.cs" />
-    <Compile Include="Assets\Scripts\LobbyUtil.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\ClientConnectionsComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Game\ClientGameComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Game\ClientGameSend.cs" />
+    <Compile Include="Assets\Scripts\Networking\ClientCode\Game\ClientPlayerController.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\Client_Multithread.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\ClientReadGameJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\ClientReadLobbyJob.cs" />
@@ -72,7 +79,8 @@
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\ClientSendLobbyJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Lobby\ClientLobbyComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Lobby\ClientLobbySend.cs" />
-    <Compile Include="Assets\Scripts\Networking\CommonCode\LobbyDataStruct.cs" />
+    <Compile Include="Assets\Scripts\Networking\CommonCode\LobbyPlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Networking\CommonCode\LobbyUtil.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Game\ServerGameComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Game\ServerGameSend.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Jobs\Server_Game_Job.cs" />
