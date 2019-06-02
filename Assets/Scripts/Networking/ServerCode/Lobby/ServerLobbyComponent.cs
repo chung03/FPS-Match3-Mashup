@@ -18,7 +18,7 @@ public class ServerLobbyComponent : MonoBehaviour
 	}
 
 	// Current Player States
-	public List<LobbyPlayerInfo> m_PlayerList;
+	public List<PersistentPlayerInfo> m_PlayerList;
 
 	// A Pair of Dictionaries to make it easier to map Index and PlayerID
 	// ID -> Connection Index
@@ -35,13 +35,13 @@ public class ServerLobbyComponent : MonoBehaviour
 	int numTeam1Players = 0;
 	int numTeam2Players = 0;
 
-	private delegate void HandleIncomingBytes(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex);
+	private delegate void HandleIncomingBytes(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex);
 	private Dictionary<int, HandleIncomingBytes> CommandToFunctionDictionary;
 
 	private void Start()
 	{
 		//Debug.Log("ServerLobbyComponent::Start Called");
-		m_PlayerList = new List<LobbyPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		m_PlayerList = new List<PersistentPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 
 		IdToIndexDictionary = new Dictionary<byte, int>();
 		IndexToIdDictionary = new Dictionary<int, byte>();
@@ -86,7 +86,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		serverLobbySend.SendDataIfReady(ref connections, ref driver, m_PlayerList);
 	}
 
-	private void HandleConnections(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+	private void HandleConnections(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
 	{
 		//Debug.Log("ServerLobbyComponent::HandleConnections Called");
 
@@ -150,7 +150,7 @@ public class ServerLobbyComponent : MonoBehaviour
 			Debug.Log("ServerLobbyComponent::HandleConnections Accepted a connection");
 
 			connections.Add(c);
-			playerList.Add(new LobbyPlayerInfo());
+			playerList.Add(new PersistentPlayerInfo());
 			playerList[playerList.Count - 1].playerID = connectionsComponent.GetNextPlayerID();
 			playerList[playerList.Count - 1].name = "Player " + playerList[playerList.Count - 1].playerID;
 			IdToIndexDictionary.Add(playerList[playerList.Count - 1].playerID, playerList.Count - 1);
@@ -177,7 +177,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		}
 	}
 
-	private void HandleReceiveData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+	private void HandleReceiveData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
 	{
 		for (int index = 0; index < connections.Length; ++index)
 		{
@@ -214,7 +214,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		}
 	}
 
-	private void ReadClientBytes(int playerIndex, List<LobbyPlayerInfo> playerList, byte[] bytes)
+	private void ReadClientBytes(int playerIndex, List<PersistentPlayerInfo> playerList, byte[] bytes)
 	{
 		Debug.Log("ServerLobbyComponent::ReadClientBytes bytes.Length = " + bytes.Length);
 
@@ -231,7 +231,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		}
 	}
 
-	private void ChangePlayerReady(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	private void ChangePlayerReady(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		if (playerInfo[playerIndex].isReady == 0)
 		{
@@ -245,7 +245,7 @@ public class ServerLobbyComponent : MonoBehaviour
 		Debug.Log("ServerLobbyComponent::ChangePlayerReady Player " + playerInfo[playerIndex].playerID + " ready state set to " + playerInfo[playerIndex].isReady);
 	}
 
-	private void ChangePlayerTeam(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	private void ChangePlayerTeam(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		if (playerInfo[playerIndex].team == 0 && numTeam2Players < 3)
 		{
@@ -269,12 +269,12 @@ public class ServerLobbyComponent : MonoBehaviour
 		}
 	}
 
-	private void ChangePlayerType(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	private void ChangePlayerType(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.CHANGE_PLAYER_TYPE, playerIndex));
 	}
 
-	private void GetPlayerID(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	private void GetPlayerID(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		Debug.Log("ServerLobbyComponent::GetPlayerID Client " + playerIndex + " sent request for its ID");
 
@@ -282,25 +282,25 @@ public class ServerLobbyComponent : MonoBehaviour
 		serverLobbySend.SendDataToPlayerWhenReady(IndexToIdDictionary[playerIndex], playerIndex);
 	}
 
-	private void StartGame(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	private void StartGame(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS));
 	}
 
-	private void ChangePlayerName(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	private void ChangePlayerName(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		playerInfo[playerIndex].name = DataUtils.ReadString(ref index, bytes);
 
 		Debug.Log("ServerLobbyComponent::ChangePlayerName Client " + playerIndex + " name set to " + playerInfo[playerIndex].name);
 	}
 
-	private void HeartBeat(ref int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo, int playerIndex)
+	private void HeartBeat(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		Debug.Log("ServerLobbyComponent::HeartBeat Client " + playerIndex + " sent heartbeat");
 		serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.HEARTBEAT, playerIndex);
 	}
 
-	private void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+	private void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
 	{
 		while (commandProcessingQueue.Count > 0)
 		{
@@ -338,7 +338,7 @@ public class ServerLobbyComponent : MonoBehaviour
 
 					int currPlayerIndex = processCommand.Value;
 
-					LobbyPlayerInfo currPlayer = playerList[currPlayerIndex];
+					PersistentPlayerInfo currPlayer = playerList[currPlayerIndex];
 
 					PLAYER_TYPE newplayerType = (PLAYER_TYPE)((int)(currPlayer.playerType + 1) % (int)PLAYER_TYPE.PLAYER_TYPES);
 

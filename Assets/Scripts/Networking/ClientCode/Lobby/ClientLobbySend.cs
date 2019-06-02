@@ -28,7 +28,7 @@ public class ClientLobbySend : MonoBehaviour
 		sendQueue = new Queue<byte>();
 	}
 
-	public void SendDataIfReady(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> allPlayerInfo)
+	public void SendDataIfReady(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> allPlayerInfo)
 	{
 		// Heart beat every once in a while to prevent disconnects for no reason
 		if (timeSinceLastHeartBeat * 1000 + heartbeatFrequencyMs <= Time.time * 1000)

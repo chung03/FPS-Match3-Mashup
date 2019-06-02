@@ -46,6 +46,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameUIObj: {fileID: 1999145933014034460, guid: 797a4a5dbb8777b448da2617d87a984c,
     type: 3}
+  FPSPlayerObj: {fileID: 4709725410128075721, guid: 274ee331bd8a51a4898427067d5e91d6,
+    type: 3}
+  Match3PlayerObj: {fileID: 0}
 --- !u!114 &927684379278832086
 MonoBehaviour:
   m_ObjectHideFlags: 0

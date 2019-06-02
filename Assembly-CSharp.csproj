@@ -79,8 +79,8 @@
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\ClientSendLobbyJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Lobby\ClientLobbyComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Lobby\ClientLobbySend.cs" />
-    <Compile Include="Assets\Scripts\Networking\CommonCode\LobbyPlayerInfo.cs" />
     <Compile Include="Assets\Scripts\Networking\CommonCode\LobbyUtil.cs" />
+    <Compile Include="Assets\Scripts\Networking\CommonCode\PersistentPlayerInfo.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Game\ServerGameComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Game\ServerGameSend.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Jobs\Server_Game_Job.cs" />

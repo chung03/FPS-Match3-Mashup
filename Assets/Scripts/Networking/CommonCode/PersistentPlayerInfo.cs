@@ -4,9 +4,9 @@ using UnityEngine;
 using LobbyUtils;
 using System.Text;
 
-public class LobbyPlayerInfo : ObjectWithDelta
+public class PersistentPlayerInfo : ObjectWithDelta
 {
-	private LobbyPlayerInfo previousState;
+	private PersistentPlayerInfo previousState;
 
 	public byte team;
 	public byte isReady;
@@ -15,15 +15,15 @@ public class LobbyPlayerInfo : ObjectWithDelta
 	public byte playerID;
 	private bool isDirty;
 
-	public LobbyPlayerInfo()
+	public PersistentPlayerInfo()
 	{
 		previousState = null;
 		isDirty = true;
 	}
 
-	public LobbyPlayerInfo Clone()
+	public PersistentPlayerInfo Clone()
 	{
-		LobbyPlayerInfo ret = new LobbyPlayerInfo();
+		PersistentPlayerInfo ret = new PersistentPlayerInfo();
 		ret.team = team;
 		ret.isReady = isReady;
 

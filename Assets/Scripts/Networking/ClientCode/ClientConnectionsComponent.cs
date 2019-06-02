@@ -7,6 +7,7 @@ using Unity.Collections;
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
 using UnityEngine.SceneManagement;
+using GameUtils;
 
 public class ClientConnectionsComponent : MonoBehaviour
 {
@@ -16,7 +17,6 @@ public class ClientConnectionsComponent : MonoBehaviour
 	public NetworkConnection m_BroadcastConnection;
 
 	private bool m_IsHost = false;
-	private int m_PlayerID;
 	private IPAddress ipAddress;
 
 	[SerializeField]
@@ -30,6 +30,8 @@ public class ClientConnectionsComponent : MonoBehaviour
 
 	[SerializeField]
 	private int disconnectTimeoutMs = 5000;
+
+	private PersistentPlayerInfo m_PlayerInfo;
 
 	private void Start()
 	{
@@ -84,7 +86,7 @@ public class ClientConnectionsComponent : MonoBehaviour
 		else if (scene.name == "PlayScene")
 		{
 			GameObject client = Instantiate(clientGameObj);
-			client.GetComponent<ClientGameComponent>().Init(this);
+			client.GetComponent<ClientGameComponent>().Init(this, m_PlayerInfo);
 		}
 	}
 
@@ -96,8 +98,8 @@ public class ClientConnectionsComponent : MonoBehaviour
 		ipAddress = _ipAddress;
 	}
 
-	public void SavePlayerID(int playerID)
+	public void SavePlayerInfo(PersistentPlayerInfo playerinfo)
 	{
-		m_PlayerID = playerID;
+		m_PlayerInfo = playerinfo;
 	}
 }

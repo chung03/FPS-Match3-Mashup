@@ -19,7 +19,7 @@ public class ServerLobbySend : MonoBehaviour
 	private Queue<byte> allSendQueue;
 	
 	// Used for calculating deltas and ultimately save on network bandwidth
-	public List<LobbyPlayerInfo> m_PreviousStatePlayerList;
+	public List<PersistentPlayerInfo> m_PreviousStatePlayerList;
 
 	[SerializeField]
 	private float sendFrequencyMs = 50;
@@ -37,12 +37,12 @@ public class ServerLobbySend : MonoBehaviour
 
 		allSendQueue = new Queue<byte>();
 
-		m_PreviousStatePlayerList = new List<LobbyPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		m_PreviousStatePlayerList = new List<PersistentPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 	}
 
     // Is kind of like an update, but is called by other code
 	// This is writen so that the ServerLobbyComponent can ensure that all data is ready before trying to send
-    public void SendDataIfReady(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+    public void SendDataIfReady(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
     {
 		// Not time to send yet.
 		if (timeSinceLastSend * 1000 + sendFrequencyMs > Time.time * 1000)
@@ -59,7 +59,7 @@ public class ServerLobbySend : MonoBehaviour
 		HandleAllPlayerSend(ref connections, ref driver);
 	}
 
-	private void HandlePlayerDiff(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> playerList)
+	private void HandlePlayerDiff(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
 	{
 		// No players, so nothing to do
 		if (playerList.Count <= 0)
@@ -192,7 +192,7 @@ public class ServerLobbySend : MonoBehaviour
 		SendFullPlayerState(m_PreviousStatePlayerList, connectionIndex, 0, m_PreviousStatePlayerList.Count);
 	}
 
-	private void SendFullPlayerState(List<LobbyPlayerInfo> playerList, int connectionIndex, int beginningIndex, int endIndex)
+	private void SendFullPlayerState(List<PersistentPlayerInfo> playerList, int connectionIndex, int beginningIndex, int endIndex)
 	{
 		// Send full data for new players
 		for (int playerNum = beginningIndex; playerNum < endIndex; playerNum++)
@@ -203,11 +203,11 @@ public class ServerLobbySend : MonoBehaviour
 		}
 	}
 
-	private List<LobbyPlayerInfo> DeepClone(List<LobbyPlayerInfo> list)
+	private List<PersistentPlayerInfo> DeepClone(List<PersistentPlayerInfo> list)
 	{
-		List<LobbyPlayerInfo> ret = new List<LobbyPlayerInfo>();
+		List<PersistentPlayerInfo> ret = new List<PersistentPlayerInfo>();
 
-		foreach (LobbyPlayerInfo player in list)
+		foreach (PersistentPlayerInfo player in list)
 		{
 			ret.Add(player.Clone());
 		}

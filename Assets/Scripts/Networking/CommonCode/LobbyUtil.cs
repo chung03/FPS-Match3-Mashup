@@ -8,14 +8,6 @@ namespace LobbyUtils
 		SEND_PLAYER_NAME
 	}
 
-	public class PersistentPlayerInfo
-	{
-		public byte team;
-		public string name;
-		public PLAYER_TYPE playerType;
-		public byte playerID;
-	}
-
 	public enum LOBBY_SERVER_COMMANDS
 	{
 		CHANGE_TEAM = 1,

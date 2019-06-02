@@ -35,7 +35,7 @@ public class LobbyUIBehaviour : MonoBehaviour
 		client = _client;
 	}
 
-	public void UpdateUI(List<LobbyPlayerInfo> allPlayerInfo)
+	public void UpdateUI(List<PersistentPlayerInfo> allPlayerInfo)
 	{
 		// Prototype hack to get UI up and running.
 		// Should be replaced with more efficient and maintainable code later
@@ -54,7 +54,7 @@ public class LobbyUIBehaviour : MonoBehaviour
 		SetTeamUI(team2Obj, 1, allPlayerInfo);
 	}
 
-	private void SetTeamUI(GameObject teamObj, int team, List<LobbyPlayerInfo> allPlayerInfo)
+	private void SetTeamUI(GameObject teamObj, int team, List<PersistentPlayerInfo> allPlayerInfo)
 	{
 		const string PLAYER_PREFIX = "Player ";
 

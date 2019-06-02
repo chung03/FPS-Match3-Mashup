@@ -111,7 +111,7 @@ public class ServerConnectionsComponent : MonoBehaviour
 	}
 
 	// Only supposed to be called from ServerLobby to set info for connections
-	public void SaveGameInfo(List<LobbyPlayerInfo> playerList)
+	public void SaveGameInfo(List<PersistentPlayerInfo> playerList)
 	{
 		persistencePlayerInfo = new List<PersistentPlayerInfo>();
 

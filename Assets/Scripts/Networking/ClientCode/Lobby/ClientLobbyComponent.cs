@@ -19,7 +19,7 @@ public class ClientLobbyComponent : MonoBehaviour
 	private int m_PlayerID;
 
 	// This stores the infor for all players, including this one.
-	private List<LobbyPlayerInfo> m_AllPlayerInfo;
+	private List<PersistentPlayerInfo> m_AllPlayerInfo;
 
 	// A Pair of Dictionaries to make it easier to map Index and PlayerID
 	// ID -> Connection Index
@@ -34,14 +34,14 @@ public class ClientLobbyComponent : MonoBehaviour
 	private GameObject lobbyUIObj;
 	private LobbyUIBehaviour lobbyUIInstance;
 
-	private delegate int HandleIncomingBytes(int index, byte[] bytes, List<LobbyPlayerInfo> playerInfo);
+	private delegate int HandleIncomingBytes(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo);
 	private Dictionary<int, HandleIncomingBytes> CommandToFunctionDictionary;
 
 	private void Start()
 	{
 		//Debug.Log("ClientLobbyComponent::Start Called");
 		m_PlayerID = -1;
-		m_AllPlayerInfo = new List<LobbyPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		m_AllPlayerInfo = new List<PersistentPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 		for (int index = 0; index < CONSTANTS.MAX_NUM_PLAYERS; ++index)
 		{
 			m_AllPlayerInfo.Add(null);
@@ -133,7 +133,7 @@ public class ClientLobbyComponent : MonoBehaviour
 		clientLobbySend.SendDataIfReady(ref connection, ref driver, m_AllPlayerInfo);
 	}
 
-	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<LobbyPlayerInfo> allPlayerInfo)
+	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> allPlayerInfo)
 	{
 		//Debug.Log("ClientLobbyComponent::HandleReceiveData Called");
 
@@ -161,7 +161,7 @@ public class ClientLobbyComponent : MonoBehaviour
 		}
 	}
 
-	private void ReadServerBytes(List<LobbyPlayerInfo> playerList, DataStreamReader stream)
+	private void ReadServerBytes(List<PersistentPlayerInfo> playerList, DataStreamReader stream)
 	{
 		var readerCtx = default(DataStreamReader.Context);
 
@@ -183,21 +183,22 @@ public class ClientLobbyComponent : MonoBehaviour
 	}
 
 	// Returns the number of bytes read from the bytes array
-	private int HandleStartCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	private int HandleStartCommand(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
 	{
-		connectionsComponent.SavePlayerID(m_PlayerID);
+		int playerIndex = IdToIndexDictionary[m_PlayerID];
+		connectionsComponent.SavePlayerInfo(playerList[playerIndex]);
 		SceneManager.LoadScene(PLAY_SCENE);
 		return 0;
 	}
 
-	private int HandleHeartBeat(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	private int HandleHeartBeat(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
 	{
 		Debug.Log("ClientLobbyComponent::ReadServerBytes Received heartbeat from server");
 		return 0;
 	}
 
 	// Returns the number of bytes read from the bytes array
-	private int HandleReadyCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	private int HandleReadyCommand(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
 	{
 		int bytesRead = 0;
 
@@ -212,7 +213,7 @@ public class ClientLobbyComponent : MonoBehaviour
 		return bytesRead;
 	}
 
-	private int HandleChangeTeamCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	private int HandleChangeTeamCommand(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
 	{
 		int bytesRead = 0;
 
@@ -227,7 +228,7 @@ public class ClientLobbyComponent : MonoBehaviour
 		return bytesRead;
 	}
 
-	private int HandleSetIdCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	private int HandleSetIdCommand(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
 	{
 		int bytesRead = 0;
 
@@ -242,7 +243,7 @@ public class ClientLobbyComponent : MonoBehaviour
 	}
 
 
-	private int HandlePlayerStatesCommand(int index, byte[] bytes, List<LobbyPlayerInfo> playerList)
+	private int HandlePlayerStatesCommand(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
 	{
 		int initialIndex = index;
 
@@ -257,7 +258,7 @@ public class ClientLobbyComponent : MonoBehaviour
 
 			if (playerList[player] == null)
 			{
-				playerList[player] = new LobbyPlayerInfo();
+				playerList[player] = new PersistentPlayerInfo();
 			}
 
 			byte playerDeltaSize = bytes[index];

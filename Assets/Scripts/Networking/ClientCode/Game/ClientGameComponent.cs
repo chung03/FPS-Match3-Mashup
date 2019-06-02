@@ -15,8 +15,8 @@ public class ClientGameComponent : MonoBehaviour
 
 	private static readonly string PLAY_SCENE = "Assets/Scenes/PlayScene.unity";
 
-	// This is the player's ID. This is all it needs to identify itself and to find its player info.
-	private int m_PlayerID;
+	// This is the player's info from the lobby. This is all it needs to identify itself and to find its player info.
+	private PersistentPlayerInfo m_PlayerInfo;
 
 	// This stores the infor for all players, including this one.
 	private List<GamePlayerInfo> m_AllPlayerInfo;
@@ -34,11 +34,14 @@ public class ClientGameComponent : MonoBehaviour
 	private GameObject gameUIObj;
 	private GameUIBehaviour gameUIInstance;
 
+	[SerializeField]
+	private GameObject FPSPlayerObj;
+
+	[SerializeField]
+	private GameObject Match3PlayerObj;
 
 	private void Start()
 	{
-		//Debug.Log("ClientGameComponent::Start Called");
-		m_PlayerID = -1;
 		m_AllPlayerInfo = new List<GamePlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 		for (int index = 0; index < CONSTANTS.MAX_NUM_PLAYERS; ++index)
 		{
@@ -49,16 +52,39 @@ public class ClientGameComponent : MonoBehaviour
 		gameUIInstance.SetUI(connectionsComponent.IsHost());
 		gameUIInstance.Init(this);
 
-
 		IdToIndexDictionary = new Dictionary<int, int>();
 		IndexToIdDictionary = new Dictionary<int, int>();
+
+		/*
+		GamePlayerInfo info = m_AllPlayerInfo[IdToIndexDictionary[m_PlayerID]];
+
+		if (info.playerType == PLAYER_TYPE.SHOOTER)
+		{
+			Instantiate(FPSPlayerObj);
+		}
+		else
+		{
+			Instantiate(Match3PlayerObj);
+		}
+		*/
 	}
 
-	public void Init(ClientConnectionsComponent connHolder)
+	public void Init(ClientConnectionsComponent connHolder, PersistentPlayerInfo playerInfo)
 	{
 		//Debug.Log("ClientGameComponent::Init Called");
 		connectionsComponent = connHolder;
 		clientGameSend = GetComponent<ClientGameSend>();
+
+		m_PlayerInfo = playerInfo;
+
+		if (m_PlayerInfo.playerType == LobbyUtils.PLAYER_TYPE.SHOOTER)
+		{
+			Instantiate(FPSPlayerObj);
+		}
+		else
+		{
+			Instantiate(Match3PlayerObj);
+		}
 	}
 
 	///////////////////////////////////////////////
@@ -186,6 +212,7 @@ public class ClientGameComponent : MonoBehaviour
 	{
 		int bytesRead = 0;
 
+		/*
 		byte readyStatus = bytes[index];
 		++bytesRead;
 
@@ -193,14 +220,14 @@ public class ClientGameComponent : MonoBehaviour
 		playerList[playerIndex].isReady = readyStatus;
 
 		Debug.Log("ClientGameComponent::HandleReadyCommand Client ready state set to " + readyStatus);
-
+		*/
 		return bytesRead;
 	}
 
 	private int HandleChangeTeamCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
 	{
 		int bytesRead = 0;
-
+		/*
 		byte newTeam = bytes[index];
 		++bytesRead;
 
@@ -208,21 +235,21 @@ public class ClientGameComponent : MonoBehaviour
 		playerList[playerIndex].team = newTeam;
 
 		Debug.Log("ClientGameComponent::HandleChangeTeamCommand Client team was set to " + newTeam);
-
+		*/
 		return bytesRead;
 	}
 
 	private int HandleSetIdCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
 	{
 		int bytesRead = 0;
-
+		/*
 		byte newID = bytes[index];
 		++bytesRead;
 
 		m_PlayerID = newID;
 
 		Debug.Log("ClientGameComponent::HandleSetIdCommand Client ID was set to " + m_PlayerID);
-
+		*/
 		return bytesRead;
 	}
 
