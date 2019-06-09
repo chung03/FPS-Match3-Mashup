@@ -191,10 +191,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3b1795a808016b45a9b0b336f2e612f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
+  moveSpeed: 7.5
   grapplingHookSpeed: 0
-  jumpHeight: 0
-  jumpDuration: 0
+  jumpHeight: 20
+  jumpDuration: 1
 --- !u!114 &4709725410128075715
 MonoBehaviour:
   m_ObjectHideFlags: 0
