@@ -63,6 +63,7 @@
     <Compile Include="Assets\Scripts\GameLogic\FPS\FPSLook.cs" />
     <Compile Include="Assets\Scripts\GameLogic\FPS\FPSMove.cs" />
     <Compile Include="Assets\Scripts\GameLogic\FPS\FPSPlayer.cs" />
+    <Compile Include="Assets\Scripts\GameLogic\FPS\FPSPlayerData.cs" />
     <Compile Include="Assets\Scripts\GameLogic\FPS\FPSPlayerInput.cs" />
     <Compile Include="Assets\Scripts\GameLogic\GameStateTracker.cs" />
     <Compile Include="Assets\Scripts\GameLogic\Match3Player.cs" />

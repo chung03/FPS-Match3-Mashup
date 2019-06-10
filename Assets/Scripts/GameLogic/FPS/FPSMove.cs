@@ -33,16 +33,18 @@ public class FPSMove : MonoBehaviour
     private Vector3[] momentVectors = new Vector3[4];
 
 	private Vector3 grappleHookTarget = Vector3.zero;
-    
-    // Use this for initialization
-    private void Start () {
+
+	private FPSPlayer fpsPlayer;
+
+	// Use this for initialization
+	private void Start () {
         charController = GetComponent<CharacterController>();
+		fpsPlayer = GetComponent<FPSPlayer>();
     }
     
     // Update is called once per frame
     private void FixedUpdate()
     {
-
         Vector3 moveVector = Vector3.zero;
 
 		if (moveState == MOVE_STATE.GRAPPLING_HOOK)
@@ -91,7 +93,9 @@ public class FPSMove : MonoBehaviour
         {
             momentVectors[move] = Vector3.zero;
         }
-    }
+
+		fpsPlayer.SetPlayerPosn(transform.position);
+	}
 
 	public void CheckCollision(ControllerColliderHit hit)
 	{

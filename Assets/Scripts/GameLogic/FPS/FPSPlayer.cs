@@ -2,46 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FPSPlayer : MonoBehaviour, ObjectWithDelta
+public class FPSPlayer : MonoBehaviour
 {
-	private class FPSPlayerState
-	{
-		public Transform currLocation;
-	}
+	private FPSPlayerData data;
 
-    // Start is called before the first frame update
-    void Start()
+	// Start is called before the first frame update
+	private void Start()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-	public List<byte> GetDeltaBytes(bool getFullState)
-	{
-		List<byte> deltaBytes = new List<byte>();
-
-		
-
-		return deltaBytes;
+		data = new FPSPlayerData();
 	}
 
-	public void ApplyDelta(byte[] delta)
+	public void SetPlayerPosn(Vector3 posn)
 	{
-		
+		data.SetPlayerPosn(posn);
 	}
 
-	public bool IsDirty()
+	public void SetPlayerRotation(Quaternion rotation)
 	{
-		return false;
-	}
-
-	public int GetObjectId()
-	{
-		return 0;
+		data.SetPlayerRotation(rotation);
 	}
 }

@@ -16,7 +16,14 @@ public class FPSLook : MonoBehaviour
 
 	[SerializeField]
 	private Camera fpsCamera;
-	
+
+	private FPSPlayer fpsPlayer;
+
+	private void Start()
+	{
+		fpsPlayer = GetComponent<FPSPlayer>();
+	}
+
 	// Update is called once per frame
 	private void Update () {
 
@@ -27,7 +34,9 @@ public class FPSLook : MonoBehaviour
 
         Quaternion localRotation = Quaternion.Euler(rotX, rotY, 0.0f);
         transform.rotation = localRotation;
-    }
+
+		fpsPlayer.SetPlayerRotation(transform.rotation);
+	}
 
 	public void SetInitialLook(Vector3 _initialRotation)
 	{
