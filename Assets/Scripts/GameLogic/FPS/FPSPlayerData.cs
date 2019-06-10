@@ -199,6 +199,11 @@ public class FPSPlayerData: ObjectWithDelta
 		return objectId;
 	}
 
+	public void SetObjectId(int newId)
+	{
+		objectId = newId;
+	}
+
 	private class FPS_PLAYER_DATA_CONSTANTS
 	{
 		public static byte POSN_X_MASK = 1; 

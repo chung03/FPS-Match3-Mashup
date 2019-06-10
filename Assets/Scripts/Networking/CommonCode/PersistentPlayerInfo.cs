@@ -192,4 +192,9 @@ public class PersistentPlayerInfo : ObjectWithDelta
 	{
 		return playerID;
 	}
+
+	public void SetObjectId(int newId)
+	{
+		playerID = (byte)newId;
+	}
 }
