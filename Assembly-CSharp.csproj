@@ -65,13 +65,11 @@
     <Compile Include="Assets\Scripts\GameLogic\FPS\FPSPlayer.cs" />
     <Compile Include="Assets\Scripts\GameLogic\FPS\FPSPlayerData.cs" />
     <Compile Include="Assets\Scripts\GameLogic\FPS\FPSPlayerInput.cs" />
-    <Compile Include="Assets\Scripts\GameLogic\GameStateTracker.cs" />
     <Compile Include="Assets\Scripts\GameLogic\Match3Player.cs" />
     <Compile Include="Assets\Scripts\GameLogic\ObjectWithDelta.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\ClientConnectionsComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Game\ClientGameComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Game\ClientGameSend.cs" />
-    <Compile Include="Assets\Scripts\Networking\ClientCode\Game\ClientPlayerController.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\Client_Multithread.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\ClientReadGameJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\ClientReadLobbyJob.cs" />
