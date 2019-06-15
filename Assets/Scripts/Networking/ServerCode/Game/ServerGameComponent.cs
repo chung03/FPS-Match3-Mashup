@@ -8,6 +8,7 @@ using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Ne
 
 using UnityEngine.Assertions;
 using GameUtils;
+using CommonNetworkingUtils;
 
 public class ServerGameComponent : MonoBehaviour
 {
@@ -42,6 +43,8 @@ public class ServerGameComponent : MonoBehaviour
 
 	private int nextObjectId = 1;
 
+	private Dictionary<int, ServerHandleIncomingBytes> CommandToFunctionDictionary;
+
 	private void Start()
 	{
 		//Debug.Log("ServerGameComponent::Start Called");
@@ -54,6 +57,10 @@ public class ServerGameComponent : MonoBehaviour
 		IdtoObjectsDictionary = new Dictionary<int, byte>();
 
 		commandProcessingQueue = new Queue<KeyValuePair<GAME_SERVER_PROCESS, int>>();
+
+		CommandToFunctionDictionary = new Dictionary<int, ServerHandleIncomingBytes>();
+		//CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.READY, ChangePlayerReady);
+		//CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.HEARTBEAT, HeartBeat);
 	}
 
 
@@ -237,6 +244,7 @@ public class ServerGameComponent : MonoBehaviour
 				int newObjectId = GetNextObjectId();
 
 				CREATE_ENTITY_TYPES newObjectType = (CREATE_ENTITY_TYPES)bytes[i];
+				++i;
 
 				serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, playerIndex);
 				serverGameSend.SendDataToPlayerWhenReady((byte)newObjectType, playerIndex);

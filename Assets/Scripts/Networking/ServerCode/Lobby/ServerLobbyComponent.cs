@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using CommonNetworkingUtils;
 
 using Unity.Networking.Transport;
 using Unity.Collections;
@@ -35,8 +36,7 @@ public class ServerLobbyComponent : MonoBehaviour
 	int numTeam1Players = 0;
 	int numTeam2Players = 0;
 
-	private delegate void HandleIncomingBytes(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex);
-	private Dictionary<int, HandleIncomingBytes> CommandToFunctionDictionary;
+	private Dictionary<int, ServerHandleIncomingBytes> CommandToFunctionDictionary;
 
 	private void Start()
 	{
@@ -48,7 +48,7 @@ public class ServerLobbyComponent : MonoBehaviour
 
 		commandProcessingQueue = new Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>>();
 
-		CommandToFunctionDictionary = new Dictionary<int, HandleIncomingBytes>();
+		CommandToFunctionDictionary = new Dictionary<int, ServerHandleIncomingBytes>();
 		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.READY, ChangePlayerReady);
 		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM, ChangePlayerTeam);
 		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE, ChangePlayerType);

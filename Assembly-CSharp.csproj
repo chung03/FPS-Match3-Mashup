@@ -68,7 +68,6 @@
     <Compile Include="Assets\Scripts\GameLogic\GameStateTracker.cs" />
     <Compile Include="Assets\Scripts\GameLogic\Match3Player.cs" />
     <Compile Include="Assets\Scripts\GameLogic\ObjectWithDelta.cs" />
-    <Compile Include="Assets\Scripts\GameUtil.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\ClientConnectionsComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Game\ClientGameComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Game\ClientGameSend.cs" />
@@ -80,6 +79,8 @@
     <Compile Include="Assets\Scripts\Networking\ClientCode\Jobs\ClientSendLobbyJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Lobby\ClientLobbyComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ClientCode\Lobby\ClientLobbySend.cs" />
+    <Compile Include="Assets\Scripts\Networking\CommonCode\CommonNetworkingUtils.cs" />
+    <Compile Include="Assets\Scripts\Networking\CommonCode\GameUtil.cs" />
     <Compile Include="Assets\Scripts\Networking\CommonCode\LobbyUtil.cs" />
     <Compile Include="Assets\Scripts\Networking\CommonCode\PersistentPlayerInfo.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Game\ServerGameComponent.cs" />

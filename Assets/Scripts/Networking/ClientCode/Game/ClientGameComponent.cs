@@ -6,6 +6,7 @@ using Unity.Networking.Transport;
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
 using GameUtils;
+using CommonNetworkingUtils;
 using UnityEngine.SceneManagement;
 
 using System.Text;
@@ -43,9 +44,8 @@ public class ClientGameComponent : MonoBehaviour
 	// List of Object with Deltas which client will update. ID -> Object
 	private Dictionary<int, ObjectWithDelta> IdToClientControlledObjectDictionary;
 	private Dictionary<int, ObjectWithDelta> IdToServerControlledObjectDictionary;
-
-	private delegate int HandleIncomingBytes(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo);
-	private Dictionary<GAME_SERVER_COMMANDS, HandleIncomingBytes> CommandToFunctionDictionary;
+	
+	private Dictionary<GAME_SERVER_COMMANDS, ClientHandleIncomingBytes> CommandToFunctionDictionary;
 
 	private void Start()
 	{
@@ -66,9 +66,9 @@ public class ClientGameComponent : MonoBehaviour
 		IdToServerControlledObjectDictionary = new Dictionary<int, ObjectWithDelta>();
 
 		// Initialize the byteHandling Table
-		CommandToFunctionDictionary = new Dictionary<GAME_SERVER_COMMANDS, HandleIncomingBytes>();
-		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityOwnershipCommand);
-		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.HEARTBEAT, HandleHeartBeat);
+		CommandToFunctionDictionary = new Dictionary<GAME_SERVER_COMMANDS, ClientHandleIncomingBytes>();
+		//CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityOwnershipCommand);
+		//CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.HEARTBEAT, HandleHeartBeat);
 	}
 
 	public void Init(ClientConnectionsComponent connHolder, PersistentPlayerInfo playerInfo)

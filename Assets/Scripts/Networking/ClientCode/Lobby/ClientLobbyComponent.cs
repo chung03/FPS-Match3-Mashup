@@ -6,6 +6,7 @@ using Unity.Networking.Transport;
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
 using LobbyUtils;
+using CommonNetworkingUtils;
 using UnityEngine.SceneManagement;
 
 using System.Text;
@@ -33,9 +34,8 @@ public class ClientLobbyComponent : MonoBehaviour
 	[SerializeField]
 	private GameObject lobbyUIObj;
 	private LobbyUIBehaviour lobbyUIInstance;
-
-	private delegate int HandleIncomingBytes(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo);
-	private Dictionary<int, HandleIncomingBytes> CommandToFunctionDictionary;
+	
+	private Dictionary<int, ClientHandleIncomingBytes> CommandToFunctionDictionary;
 
 	private void Start()
 	{
@@ -56,7 +56,7 @@ public class ClientLobbyComponent : MonoBehaviour
 		IndexToIdDictionary = new Dictionary<int, int>();
 
 		// Initialize the byteHandling Table
-		CommandToFunctionDictionary = new Dictionary<int, HandleIncomingBytes>();
+		CommandToFunctionDictionary = new Dictionary<int, ClientHandleIncomingBytes>();
 		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.READY, HandleReadyCommand);
 		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.CHANGE_TEAM, HandleChangeTeamCommand);
 		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.SET_ID, HandleSetIdCommand);
