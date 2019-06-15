@@ -227,11 +227,11 @@ public class ServerLobbyComponent : MonoBehaviour
 
 			Debug.Log("ServerLobbyComponent::ReadClientBytes Got " + clientCmd + " from the Client");
 
-			CommandToFunctionDictionary[clientCmd](ref i, bytes, playerList, playerIndex);
+			i += CommandToFunctionDictionary[clientCmd](i, bytes, playerList, playerIndex);
 		}
 	}
 
-	private void ChangePlayerReady(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
+	private int ChangePlayerReady(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		if (playerInfo[playerIndex].isReady == 0)
 		{
@@ -243,9 +243,11 @@ public class ServerLobbyComponent : MonoBehaviour
 		}
 
 		Debug.Log("ServerLobbyComponent::ChangePlayerReady Player " + playerInfo[playerIndex].playerID + " ready state set to " + playerInfo[playerIndex].isReady);
+
+		return 0;
 	}
 
-	private void ChangePlayerTeam(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
+	private int ChangePlayerTeam(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		if (playerInfo[playerIndex].team == 0 && numTeam2Players < 3)
 		{
@@ -267,37 +269,51 @@ public class ServerLobbyComponent : MonoBehaviour
 		{
 			Debug.Log("ServerLobbyComponent::ChangePlayerTeam SHOULD NOT HAPPEN! Player " + playerInfo[playerIndex].playerID + " tried to change teams but something strange happened. players team = " + playerInfo[playerIndex].team + ", numTeam1Players = " + numTeam1Players + ", numTeam2Players = " + numTeam2Players);
 		}
+
+		return 0;
 	}
 
-	private void ChangePlayerType(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
+	private int ChangePlayerType(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.CHANGE_PLAYER_TYPE, playerIndex));
+
+		return 0;
 	}
 
-	private void GetPlayerID(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
+	private int GetPlayerID(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		Debug.Log("ServerLobbyComponent::GetPlayerID Client " + playerIndex + " sent request for its ID");
 
 		serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ID, playerIndex);
 		serverLobbySend.SendDataToPlayerWhenReady(IndexToIdDictionary[playerIndex], playerIndex);
+
+		return 0;
 	}
 
-	private void StartGame(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
+	private int StartGame(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS));
+
+		return 0;
 	}
 
-	private void ChangePlayerName(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
+	private int ChangePlayerName(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
-		playerInfo[playerIndex].name = DataUtils.ReadString(ref index, bytes);
+		int afterStringReadIndex = index;
+
+		playerInfo[playerIndex].name = DataUtils.ReadString(ref afterStringReadIndex, bytes);
 
 		Debug.Log("ServerLobbyComponent::ChangePlayerName Client " + playerIndex + " name set to " + playerInfo[playerIndex].name);
+
+		return afterStringReadIndex - index;
 	}
 
-	private void HeartBeat(ref int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
+	private int HeartBeat(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
 		Debug.Log("ServerLobbyComponent::HeartBeat Client " + playerIndex + " sent heartbeat");
 		serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.HEARTBEAT, playerIndex);
+
+		return 0;
 	}
 
 	private void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)

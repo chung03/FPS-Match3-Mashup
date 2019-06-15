@@ -19,7 +19,7 @@ public class ServerGameComponent : MonoBehaviour
 	}
 
 	// Current Player States
-	public List<GamePlayerInfo> m_PlayerList;
+	public List<PersistentPlayerInfo> m_PlayerList;
 
 	// A Pair of Dictionaries to make it easier to map Index and PlayerID
 	// ID -> Connection Index
@@ -43,12 +43,12 @@ public class ServerGameComponent : MonoBehaviour
 
 	private int nextObjectId = 1;
 
-	private Dictionary<int, ServerHandleIncomingBytes> CommandToFunctionDictionary;
+	private Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes> CommandToFunctionDictionary;
 
 	private void Start()
 	{
 		//Debug.Log("ServerGameComponent::Start Called");
-		m_PlayerList = new List<GamePlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		m_PlayerList = new List<PersistentPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 
 		IdToIndexDictionary = new Dictionary<byte, int>();
 		IndexToIdDictionary = new Dictionary<int, byte>();
@@ -58,9 +58,9 @@ public class ServerGameComponent : MonoBehaviour
 
 		commandProcessingQueue = new Queue<KeyValuePair<GAME_SERVER_PROCESS, int>>();
 
-		CommandToFunctionDictionary = new Dictionary<int, ServerHandleIncomingBytes>();
-		//CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.READY, ChangePlayerReady);
-		//CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.HEARTBEAT, HeartBeat);
+		CommandToFunctionDictionary = new Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes>();
+		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityWithOwnership);
+		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.HEARTBEAT, HeartBeat);
 	}
 
 
@@ -98,7 +98,7 @@ public class ServerGameComponent : MonoBehaviour
 		serverGameSend.SendDataIfReady(ref connections, ref driver, m_PlayerList);
 	}
 
-	private void HandleConnections(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<GamePlayerInfo> playerList)
+	private void HandleConnections(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
 	{
 		//Debug.Log("ServerGameComponent::HandleConnections Called");
 
@@ -162,7 +162,7 @@ public class ServerGameComponent : MonoBehaviour
 			Debug.Log("ServerGameComponent::HandleConnections Accepted a connection");
 
 			connections.Add(c);
-			playerList.Add(new GamePlayerInfo());
+			playerList.Add(new PersistentPlayerInfo());
 			playerList[playerList.Count - 1].playerID = connectionsComponent.GetNextPlayerID();
 			playerList[playerList.Count - 1].name = "Player " + playerList[playerList.Count - 1].playerID;
 			IdToIndexDictionary.Add(playerList[playerList.Count - 1].playerID, playerList.Count - 1);
@@ -189,7 +189,7 @@ public class ServerGameComponent : MonoBehaviour
 		}
 	}
 
-	private void HandleReceiveData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<GamePlayerInfo> playerList)
+	private void HandleReceiveData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
 	{
 		for (int index = 0; index < connections.Length; ++index)
 		{
@@ -226,39 +226,50 @@ public class ServerGameComponent : MonoBehaviour
 		}
 	}
 
-	private void ReadClientBytes(int playerIndex, List<GamePlayerInfo> playerList, byte[] bytes)
+	private void ReadClientBytes(int playerIndex, List<PersistentPlayerInfo> playerList, byte[] bytes)
 	{
 		Debug.Log("ServerGameComponent::ReadClientBytes bytes.Length = " + bytes.Length);
 
 		for (int i = 0; i < bytes.Length;)
 		{
-			byte clientCmd = bytes[i];
+			GAME_CLIENT_REQUESTS clientCmd = (GAME_CLIENT_REQUESTS)bytes[i];
 
 			// Unsafely assuming that everything is working as expected and there are no attackers.
 			++i;
 
 			Debug.Log("ServerGameComponent::ReadClientBytes Got " + clientCmd + " from the Client");
 
-			if (clientCmd == (byte)GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP)
-			{
-				int newObjectId = GetNextObjectId();
-
-				CREATE_ENTITY_TYPES newObjectType = (CREATE_ENTITY_TYPES)bytes[i];
-				++i;
-
-				serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, playerIndex);
-				serverGameSend.SendDataToPlayerWhenReady((byte)newObjectType, playerIndex);
-				serverGameSend.SendDataToPlayerWhenReady((byte)newObjectId, playerIndex);
-			}
-			else if (clientCmd == (byte)GAME_CLIENT_REQUESTS.HEARTBEAT)
-			{
-				Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " sent heartbeat");
-				serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.HEARTBEAT, playerIndex);
-			}
+			i += CommandToFunctionDictionary[clientCmd](i, bytes, playerList, playerIndex);
 		}
 	}
 
-	private void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<GamePlayerInfo> playerList)
+	private int HandleCreateEntityWithOwnership(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
+	{
+		int bytesRead = 0;
+
+		int newObjectId = GetNextObjectId();
+
+		CREATE_ENTITY_TYPES newObjectType = (CREATE_ENTITY_TYPES)bytes[index];
+		++bytesRead;
+
+		serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, playerIndex);
+		serverGameSend.SendDataToPlayerWhenReady((byte)newObjectType, playerIndex);
+		serverGameSend.SendDataToPlayerWhenReady((byte)newObjectId, playerIndex);
+
+		//Debug.Log("ServerLobbyComponent::ChangePlayerReady Player " + playerInfo[playerIndex].playerID + " ready state set to " + playerInfo[playerIndex].isReady);
+
+		return bytesRead;
+	}
+
+	private int HeartBeat(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
+	{
+		Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " sent heartbeat");
+		serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.HEARTBEAT, playerIndex);
+
+		return 0;
+	}
+
+	private void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
 	{
 		while (commandProcessingQueue.Count > 0)
 		{
