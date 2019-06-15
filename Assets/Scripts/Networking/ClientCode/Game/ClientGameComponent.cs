@@ -19,7 +19,7 @@ public class ClientGameComponent : MonoBehaviour
 	private PersistentPlayerInfo m_PlayerInfo;
 
 	// This stores the infor for all players, including this one.
-	private List<GamePlayerInfo> m_AllPlayerInfo;
+	private List<PersistentPlayerInfo> m_AllPlayerInfo;
 
 	// A Pair of Dictionaries to make it easier to map Index and PlayerID
 	// ID -> Connection Index
@@ -44,9 +44,12 @@ public class ClientGameComponent : MonoBehaviour
 	private Dictionary<int, ObjectWithDelta> IdToClientControlledObjectDictionary;
 	private Dictionary<int, ObjectWithDelta> IdToServerControlledObjectDictionary;
 
+	private delegate int HandleIncomingBytes(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo);
+	private Dictionary<GAME_SERVER_COMMANDS, HandleIncomingBytes> CommandToFunctionDictionary;
+
 	private void Start()
 	{
-		m_AllPlayerInfo = new List<GamePlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		m_AllPlayerInfo = new List<PersistentPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 		for (int index = 0; index < CONSTANTS.MAX_NUM_PLAYERS; ++index)
 		{
 			m_AllPlayerInfo.Add(null);
@@ -61,6 +64,11 @@ public class ClientGameComponent : MonoBehaviour
 
 		IdToClientControlledObjectDictionary = new Dictionary<int, ObjectWithDelta>();
 		IdToServerControlledObjectDictionary = new Dictionary<int, ObjectWithDelta>();
+
+		// Initialize the byteHandling Table
+		CommandToFunctionDictionary = new Dictionary<GAME_SERVER_COMMANDS, HandleIncomingBytes>();
+		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityOwnershipCommand);
+		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.HEARTBEAT, HandleHeartBeat);
 	}
 
 	public void Init(ClientConnectionsComponent connHolder, PersistentPlayerInfo playerInfo)
@@ -73,11 +81,6 @@ public class ClientGameComponent : MonoBehaviour
 
 		if (m_PlayerInfo.playerType == LobbyUtils.PLAYER_TYPE.SHOOTER)
 		{
-			/*
-			FPSPlayer fpsPlayer = Instantiate(FPSPlayerObj).GetComponent<FPSPlayer>();
-			fpsPlayer.Init(this);
-			*/
-
 			clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP);
 			clientGameSend.SendDataWhenReady((byte)CREATE_ENTITY_TYPES.FPS_PLAYER);
 		}
@@ -106,13 +109,13 @@ public class ClientGameComponent : MonoBehaviour
 		HandleReceiveData(ref connection, ref driver, m_AllPlayerInfo);
 
 		// ***** Update UI ****
-		gameUIInstance.UpdateUI(m_AllPlayerInfo);
+		// gameUIInstance.UpdateUI(m_AllPlayerInfo);
 
 		// ***** Send data *****
 		clientGameSend.SendDataIfReady(ref connection, ref driver, m_AllPlayerInfo);
 	}
 
-	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<GamePlayerInfo> allPlayerInfo)
+	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> allPlayerInfo)
 	{
 		//Debug.Log("ClientGameComponent::HandleReceiveData Called");
 
@@ -140,7 +143,7 @@ public class ClientGameComponent : MonoBehaviour
 		}
 	}
 
-	private void ReadServerBytes(List<GamePlayerInfo> playerList, DataStreamReader stream)
+	private void ReadServerBytes(List<PersistentPlayerInfo> playerList, DataStreamReader stream)
 	{
 		var readerCtx = default(DataStreamReader.Context);
 
@@ -152,77 +155,23 @@ public class ClientGameComponent : MonoBehaviour
 		for (int i = 0; i < stream.Length;)
 		{
 			// Unsafely assuming that everything is working as expected and there are no attackers.
-			byte serverCmd = bytes[i];
+			GAME_SERVER_COMMANDS serverCmd = (GAME_SERVER_COMMANDS)bytes[i];
 			++i;
 
 			Debug.Log("ClientGameComponent::ReadServerBytes Got " + serverCmd + " from the Server");
 
-			if (serverCmd == (byte)GAME_SERVER_COMMANDS.SET_ID)
-			{
-				i += HandleSetIdCommand(i, bytes, playerList);
-			}
-			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.SET_ALL_PLAYER_STATES)
-			{
-				i += HandlePlayerStatesCommand(i, bytes, playerList);
-			}
-			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP)
-			{
-				i += HandleCreateEntityOwnershipCommand(i, bytes, playerList);
-			}
-			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.HEARTBEAT)
-			{
-				Debug.Log("ClientGameComponent::ReadServerBytes Received heartbeat from server");
-			}
+			i += CommandToFunctionDictionary[serverCmd](i, bytes, playerList);
 		}
 	}
 
+	private int HandleHeartBeat(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
+	{
+		Debug.Log("ClientGameComponent::HandleHeartBeat Received heartbeat from server");
+		return 0;
+	}
+
 	// Returns the number of bytes read from the bytes array
-	private int HandleReadyCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
-	{
-		int bytesRead = 0;
-
-		/*
-		byte readyStatus = bytes[index];
-		++bytesRead;
-
-		int playerIndex = IdToIndexDictionary[m_PlayerID];
-		playerList[playerIndex].isReady = readyStatus;
-
-		Debug.Log("ClientGameComponent::HandleReadyCommand Client ready state set to " + readyStatus);
-		*/
-		return bytesRead;
-	}
-
-	private int HandleChangeTeamCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
-	{
-		int bytesRead = 0;
-		/*
-		byte newTeam = bytes[index];
-		++bytesRead;
-
-		int playerIndex = IdToIndexDictionary[m_PlayerID];
-		playerList[playerIndex].team = newTeam;
-
-		Debug.Log("ClientGameComponent::HandleChangeTeamCommand Client team was set to " + newTeam);
-		*/
-		return bytesRead;
-	}
-
-	private int HandleSetIdCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
-	{
-		int bytesRead = 0;
-		/*
-		byte newID = bytes[index];
-		++bytesRead;
-
-		m_PlayerID = newID;
-
-		Debug.Log("ClientGameComponent::HandleSetIdCommand Client ID was set to " + m_PlayerID);
-		*/
-		return bytesRead;
-	}
-
-	private int HandleCreateEntityOwnershipCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
+	private int HandleCreateEntityOwnershipCommand(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
 	{
 		int bytesRead = 0;
 
@@ -232,98 +181,21 @@ public class ClientGameComponent : MonoBehaviour
 		byte newId = bytes[index];
 		++bytesRead;
 
-		FPSPlayer fpsPlayer = Instantiate(FPSPlayerObj).GetComponent<FPSPlayer>();
-		fpsPlayer.Init(this, newId);
-
-		Debug.Log("ClientGameComponent::HandleCreateEntityOwnershipCommand Client ID was set to " + newId);
-		return bytesRead;
-	}
-
-
-	private int HandlePlayerStatesCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
-	{
-		int bytesRead = 0;
-
-		byte numPlayers = bytes[index];
-		++bytesRead;
-
-		// Do a for loop iterating over the bytes using the same counter
-		for (int player = 0; player < numPlayers; ++player)
+		if (objectType == (byte)CREATE_ENTITY_TYPES.FPS_PLAYER)
 		{
-			// Unsafely assuming that everything is working as expected and there are no attackers.
-			Debug.Log("ClientGameComponent::HandlePlayerStatesCommand Data for client " + player + " received");
-
-			if (playerList[player] == null)
-			{
-				playerList[player] = new GamePlayerInfo();
-			}
-
-			byte playerDiffMask = bytes[index + bytesRead];
-			++bytesRead;
-
-			if ((playerDiffMask & CONSTANTS.NAME_MASK) > 0)
-			{
-				// Get length of name
-				byte nameBytesLength = bytes[index + bytesRead];
-				++bytesRead;
-
-				// Extract name into byte array
-				byte[] nameAsBytes = new byte[nameBytesLength];
-				for (int nameIndex = 0; nameIndex < nameBytesLength; ++nameIndex)
-				{
-					nameAsBytes[nameIndex] = bytes[index + bytesRead];
-					++bytesRead;
-				}
-
-				// Convert from bytes to string
-				playerList[player].name = Encoding.UTF8.GetString(nameAsBytes);
-			}
-
-			if ((playerDiffMask & CONSTANTS.PLAYER_ID_MASK) > 0)
-			{
-				playerList[player].playerID = bytes[index + bytesRead];
-				++bytesRead;
-			}
-
-			if ((playerDiffMask & CONSTANTS.PLAYER_TYPE_MASK) > 0)
-			{
-				playerList[player].playerType = (PLAYER_TYPE)bytes[index + bytesRead];
-				++bytesRead;
-			}
-
-			if ((playerDiffMask & CONSTANTS.READY_MASK) > 0)
-			{
-				playerList[player].isReady = bytes[index + bytesRead];
-				++bytesRead;
-			}
-
-			if ((playerDiffMask & CONSTANTS.TEAM_MASK) > 0)
-			{
-				playerList[player].team = bytes[index + bytesRead];
-				++bytesRead;
-			}
+			FPSPlayer fpsPlayer = Instantiate(FPSPlayerObj).GetComponent<FPSPlayer>();
+			fpsPlayer.Init(this, newId);
+		}
+		else if (objectType == (byte)CREATE_ENTITY_TYPES.MATCH3_PLAYER)
+		{
+			/*
+			FPSPlayer fpsPlayer = Instantiate(FPSPlayerObj).GetComponent<FPSPlayer>();
+			fpsPlayer.Init(this, newId);
+			*/
 		}
 
-		for (int player = numPlayers; player < CONSTANTS.MAX_NUM_PLAYERS; ++player)
-		{
-			playerList[player] = null;
-		}
 
-		// Update Dictionaries after all the player data has been received
-		IdToIndexDictionary.Clear();
-		IndexToIdDictionary.Clear();
-
-		for (int playerIndex = 0; playerIndex < playerList.Count; ++playerIndex)
-		{
-			if (playerList[playerIndex] == null)
-			{
-				continue;
-			}
-
-			IdToIndexDictionary.Add(playerList[playerIndex].playerID, playerIndex);
-			IndexToIdDictionary.Add(playerIndex, playerList[playerIndex].playerID);
-		}
-
+		Debug.Log("ClientGameComponent::HandleCreateEntityOwnershipCommand Object ID was set to " + newId + " and Object type is " + objectType);
 		return bytesRead;
 	}
 

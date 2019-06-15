@@ -36,7 +36,7 @@ public class ClientGameSend : MonoBehaviour
 		}
 	}
 
-	public void SendDataIfReady(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<GamePlayerInfo> allPlayerInfo)
+	public void SendDataIfReady(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> allPlayerInfo)
 	{
 		CreateQueueIfNecessary();
 
