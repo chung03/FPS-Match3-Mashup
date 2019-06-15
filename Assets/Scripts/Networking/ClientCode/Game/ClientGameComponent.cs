@@ -40,6 +40,10 @@ public class ClientGameComponent : MonoBehaviour
 	[SerializeField]
 	private GameObject Match3PlayerObj;
 
+	// List of Object with Deltas which client will update. ID -> Object
+	private Dictionary<int, ObjectWithDelta> IdToClientControlledObjectDictionary;
+	private Dictionary<int, ObjectWithDelta> IdToServerControlledObjectDictionary;
+
 	private void Start()
 	{
 		m_AllPlayerInfo = new List<GamePlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
@@ -55,18 +59,8 @@ public class ClientGameComponent : MonoBehaviour
 		IdToIndexDictionary = new Dictionary<int, int>();
 		IndexToIdDictionary = new Dictionary<int, int>();
 
-		/*
-		GamePlayerInfo info = m_AllPlayerInfo[IdToIndexDictionary[m_PlayerID]];
-
-		if (info.playerType == PLAYER_TYPE.SHOOTER)
-		{
-			Instantiate(FPSPlayerObj);
-		}
-		else
-		{
-			Instantiate(Match3PlayerObj);
-		}
-		*/
+		IdToClientControlledObjectDictionary = new Dictionary<int, ObjectWithDelta>();
+		IdToServerControlledObjectDictionary = new Dictionary<int, ObjectWithDelta>();
 	}
 
 	public void Init(ClientConnectionsComponent connHolder, PersistentPlayerInfo playerInfo)
@@ -79,36 +73,19 @@ public class ClientGameComponent : MonoBehaviour
 
 		if (m_PlayerInfo.playerType == LobbyUtils.PLAYER_TYPE.SHOOTER)
 		{
-			Instantiate(FPSPlayerObj);
+			/*
+			FPSPlayer fpsPlayer = Instantiate(FPSPlayerObj).GetComponent<FPSPlayer>();
+			fpsPlayer.Init(this);
+			*/
+
+			clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP);
+			clientGameSend.SendDataWhenReady((byte)CREATE_ENTITY_TYPES.FPS_PLAYER);
 		}
 		else
 		{
 			Instantiate(Match3PlayerObj);
 		}
 	}
-
-	///////////////////////////////////////////////
-	// These functions are for hooking into the lobby UI
-	public void ChangeTeam()
-	{
-		clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.CHANGE_TEAM);
-	}
-
-	public void ChangeReadyStatus()
-	{
-		clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.READY);
-	}
-
-	public void ChangePlayerType()
-	{
-		clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE);
-	}
-
-	public void SendStartGame()
-	{
-		clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.START_GAME);
-	}
-	///////////////////////////////////////////////
 
 	void Update()
 	{
@@ -180,15 +157,7 @@ public class ClientGameComponent : MonoBehaviour
 
 			Debug.Log("ClientGameComponent::ReadServerBytes Got " + serverCmd + " from the Server");
 
-			if (serverCmd == (byte)GAME_SERVER_COMMANDS.READY)
-			{
-				i += HandleReadyCommand(i, bytes, playerList);
-			}
-			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.CHANGE_TEAM)
-			{
-				i += HandleChangeTeamCommand(i, bytes, playerList);
-			}
-			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.SET_ID)
+			if (serverCmd == (byte)GAME_SERVER_COMMANDS.SET_ID)
 			{
 				i += HandleSetIdCommand(i, bytes, playerList);
 			}
@@ -196,9 +165,9 @@ public class ClientGameComponent : MonoBehaviour
 			{
 				i += HandlePlayerStatesCommand(i, bytes, playerList);
 			}
-			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.START_GAME)
+			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP)
 			{
-				SceneManager.LoadScene(PLAY_SCENE);
+				i += HandleCreateEntityOwnershipCommand(i, bytes, playerList);
 			}
 			else if (serverCmd == (byte)GAME_SERVER_COMMANDS.HEARTBEAT)
 			{
@@ -250,6 +219,23 @@ public class ClientGameComponent : MonoBehaviour
 
 		Debug.Log("ClientGameComponent::HandleSetIdCommand Client ID was set to " + m_PlayerID);
 		*/
+		return bytesRead;
+	}
+
+	private int HandleCreateEntityOwnershipCommand(int index, byte[] bytes, List<GamePlayerInfo> playerList)
+	{
+		int bytesRead = 0;
+
+		byte objectType = bytes[index];
+		++bytesRead;
+
+		byte newId = bytes[index];
+		++bytesRead;
+
+		FPSPlayer fpsPlayer = Instantiate(FPSPlayerObj).GetComponent<FPSPlayer>();
+		fpsPlayer.Init(this, newId);
+
+		Debug.Log("ClientGameComponent::HandleCreateEntityOwnershipCommand Client ID was set to " + newId);
 		return bytesRead;
 	}
 
@@ -339,5 +325,11 @@ public class ClientGameComponent : MonoBehaviour
 		}
 
 		return bytesRead;
+	}
+
+	public void AddObjectWithDeltaClient(ObjectWithDelta newObj)
+	{
+		IdToClientControlledObjectDictionary.Add(0, newObj);
+		IdToServerControlledObjectDictionary.Add(0, newObj);
 	}
 }

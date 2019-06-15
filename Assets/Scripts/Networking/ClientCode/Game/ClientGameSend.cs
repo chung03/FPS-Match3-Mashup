@@ -25,11 +25,21 @@ public class ClientGameSend : MonoBehaviour
 	// Start is called before the first frame update
 	private void Start()
 	{
-		sendQueue = new Queue<byte>();
+		CreateQueueIfNecessary();
+	}
+
+	private void CreateQueueIfNecessary()
+	{
+		if (sendQueue == null)
+		{
+			sendQueue = new Queue<byte>();
+		}
 	}
 
 	public void SendDataIfReady(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<GamePlayerInfo> allPlayerInfo)
 	{
+		CreateQueueIfNecessary();
+
 		// Heart beat every once in a while to prevent disconnects for no reason
 		if (timeSinceLastHeartBeat * 1000 + heartbeatFrequencyMs <= Time.time * 1000)
 		{
@@ -65,6 +75,7 @@ public class ClientGameSend : MonoBehaviour
 
 	public void SendDataWhenReady(byte data)
 	{
+		CreateQueueIfNecessary();
 		sendQueue.Enqueue(data);
 	}
 }

@@ -26,6 +26,11 @@ public class ServerGameComponent : MonoBehaviour
 	// Connection Index -> ID
 	private Dictionary<int, byte> IndexToIdDictionary;
 
+	// Player ID -> Objects they own
+	private Dictionary<byte, int> IdToOwnedObjectsDictionary;
+	// Object ID -> Object
+	private Dictionary<int, byte> IdtoObjectsDictionary;
+
 	// Command and the player ID
 	private Queue<KeyValuePair<GAME_SERVER_PROCESS, int>> commandProcessingQueue;
 
@@ -35,6 +40,8 @@ public class ServerGameComponent : MonoBehaviour
 	int numTeam1Players = 0;
 	int numTeam2Players = 0;
 
+	private int nextObjectId = 1;
+
 	private void Start()
 	{
 		//Debug.Log("ServerGameComponent::Start Called");
@@ -42,6 +49,9 @@ public class ServerGameComponent : MonoBehaviour
 
 		IdToIndexDictionary = new Dictionary<byte, int>();
 		IndexToIdDictionary = new Dictionary<int, byte>();
+
+		IdToOwnedObjectsDictionary = new Dictionary<byte, int>();
+		IdtoObjectsDictionary = new Dictionary<int, byte>();
 
 		commandProcessingQueue = new Queue<KeyValuePair<GAME_SERVER_PROCESS, int>>();
 	}
@@ -54,6 +64,11 @@ public class ServerGameComponent : MonoBehaviour
 		serverGameSend = GetComponent<ServerGameSend>();
 
 
+	}
+
+	private int GetNextObjectId()
+	{
+		return nextObjectId++;
 	}
 
 	void Update()
@@ -217,56 +232,15 @@ public class ServerGameComponent : MonoBehaviour
 
 			Debug.Log("ServerGameComponent::ReadClientBytes Got " + clientCmd + " from the Client");
 
-			if (clientCmd == (byte)GAME_CLIENT_REQUESTS.READY)
+			if (clientCmd == (byte)GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP)
 			{
-				if (playerList[playerIndex].isReady == 0)
-				{
-					playerList[playerIndex].isReady = 1;
-				}
-				else
-				{
-					playerList[playerIndex].isReady = 0;
-				}
+				int newObjectId = GetNextObjectId();
 
-				Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " ready state set to " + playerList[playerIndex].isReady);
-			}
-			else if (clientCmd == (byte)GAME_CLIENT_REQUESTS.CHANGE_TEAM)
-			{
-				if (playerList[playerIndex].team == 0 && numTeam2Players < 3)
-				{
-					playerList[playerIndex].team = 1;
-					--numTeam1Players;
-					++numTeam2Players;
+				CREATE_ENTITY_TYPES newObjectType = (CREATE_ENTITY_TYPES)bytes[i];
 
-					Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " team was set to 1");
-				}
-				else if (playerList[playerIndex].team == 1 && numTeam1Players < 3)
-				{
-					playerList[playerIndex].team = 0;
-					++numTeam1Players;
-					--numTeam2Players;
-
-					Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " team was set to 0");
-				}
-				else
-				{
-					Debug.Log("ServerGameComponent::ReadClientBytes SHOULD NOT HAPPEN! Client " + playerIndex + " tried to change teams but something strange happened. playerList[index].team = " + playerList[playerIndex].team + ", numTeam1Players = " + numTeam1Players + ", numTeam2Players = " + numTeam2Players);
-				}
-			}
-			else if (clientCmd == (byte)GAME_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE)
-			{
-				commandProcessingQueue.Enqueue(new KeyValuePair<GAME_SERVER_PROCESS, int>(GAME_SERVER_PROCESS.CHANGE_PLAYER_TYPE, playerIndex));
-			}
-			else if (clientCmd == (byte)GAME_CLIENT_REQUESTS.GET_ID)
-			{
-				Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " sent request for its ID");
-
-				serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.SET_ID, playerIndex);
-				serverGameSend.SendDataToPlayerWhenReady(IndexToIdDictionary[playerIndex], playerIndex);
-			}
-			else if (clientCmd == (byte)GAME_CLIENT_REQUESTS.START_GAME)
-			{
-				commandProcessingQueue.Enqueue(new KeyValuePair<GAME_SERVER_PROCESS, int>(GAME_SERVER_PROCESS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS));
+				serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, playerIndex);
+				serverGameSend.SendDataToPlayerWhenReady((byte)newObjectType, playerIndex);
+				serverGameSend.SendDataToPlayerWhenReady((byte)newObjectId, playerIndex);
 			}
 			else if (clientCmd == (byte)GAME_CLIENT_REQUESTS.HEARTBEAT)
 			{
@@ -282,83 +256,7 @@ public class ServerGameComponent : MonoBehaviour
 		{
 			KeyValuePair<GAME_SERVER_PROCESS, int> processCommand = commandProcessingQueue.Dequeue();
 
-			if (processCommand.Value == CONSTANTS.SEND_ALL_PLAYERS)
-			{
-				if (processCommand.Key == GAME_SERVER_PROCESS.START_GAME)
-				{
-					bool isReadytoStart = true;
-
-					for (int playerNum = 0; playerNum < connections.Length; ++playerNum)
-					{
-						if (playerList[playerNum].playerType == PLAYER_TYPE.NONE
-							|| playerList[playerNum].isReady == 0)
-						{
-							isReadytoStart = false;
-						}
-					}
-
-					if (isReadytoStart)
-					{
-						serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS);
-					}
-				}
-			}
-			else
-			{
-				// Make sure that changing player types doesn't result in some invalid team configuration
-				if (processCommand.Key == GAME_SERVER_PROCESS.CHANGE_PLAYER_TYPE)
-				{
-					int numShootersFound = 0;
-					int numMatch3Found = 0;
-
-					int currPlayerIndex = processCommand.Value;
-
-					GamePlayerInfo currPlayer = playerList[currPlayerIndex];
-
-					PLAYER_TYPE newplayerType = (PLAYER_TYPE)((int)(currPlayer.playerType + 1) % (int)PLAYER_TYPE.PLAYER_TYPES);
-
-					// Get number of types of players on this player's team
-					for (int playerIndex = 0; playerIndex < playerList.Count; ++playerIndex)
-					{
-						// Skip over self
-						if (currPlayerIndex == playerIndex)
-						{
-							continue;
-						}
-
-						if (playerList[playerIndex].team == currPlayer.team)
-						{
-							if (playerList[playerIndex].playerType == PLAYER_TYPE.SHOOTER)
-							{
-								++numShootersFound;
-							}
-							else if (playerList[playerIndex].playerType == PLAYER_TYPE.MATCH3)
-							{
-								++numMatch3Found;
-							}
-						}
-					}
-
-					// Debug.Log("ServerGameComponent::ProcessData numShootersFound = " + numShootersFound + ", numMatch3Found = " + numMatch3Found);
-
-					// Now figure out what type the player can be
-					if (newplayerType == PLAYER_TYPE.SHOOTER
-						&& numShootersFound >= 2)
-					{
-						newplayerType = (PLAYER_TYPE)((int)(newplayerType + 1) % (int)PLAYER_TYPE.PLAYER_TYPES);
-					}
-
-					if (newplayerType == PLAYER_TYPE.MATCH3
-						&& numMatch3Found >= 1)
-					{
-						newplayerType = (PLAYER_TYPE)((int)(newplayerType + 1) % (int)PLAYER_TYPE.PLAYER_TYPES);
-					}
-
-					currPlayer.playerType = newplayerType;
-
-					Debug.Log("ServerGameComponent::ProcessData Client " + currPlayerIndex + " player type was set to " + currPlayer.playerType.ToString());
-				}
-			}
+			
 
 		}
 	}

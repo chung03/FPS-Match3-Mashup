@@ -94,21 +94,21 @@ public class GameUIBehaviour : MonoBehaviour
 
 	public void OnReadyClick()
 	{
-		client.ChangeReadyStatus();
+		//client.ChangeReadyStatus();
 	}
 
 	public void OnTeamClick()
 	{
-		client.ChangeTeam();
+		//client.ChangeTeam();
 	}
 
 	public void OnPlayerTypeClick()
 	{
-		client.ChangePlayerType();
+		//client.ChangePlayerType();
 	}
 
 	public void OnStartGameClick()
 	{
-		client.SendStartGame();
+		//client.SendStartGame();
 	}
 }

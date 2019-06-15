@@ -44,6 +44,8 @@ namespace GameUtils
 		SET_ID,
 		SET_ALL_PLAYER_STATES,
 		START_GAME,
+		CREATE_ENTITY,
+		CREATE_ENTITY_WITH_OWNERSHIP,
 		HEARTBEAT
 	}
 
@@ -55,7 +57,15 @@ namespace GameUtils
 		CHANGE_PLAYER_TYPE,
 		CHANGE_NAME,
 		START_GAME,
+		CREATE_ENTITY,
+		CREATE_ENTITY_WITH_OWNERSHIP,
 		HEARTBEAT
+	}
+
+	public enum CREATE_ENTITY_TYPES
+	{
+		FPS_PLAYER = 20,
+		MATCH3_PLAYER
 	}
 
 	public enum PLAYER_TYPE
@@ -78,6 +88,8 @@ namespace GameUtils
 		public const int SEND_ALL_PLAYERS = -1;
 
 		public const int MAX_NUM_PLAYERS = 6;
+
+		public const int SERVER_OWNS = 0;
 	}
 
 	public class DataUtils
