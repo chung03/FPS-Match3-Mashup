@@ -36,11 +36,11 @@ public class ClientGameSend : MonoBehaviour
 		}
 	}
 
-	public void SendDataIfReady(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> allPlayerInfo)
+	public void SendDataIfReady(ref NetworkConnection connection, ref UdpCNetworkDriver driver, Dictionary<int, ObjectWithDelta> IdToClientControlledObjectDictionary)
 	{
 		CreateQueueIfNecessary();
 
-		// Heart beat every once in a while to prevent disconnects for no reason
+		// Heart beat every once in a while to prevent disconnects
 		if (timeSinceLastHeartBeat * 1000 + heartbeatFrequencyMs <= Time.time * 1000)
 		{
 			timeSinceLastHeartBeat = Time.time;
@@ -54,6 +54,8 @@ public class ClientGameSend : MonoBehaviour
 		}
 
 		timeSinceLastSend = Time.time;
+
+		HandleObjectDiff(IdToClientControlledObjectDictionary);
 
 
 		if (sendQueue.Count <= 0)
@@ -70,6 +72,30 @@ public class ClientGameSend : MonoBehaviour
 			}
 
 			connection.Send(driver, writer);
+		}
+	}
+
+	private void HandleObjectDiff(Dictionary<int, ObjectWithDelta> IdToObjectsDictionary)
+	{
+		// No Objects, so nothing to do
+		if (IdToObjectsDictionary.Count <= 0)
+		{
+			return;
+		}
+
+		SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.SET_ALL_OBJECT_STATES);
+		SendDataWhenReady((byte)IdToObjectsDictionary.Count);
+
+		foreach (ObjectWithDelta data in IdToObjectsDictionary.Values)
+		{
+			SendDataWhenReady((byte)data.GetObjectId());
+
+			List<byte> request = data.ServerGetDeltaBytes(false);
+
+			foreach (byte dataByte in request)
+			{
+				SendDataWhenReady(dataByte);
+			}
 		}
 	}
 

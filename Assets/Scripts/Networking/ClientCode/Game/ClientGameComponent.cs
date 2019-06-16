@@ -113,7 +113,7 @@ public class ClientGameComponent : MonoBehaviour
 		// gameUIInstance.UpdateUI(m_AllPlayerInfo);
 
 		// ***** Send data *****
-		clientGameSend.SendDataIfReady(ref connection, ref driver, m_AllPlayerInfo);
+		clientGameSend.SendDataIfReady(ref connection, ref driver, IdToClientControlledObjectDictionary);
 	}
 
 	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> allPlayerInfo)
@@ -228,7 +228,7 @@ public class ClientGameComponent : MonoBehaviour
 			if (IdToServerControlledObjectDictionary.ContainsKey(objectId))
 			{
 				ObjectWithDelta obj = IdToServerControlledObjectDictionary[objectId];
-				obj.ApplyDelta(deltaBytes);
+				obj.ClientApplyDelta(deltaBytes);
 			}
 		}
 

@@ -85,16 +85,25 @@ public class FPSMove : MonoBehaviour
 
 			moveVector += Physics.gravity;
 		}
+
+
+		//MoveChar(moveVector);
+
+		moveVector.y = 0;
+
+		if (moveVector != Vector3.zero)
+		{
+			fpsPlayer.SetPlayerPosn(transform.position + moveVector);
+		}
 		
 
-        MoveChar(moveVector);
-
-        for (int move = 0; move < momentVectors.Length; ++move)
+		for (int move = 0; move < momentVectors.Length; ++move)
         {
             momentVectors[move] = Vector3.zero;
         }
 
-		fpsPlayer.SetPlayerPosn(transform.position);
+		//fpsPlayer.SetPlayerPosn(transform.position);
+		//fpsPlayer.SetPlayerPosn(transform.position + moveVector);
 	}
 
 	public void CheckCollision(ControllerColliderHit hit)

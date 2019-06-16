@@ -74,7 +74,7 @@ public class PersistentPlayerInfo : ObjectWithDelta
 		return playerDiffFlags;
 	}
 
-	public List<byte> GetDeltaBytes(bool getFullState)
+	public List<byte> ServerGetDeltaBytes(bool getFullState)
 	{
 		List<byte> deltaBytes = new List<byte>();
 
@@ -147,7 +147,7 @@ public class PersistentPlayerInfo : ObjectWithDelta
 		return deltaBytes;
 	}
 
-	public void ApplyDelta(byte[] delta)
+	public void ClientApplyDelta(byte[] delta)
 	{
 		byte playerDiffMask = delta[0];
 		int index = 1;
@@ -181,6 +181,15 @@ public class PersistentPlayerInfo : ObjectWithDelta
 			team = delta[index];
 			++index;
 		}
+	}
+
+	public void ServerHandleClientRequests(byte[] delta)
+	{
+	}
+
+	public List<byte> ClientGetRequestBytes()
+	{
+		return null;
 	}
 
 	public bool IsDirty()

@@ -268,7 +268,7 @@ public class ClientLobbyComponent : MonoBehaviour
 
 			System.Array.Copy(bytes, index, deltaBytes, 0, playerDeltaSize);
 
-			playerList[player].ApplyDelta(deltaBytes);
+			playerList[player].ClientApplyDelta(deltaBytes);
 
 			index += playerDeltaSize;
 		}

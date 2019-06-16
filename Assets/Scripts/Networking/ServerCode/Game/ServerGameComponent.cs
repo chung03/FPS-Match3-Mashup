@@ -63,6 +63,7 @@ public class ServerGameComponent : MonoBehaviour
 
 		CommandToFunctionDictionary = new Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes>();
 		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityWithOwnership);
+		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.SET_ALL_OBJECT_STATES, HandleSetAllObjectStatesCommand);
 		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.HEARTBEAT, HeartBeat);
 
 		IdToObjectsDictionary = new Dictionary<int, ObjectWithDelta>();
@@ -274,9 +275,46 @@ public class ServerGameComponent : MonoBehaviour
 		return bytesRead;
 	}
 
+	private int HandleSetAllObjectStatesCommand(int index, byte[] bytes, List<PersistentPlayerInfo> playerList, int playerIndex)
+	{
+		Debug.Log("ServerGameComponent::HandleSetAllObjectStatesCommand Start");
+
+		int bytesRead = 0;
+
+		byte numObjects = bytes[index];
+		++bytesRead;
+
+		for (int objectNum = 0; objectNum < numObjects; ++objectNum)
+		{
+			byte objectId = bytes[index + bytesRead];
+			++bytesRead;
+
+			byte numBytesInDelta = bytes[index + bytesRead];
+			++bytesRead;
+
+			byte[] deltaBytes = new byte[numBytesInDelta];
+
+			System.Array.Copy(bytes, index + bytesRead, deltaBytes, 0, numBytesInDelta);
+
+			bytesRead += numBytesInDelta;
+
+			// If the object hasn't been created yet, the don't do anything for now.
+			// In future, should probably through some sort of error
+			if (IdToObjectsDictionary.ContainsKey(objectId))
+			{
+				ObjectWithDelta obj = IdToObjectsDictionary[objectId];
+				obj.ServerHandleClientRequests(deltaBytes);
+			}
+		}
+
+		Debug.Log("ServerGameComponent::HandleSetAllObjectStatesCommand Finished");
+		return bytesRead;
+	}
+
+
 	private int HeartBeat(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
 	{
-		Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " sent heartbeat");
+		// Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " sent heartbeat");
 		serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.HEARTBEAT, playerIndex);
 
 		return 0;

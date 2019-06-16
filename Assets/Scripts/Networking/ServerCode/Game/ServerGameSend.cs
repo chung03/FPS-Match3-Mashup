@@ -52,14 +52,14 @@ public class ServerGameSend : MonoBehaviour
 
 		timeSinceLastSend = Time.time;
 
-		HandleObjectDiff(ref connections, ref driver, IdToObjectsDictionary);
+		HandleObjectDiff(IdToObjectsDictionary);
 
 		HandleIndividualPlayerSend(ref connections, ref driver);
 
 		HandleAllPlayerSend(ref connections, ref driver);
 	}
 
-	private void HandleObjectDiff(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, Dictionary<int, ObjectWithDelta> IdToObjectsDictionary)
+	private void HandleObjectDiff(Dictionary<int, ObjectWithDelta> IdToObjectsDictionary)
 	{
 		// No Objects, so nothing to do
 		if (IdToObjectsDictionary.Count <= 0)
@@ -72,14 +72,18 @@ public class ServerGameSend : MonoBehaviour
 
 		foreach (ObjectWithDelta data in IdToObjectsDictionary.Values)
 		{
-			SendDataToPlayerWhenReady((byte)data.GetObjectId(), CONSTANTS.SEND_ALL_PLAYERS);
+			//if (data.IsDirty())
+			//{
+				SendDataToPlayerWhenReady((byte)data.GetObjectId(), CONSTANTS.SEND_ALL_PLAYERS);
 
-			List<byte> delta = data.GetDeltaBytes(false);
+				List<byte> delta = data.ServerGetDeltaBytes(false);
 
-			foreach(byte dataByte in delta)
-			{
-				SendDataToPlayerWhenReady(dataByte, CONSTANTS.SEND_ALL_PLAYERS);
-			}
+				foreach (byte dataByte in delta)
+				{
+					SendDataToPlayerWhenReady(dataByte, CONSTANTS.SEND_ALL_PLAYERS);
+				}
+			//}
+			
 		}
 	}
 

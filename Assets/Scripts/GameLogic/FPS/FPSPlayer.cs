@@ -13,6 +13,14 @@ public class FPSPlayer : MonoBehaviour
 		clientGameComponent.AddObjectWithDeltaClient(data);
 	}
 
+	private void Update()
+	{
+		//if (!data.IsDirty())
+		//{
+			transform.position = data.GetPlayerPosn();
+		//}
+	}
+
 	public void Init(ClientGameComponent _clientGameComponent, int objectId)
 	{
 		clientGameComponent = _clientGameComponent;

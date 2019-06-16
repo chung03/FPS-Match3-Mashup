@@ -2,9 +2,11 @@
 
 public interface ObjectWithDelta
 {
-	List<byte> GetDeltaBytes(bool getFullState);
+	List<byte> ServerGetDeltaBytes(bool getFullState);
+	List<byte> ClientGetRequestBytes();
 	bool IsDirty();
 	int GetObjectId();
 	void SetObjectId(int newId);
-	void ApplyDelta(byte[] delta);
+	void ClientApplyDelta(byte[] delta);
+	void ServerHandleClientRequests(byte[] delta);
 }
