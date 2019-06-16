@@ -68,6 +68,7 @@ public class ClientGameComponent : MonoBehaviour
 		// Initialize the byteHandling Table
 		CommandToFunctionDictionary = new Dictionary<GAME_SERVER_COMMANDS, ClientHandleIncomingBytes>();
 		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityOwnershipCommand);
+		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.SET_ALL_OBJECT_STATES, HandleSetAllObjectStatesCommand);
 		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.HEARTBEAT, HandleHeartBeat);
 	}
 
@@ -178,13 +179,15 @@ public class ClientGameComponent : MonoBehaviour
 		byte objectType = bytes[index];
 		++bytesRead;
 
-		byte newId = bytes[index];
+		byte newId = bytes[index + bytesRead];
 		++bytesRead;
 
 		if (objectType == (byte)CREATE_ENTITY_TYPES.FPS_PLAYER)
 		{
 			FPSPlayer fpsPlayer = Instantiate(FPSPlayerObj).GetComponent<FPSPlayer>();
 			fpsPlayer.Init(this, newId);
+
+			//IdToClientControlledObjectDictionary.Add(newId, fpsPlayer.GetData());
 		}
 		else if (objectType == (byte)CREATE_ENTITY_TYPES.MATCH3_PLAYER)
 		{
@@ -199,9 +202,43 @@ public class ClientGameComponent : MonoBehaviour
 		return bytesRead;
 	}
 
+	private int HandleSetAllObjectStatesCommand(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
+	{
+		int bytesRead = 0;
+
+		byte numObjects = bytes[index];
+		++bytesRead;
+
+		for (int objectNum = 0; objectNum < numObjects; ++objectNum)
+		{
+			byte objectId = bytes[index + bytesRead];
+			++bytesRead;
+
+			byte numBytesInDelta = bytes[index + bytesRead];
+			++bytesRead;
+
+			byte[] deltaBytes = new byte[numBytesInDelta];
+				
+			System.Array.Copy(bytes, index + bytesRead, deltaBytes, 0, numBytesInDelta);
+
+			bytesRead += numBytesInDelta;
+
+			// If the object hasn't been created yet, the don't do anything for now.
+			// In future, should probably through some sort of error
+			if (IdToServerControlledObjectDictionary.ContainsKey(objectId))
+			{
+				ObjectWithDelta obj = IdToServerControlledObjectDictionary[objectId];
+				obj.ApplyDelta(deltaBytes);
+			}
+		}
+
+		Debug.Log("ClientGameComponent::HandleSetAllObjectStatesCommand Finished");
+		return bytesRead;
+	}
+
 	public void AddObjectWithDeltaClient(ObjectWithDelta newObj)
 	{
-		IdToClientControlledObjectDictionary.Add(0, newObj);
-		IdToServerControlledObjectDictionary.Add(0, newObj);
+		IdToClientControlledObjectDictionary.Add(newObj.GetObjectId(), newObj);
+		IdToServerControlledObjectDictionary.Add(newObj.GetObjectId(), newObj);
 	}
 }

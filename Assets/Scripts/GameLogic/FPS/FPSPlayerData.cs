@@ -133,6 +133,7 @@ public class FPSPlayerData: ObjectWithDelta
 		}
 
 		deltaBytes.Insert(0, (byte)deltaBytes.Count);
+		isDirty = false;
 
 		return deltaBytes;
 	}

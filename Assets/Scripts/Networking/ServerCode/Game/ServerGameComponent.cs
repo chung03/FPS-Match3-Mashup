@@ -45,6 +45,9 @@ public class ServerGameComponent : MonoBehaviour
 
 	private Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes> CommandToFunctionDictionary;
 
+	// List of Object with Deltas. ID -> Object
+	private Dictionary<int, ObjectWithDelta> IdToObjectsDictionary;
+
 	private void Start()
 	{
 		//Debug.Log("ServerGameComponent::Start Called");
@@ -61,6 +64,8 @@ public class ServerGameComponent : MonoBehaviour
 		CommandToFunctionDictionary = new Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes>();
 		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityWithOwnership);
 		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.HEARTBEAT, HeartBeat);
+
+		IdToObjectsDictionary = new Dictionary<int, ObjectWithDelta>();
 	}
 
 
@@ -95,7 +100,7 @@ public class ServerGameComponent : MonoBehaviour
 		ProcessData(ref connections, ref driver, m_PlayerList);
 
 		// ***** Send data *****
-		serverGameSend.SendDataIfReady(ref connections, ref driver, m_PlayerList);
+		serverGameSend.SendDataIfReady(ref connections, ref driver, IdToObjectsDictionary);
 	}
 
 	private void HandleConnections(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
@@ -251,6 +256,14 @@ public class ServerGameComponent : MonoBehaviour
 
 		CREATE_ENTITY_TYPES newObjectType = (CREATE_ENTITY_TYPES)bytes[index];
 		++bytesRead;
+
+		if (newObjectType == CREATE_ENTITY_TYPES.FPS_PLAYER)
+		{
+			FPSPlayerData newData = new FPSPlayerData();
+			newData.SetObjectId(newObjectId);
+
+			IdToObjectsDictionary.Add(newObjectId, newData);
+		}
 
 		serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, playerIndex);
 		serverGameSend.SendDataToPlayerWhenReady((byte)newObjectType, playerIndex);

@@ -29,4 +29,9 @@ public class FPSPlayer : MonoBehaviour
 	{
 		data.SetPlayerRotation(rotation);
 	}
+
+	public FPSPlayerData GetData()
+	{
+		return data;
+	}
 }

@@ -42,7 +42,7 @@ public class ServerGameSend : MonoBehaviour
 
     // Is kind of like an update, but is called by other code
 	// This is writen so that the ServerGameComponent can ensure that all data is ready before trying to send
-    public void SendDataIfReady(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
+    public void SendDataIfReady(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, Dictionary<int, ObjectWithDelta> IdToObjectsDictionary)
     {
 		// Not time to send yet.
 		if (timeSinceLastSend * 1000 + sendFrequencyMs > Time.time * 1000)
@@ -52,105 +52,35 @@ public class ServerGameSend : MonoBehaviour
 
 		timeSinceLastSend = Time.time;
 
-		HandlePlayerDiff(ref connections, ref driver, playerList);
+		HandleObjectDiff(ref connections, ref driver, IdToObjectsDictionary);
 
 		HandleIndividualPlayerSend(ref connections, ref driver);
 
 		HandleAllPlayerSend(ref connections, ref driver);
 	}
 
-	private void HandlePlayerDiff(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
+	private void HandleObjectDiff(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, Dictionary<int, ObjectWithDelta> IdToObjectsDictionary)
 	{
-		// No players, so nothing to do
-		if (playerList.Count <= 0)
+		// No Objects, so nothing to do
+		if (IdToObjectsDictionary.Count <= 0)
 		{
 			return;
 		}
 
-		// Send player state to all players
-		// Calculate and send Delta
+		SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.SET_ALL_OBJECT_STATES, CONSTANTS.SEND_ALL_PLAYERS);
+		SendDataToPlayerWhenReady((byte)IdToObjectsDictionary.Count, CONSTANTS.SEND_ALL_PLAYERS);
 
-		// Figure out diffs for each player that was here before
-		byte[] playerDiffFlags = new byte[Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count)];
-		for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
+		foreach (ObjectWithDelta data in IdToObjectsDictionary.Values)
 		{
-			playerDiffFlags[playerNum] = 0;
+			SendDataToPlayerWhenReady((byte)data.GetObjectId(), CONSTANTS.SEND_ALL_PLAYERS);
 
-			if (playerList[playerNum].name.CompareTo(m_PreviousStatePlayerList[playerNum].name) != 0)
-			{
-				playerDiffFlags[playerNum] |= CONSTANTS.NAME_MASK;
-			}
-			
-			if (playerList[playerNum].playerID != m_PreviousStatePlayerList[playerNum].playerID)
-			{
-				playerDiffFlags[playerNum] |= CONSTANTS.PLAYER_ID_MASK;
-			}
+			List<byte> delta = data.GetDeltaBytes(false);
 
-			if (playerList[playerNum].playerType != m_PreviousStatePlayerList[playerNum].playerType)
+			foreach(byte dataByte in delta)
 			{
-				playerDiffFlags[playerNum] |= CONSTANTS.PLAYER_TYPE_MASK;
-			}
-
-			if (playerList[playerNum].isReady != m_PreviousStatePlayerList[playerNum].isReady)
-			{
-				playerDiffFlags[playerNum] |= CONSTANTS.READY_MASK;
-			}
-
-			if (playerList[playerNum].team != m_PreviousStatePlayerList[playerNum].team)
-			{
-				playerDiffFlags[playerNum] |= CONSTANTS.TEAM_MASK;
+				SendDataToPlayerWhenReady(dataByte, CONSTANTS.SEND_ALL_PLAYERS);
 			}
 		}
-
-		SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, CONSTANTS.SEND_ALL_PLAYERS);
-		SendDataToPlayerWhenReady((byte)playerList.Count, CONSTANTS.SEND_ALL_PLAYERS);
-
-		// Send data for players that were here before
-		for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
-		{
-			// Tell Client what changed
-			SendDataToPlayerWhenReady(playerDiffFlags[playerNum], CONSTANTS.SEND_ALL_PLAYERS);
-
-			// Send necessary data. Go from most significant bit to least
-			if ((playerDiffFlags[playerNum] & CONSTANTS.NAME_MASK) > 0)
-			{
-				byte[] nameAsBytes = Encoding.UTF8.GetBytes(playerList[playerNum].name);
-
-				// Send length of name, and then send name
-				SendDataToPlayerWhenReady((byte)nameAsBytes.Length, CONSTANTS.SEND_ALL_PLAYERS);
-
-				for (int byteIndex = 0; byteIndex < nameAsBytes.Length; ++byteIndex)
-				{
-					SendDataToPlayerWhenReady(nameAsBytes[byteIndex], CONSTANTS.SEND_ALL_PLAYERS);
-				}
-			}
-
-			if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_ID_MASK) > 0)
-			{
-				SendDataToPlayerWhenReady(playerList[playerNum].playerID, CONSTANTS.SEND_ALL_PLAYERS);
-			}
-
-			if ((playerDiffFlags[playerNum] & CONSTANTS.PLAYER_TYPE_MASK) > 0)
-			{
-				SendDataToPlayerWhenReady((byte)playerList[playerNum].playerType, CONSTANTS.SEND_ALL_PLAYERS);
-			}
-
-			if ((playerDiffFlags[playerNum] & CONSTANTS.READY_MASK) > 0)
-			{
-				SendDataToPlayerWhenReady(playerList[playerNum].isReady, CONSTANTS.SEND_ALL_PLAYERS);
-			}
-
-			if ((playerDiffFlags[playerNum] & CONSTANTS.TEAM_MASK) > 0)
-			{
-				SendDataToPlayerWhenReady(playerList[playerNum].team, CONSTANTS.SEND_ALL_PLAYERS);
-			}
-		}
-
-		// Send full data for new players
-		SendFullPlayerState(playerList, CONSTANTS.SEND_ALL_PLAYERS, m_PreviousStatePlayerList.Count, playerList.Count);
-
-		// Save previous state so that we can create deltas later
-		m_PreviousStatePlayerList = DeepClone(playerList);
 	}
 
 	private void HandleIndividualPlayerSend(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
@@ -243,7 +173,7 @@ public class ServerGameSend : MonoBehaviour
 			return;
 		}
 
-		SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, connectionIndex);
+		SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.SET_ALL_OBJECT_STATES, connectionIndex);
 		SendDataToPlayerWhenReady((byte)m_PreviousStatePlayerList.Count, connectionIndex);
 		SendFullPlayerState(m_PreviousStatePlayerList, connectionIndex, 0, m_PreviousStatePlayerList.Count);
 	}
