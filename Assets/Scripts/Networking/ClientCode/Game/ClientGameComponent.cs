@@ -228,7 +228,7 @@ public class ClientGameComponent : MonoBehaviour
 			if (IdToServerControlledObjectDictionary.ContainsKey(objectId))
 			{
 				ObjectWithDelta obj = IdToServerControlledObjectDictionary[objectId];
-				obj.ClientApplyDelta(deltaBytes);
+				obj.ApplyDelta(deltaBytes, false);
 			}
 		}
 

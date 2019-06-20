@@ -147,7 +147,7 @@ public class PersistentPlayerInfo : ObjectWithDelta
 		return deltaBytes;
 	}
 
-	public void ClientApplyDelta(byte[] delta)
+	public void ApplyDelta(byte[] delta, bool isServer)
 	{
 		byte playerDiffMask = delta[0];
 		int index = 1;
@@ -181,10 +181,11 @@ public class PersistentPlayerInfo : ObjectWithDelta
 			team = delta[index];
 			++index;
 		}
-	}
 
-	public void ServerHandleClientRequests(byte[] delta)
-	{
+		if (isServer)
+		{
+
+		}
 	}
 
 	public List<byte> ClientGetRequestBytes()

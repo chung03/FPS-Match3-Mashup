@@ -303,7 +303,7 @@ public class ServerGameComponent : MonoBehaviour
 			if (IdToObjectsDictionary.ContainsKey(objectId))
 			{
 				ObjectWithDelta obj = IdToObjectsDictionary[objectId];
-				obj.ServerHandleClientRequests(deltaBytes);
+				obj.ApplyDelta(deltaBytes, true);
 			}
 		}
 
