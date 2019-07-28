@@ -6,7 +6,6 @@ using Unity.Networking.Transport;
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
 using LobbyUtils;
-using CommonNetworkingUtils;
 
 
 public class ClientLobbyReceiveComponent : MonoBehaviour
@@ -14,20 +13,6 @@ public class ClientLobbyReceiveComponent : MonoBehaviour
 	private ClientConnectionsComponent connectionsComponent;
 	private ClientLobbySend clientLobbySend;
 	private ClientLobbyDataComponent clientLobbyData;
-	
-	private Dictionary<int, ClientHandleIncomingBytes> CommandToFunctionDictionary;
-
-	private void Start()
-	{
-		// Initialize the byteHandling Table
-		CommandToFunctionDictionary = new Dictionary<int, ClientHandleIncomingBytes>();
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.READY, clientLobbyData.HandleReadyCommand);
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.CHANGE_TEAM, clientLobbyData.HandleChangeTeamCommand);
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.SET_ID, clientLobbyData.HandleSetIdCommand);
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, clientLobbyData.HandlePlayerStatesCommand);
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.START_GAME, clientLobbyData.HandleStartCommand);
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.HEARTBEAT, clientLobbyData.HandleHeartBeat);
-	}
 
 	public void Init(ClientConnectionsComponent connHolder)
 	{
@@ -92,16 +77,6 @@ public class ClientLobbyReceiveComponent : MonoBehaviour
 
 		byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
 
-		// Must always manually move index for bytes
-		for (int i = 0; i < stream.Length;)
-		{
-			// Unsafely assuming that everything is working as expected and there are no attackers.
-			byte serverCmd = bytes[i];
-			++i;
-
-			Debug.Log("ClientLobbyComponent::ReadServerBytes Got " + serverCmd + " from the Server");
-
-			i += CommandToFunctionDictionary[serverCmd](i, bytes);
-		}
+		clientLobbyData.ProcessServerBytes(bytes);
 	}
 }

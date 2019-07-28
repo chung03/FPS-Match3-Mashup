@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using LobbyUtils;
+using CommonNetworkingUtils;
 using UnityEngine.SceneManagement;
 
 using Unity.Networking.Transport;
@@ -25,6 +26,8 @@ public class ClientLobbyDataComponent : MonoBehaviour
 	// Connection Index -> ID
 	private Dictionary<int, int> IndexToIdDictionary;
 
+	private Dictionary<int, ClientHandleIncomingBytes> CommandToFunctionDictionary;
+
 	private ClientConnectionsComponent connectionsComponent;
 	private ClientLobbySend clientLobbySend;
 
@@ -45,6 +48,15 @@ public class ClientLobbyDataComponent : MonoBehaviour
 		lobbyUIInstance = Instantiate(lobbyUIObj).GetComponent<LobbyUIBehaviour>();
 		lobbyUIInstance.SetUI(connectionsComponent.IsHost());
 		lobbyUIInstance.Init(this);
+
+		// Initialize the byteHandling Table
+		CommandToFunctionDictionary = new Dictionary<int, ClientHandleIncomingBytes>();
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.READY, HandleReadyCommand);
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.CHANGE_TEAM, HandleChangeTeamCommand);
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.SET_ID, HandleSetIdCommand);
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, HandlePlayerStatesCommand);
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.START_GAME, HandleStartCommand);
+		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.HEARTBEAT, HandleHeartBeat);
 
 
 		IdToIndexDictionary = new Dictionary<int, int>();
@@ -216,5 +228,20 @@ public class ClientLobbyDataComponent : MonoBehaviour
 		}
 
 		return index - initialIndex;
+	}
+
+	public void ProcessServerBytes(byte[] bytes)
+	{
+		// Must always manually move index for bytes
+		for (int i = 0; i < bytes.Length;)
+		{
+			// Unsafely assuming that everything is working as expected and there are no attackers.
+			byte serverCmd = bytes[i];
+			++i;
+
+			Debug.Log("ClientLobbyComponent::ReadServerBytes Got " + serverCmd + " from the Server");
+
+			i += CommandToFunctionDictionary[serverCmd](i, bytes);
+		}
 	}
 }

@@ -18,17 +18,6 @@ public class ClientGameReceiveComponent : MonoBehaviour
 	private ClientConnectionsComponent connectionsComponent;
 	private ClientGameSend clientGameSend;
 	private ClientGameDataComponent clientGameData;
-	
-	private Dictionary<GAME_SERVER_COMMANDS, ClientHandleIncomingBytes> CommandToFunctionDictionary;
-
-	private void Start()
-	{
-		// Initialize the byteHandling Table
-		CommandToFunctionDictionary = new Dictionary<GAME_SERVER_COMMANDS, ClientHandleIncomingBytes>();
-		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, clientGameData.HandleCreateEntityOwnershipCommand);
-		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.SET_ALL_OBJECT_STATES, clientGameData.HandleSetAllObjectStatesCommand);
-		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.HEARTBEAT, clientGameData.HandleHeartBeat);
-	}
 
 	public void Init(ClientConnectionsComponent connHolder)
 	{
@@ -93,16 +82,6 @@ public class ClientGameReceiveComponent : MonoBehaviour
 
 		byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
 
-		// Must always manually move index for bytes
-		for (int i = 0; i < stream.Length;)
-		{
-			// Unsafely assuming that everything is working as expected and there are no attackers.
-			GAME_SERVER_COMMANDS serverCmd = (GAME_SERVER_COMMANDS)bytes[i];
-			++i;
-
-			Debug.Log("ClientGameComponent::ReadServerBytes Got " + serverCmd + " from the Server");
-
-			i += CommandToFunctionDictionary[serverCmd](i, bytes);
-		}
+		clientGameData.ProcessServerBytes(bytes);
 	}
 }

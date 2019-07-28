@@ -35,6 +35,8 @@ public class ServerGameDataComponent : MonoBehaviour
 	// Command and the player ID
 	private Queue<KeyValuePair<GAME_SERVER_PROCESS, int>> commandProcessingQueue;
 
+	private Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes> CommandToFunctionDictionary;
+
 	private ServerConnectionsComponent connectionsComponent;
 	private ServerGameSend serverGameSend;
 
@@ -58,6 +60,11 @@ public class ServerGameDataComponent : MonoBehaviour
 		IdtoObjectsDictionary = new Dictionary<int, byte>();
 
 		commandProcessingQueue = new Queue<KeyValuePair<GAME_SERVER_PROCESS, int>>();
+
+		CommandToFunctionDictionary = new Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes>();
+		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityWithOwnership);
+		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.SET_ALL_OBJECT_STATES, HandleSetAllObjectStatesCommand);
+		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.HEARTBEAT, HeartBeat);
 
 		IdToObjectsDictionary = new Dictionary<int, ObjectWithDelta>();
 	}
@@ -199,6 +206,23 @@ public class ServerGameDataComponent : MonoBehaviour
 
 
 
+		}
+	}
+
+	public void ProcessClientBytes(int playerIndex, byte[] bytes)
+	{
+		Debug.Log("ServerGameReceiveComponent::ReadClientBytes bytes.Length = " + bytes.Length);
+
+		for (int i = 0; i < bytes.Length;)
+		{
+			GAME_CLIENT_REQUESTS clientCmd = (GAME_CLIENT_REQUESTS)bytes[i];
+
+			// Unsafely assuming that everything is working as expected and there are no attackers.
+			++i;
+
+			Debug.Log("ServerGameReceiveComponent::ReadClientBytes Got " + clientCmd + " from the Client");
+
+			i += CommandToFunctionDictionary[clientCmd](i, bytes, playerIndex);
 		}
 	}
 }

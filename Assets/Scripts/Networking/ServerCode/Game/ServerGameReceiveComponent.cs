@@ -7,8 +7,6 @@ using Unity.Collections;
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
 using UnityEngine.Assertions;
-using GameUtils;
-using CommonNetworkingUtils;
 
 public class ServerGameReceiveComponent : MonoBehaviour
 {
@@ -21,17 +19,6 @@ public class ServerGameReceiveComponent : MonoBehaviour
 	private ServerConnectionsComponent connectionsComponent;
 	private ServerGameSend serverGameSend;
 	private ServerGameDataComponent serverGameDataComponent;
-	
-	private Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes> CommandToFunctionDictionary;
-
-	private void Start()
-	{
-		CommandToFunctionDictionary = new Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes>();
-		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP, serverGameDataComponent.HandleCreateEntityWithOwnership);
-		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.SET_ALL_OBJECT_STATES, serverGameDataComponent.HandleSetAllObjectStatesCommand);
-		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.HEARTBEAT, serverGameDataComponent.HeartBeat);
-	}
-
 
 	public void Init(ServerConnectionsComponent connHolder)
 	{
@@ -60,7 +47,6 @@ public class ServerGameReceiveComponent : MonoBehaviour
 		//Debug.Log("ServerGameReceiveComponent::HandleConnections Called");
 
 		// Clean up connections
-		bool connectionsChanged = false;
 		for (int i = 0; i < connections.Length; i++)
 		{
 			if (!connections[i].IsCreated)
@@ -72,8 +58,6 @@ public class ServerGameReceiveComponent : MonoBehaviour
 				--i;
 			}
 		}
-			
-		
 
 		// Don't accept new connections
 		NetworkConnection c;
@@ -104,7 +88,7 @@ public class ServerGameReceiveComponent : MonoBehaviour
 					var readerCtx = default(DataStreamReader.Context);
 					byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
 
-					ReadClientBytes(index, bytes);
+					serverGameDataComponent.ProcessClientBytes(index, bytes);
 				}
 				else if (cmd == NetworkEvent.Type.Disconnect)
 				{
@@ -118,23 +102,6 @@ public class ServerGameReceiveComponent : MonoBehaviour
 			}
 
 			//Debug.Log("ServerGameReceiveComponent::HandleReceiveData Finished processing connection[" + index + "]");
-		}
-	}
-
-	private void ReadClientBytes(int playerIndex, byte[] bytes)
-	{
-		Debug.Log("ServerGameReceiveComponent::ReadClientBytes bytes.Length = " + bytes.Length);
-
-		for (int i = 0; i < bytes.Length;)
-		{
-			GAME_CLIENT_REQUESTS clientCmd = (GAME_CLIENT_REQUESTS)bytes[i];
-
-			// Unsafely assuming that everything is working as expected and there are no attackers.
-			++i;
-
-			Debug.Log("ServerGameReceiveComponent::ReadClientBytes Got " + clientCmd + " from the Client");
-
-			i += CommandToFunctionDictionary[clientCmd](i, bytes, playerIndex);
 		}
 	}
 }

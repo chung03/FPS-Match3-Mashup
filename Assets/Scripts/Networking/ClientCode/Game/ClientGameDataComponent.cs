@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using GameUtils;
+using CommonNetworkingUtils;
 
 using Unity.Networking.Transport;
 
@@ -33,6 +34,8 @@ public class ClientGameDataComponent : MonoBehaviour
 	private Dictionary<int, ObjectWithDelta> IdToClientControlledObjectDictionary;
 	private Dictionary<int, ObjectWithDelta> IdToServerControlledObjectDictionary;
 
+	private Dictionary<GAME_SERVER_COMMANDS, ClientHandleIncomingBytes> CommandToFunctionDictionary;
+
 	[SerializeField]
 	private GameObject gameUIObj;
 	private GameUIBehaviour gameUIInstance;
@@ -60,6 +63,12 @@ public class ClientGameDataComponent : MonoBehaviour
 
 		IdToClientControlledObjectDictionary = new Dictionary<int, ObjectWithDelta>();
 		IdToServerControlledObjectDictionary = new Dictionary<int, ObjectWithDelta>();
+
+		// Initialize the byteHandling Table
+		CommandToFunctionDictionary = new Dictionary<GAME_SERVER_COMMANDS, ClientHandleIncomingBytes>();
+		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityOwnershipCommand);
+		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.SET_ALL_OBJECT_STATES, HandleSetAllObjectStatesCommand);
+		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.HEARTBEAT, HandleHeartBeat);
 	}
 
 	public void Init(ClientConnectionsComponent connHolder, PersistentPlayerInfo playerInfo)
@@ -168,5 +177,20 @@ public class ClientGameDataComponent : MonoBehaviour
 	{
 		IdToClientControlledObjectDictionary.Add(newObj.GetObjectId(), newObj);
 		IdToServerControlledObjectDictionary.Add(newObj.GetObjectId(), newObj);
+	}
+
+	public void ProcessServerBytes(byte[] bytes)
+	{
+		// Must always manually move index for bytes
+		for (int i = 0; i < bytes.Length;)
+		{
+			// Unsafely assuming that everything is working as expected and there are no attackers.
+			GAME_SERVER_COMMANDS serverCmd = (GAME_SERVER_COMMANDS)bytes[i];
+			++i;
+
+			Debug.Log("ClientGameComponent::ReadServerBytes Got " + serverCmd + " from the Server");
+
+			i += CommandToFunctionDictionary[serverCmd](i, bytes);
+		}
 	}
 }
