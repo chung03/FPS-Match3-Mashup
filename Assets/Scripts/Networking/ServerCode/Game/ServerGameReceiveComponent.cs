@@ -10,7 +10,7 @@ using UnityEngine.Assertions;
 using GameUtils;
 using CommonNetworkingUtils;
 
-public class ServerGameComponent : MonoBehaviour
+public class ServerGameReceiveComponent : MonoBehaviour
 {
 	private enum GAME_SERVER_PROCESS
 	{
@@ -37,6 +37,7 @@ public class ServerGameComponent : MonoBehaviour
 
 	private ServerConnectionsComponent connectionsComponent;
 	private ServerGameSend serverGameSend;
+	private ServerGameDataComponent serverGameDataComponent;
 
 	int numTeam1Players = 0;
 	int numTeam2Players = 0;
@@ -62,9 +63,9 @@ public class ServerGameComponent : MonoBehaviour
 		commandProcessingQueue = new Queue<KeyValuePair<GAME_SERVER_PROCESS, int>>();
 
 		CommandToFunctionDictionary = new Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes>();
-		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityWithOwnership);
-		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.SET_ALL_OBJECT_STATES, HandleSetAllObjectStatesCommand);
-		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.HEARTBEAT, HeartBeat);
+		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP, serverGameDataComponent.HandleCreateEntityWithOwnership);
+		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.SET_ALL_OBJECT_STATES, serverGameDataComponent.HandleSetAllObjectStatesCommand);
+		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.HEARTBEAT, serverGameDataComponent.HeartBeat);
 
 		IdToObjectsDictionary = new Dictionary<int, ObjectWithDelta>();
 	}
@@ -75,13 +76,7 @@ public class ServerGameComponent : MonoBehaviour
 		//Debug.Log("ServerGameComponent::Init Called");
 		connectionsComponent = connHolder;
 		serverGameSend = GetComponent<ServerGameSend>();
-
-
-	}
-
-	private int GetNextObjectId()
-	{
-		return nextObjectId++;
+		serverGameDataComponent = GetComponent<ServerGameDataComponent>();
 	}
 
 	void Update()
@@ -96,12 +91,6 @@ public class ServerGameComponent : MonoBehaviour
 
 		// ***** Receive data *****
 		HandleReceiveData(ref connections, ref driver, m_PlayerList);
-
-		// ***** Process data *****
-		ProcessData(ref connections, ref driver, m_PlayerList);
-
-		// ***** Send data *****
-		serverGameSend.SendDataIfReady(ref connections, ref driver, IdToObjectsDictionary);
 	}
 
 	private void HandleConnections(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
@@ -245,89 +234,7 @@ public class ServerGameComponent : MonoBehaviour
 
 			Debug.Log("ServerGameComponent::ReadClientBytes Got " + clientCmd + " from the Client");
 
-			i += CommandToFunctionDictionary[clientCmd](i, bytes, playerList, playerIndex);
-		}
-	}
-
-	private int HandleCreateEntityWithOwnership(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
-	{
-		int bytesRead = 0;
-
-		int newObjectId = GetNextObjectId();
-
-		CREATE_ENTITY_TYPES newObjectType = (CREATE_ENTITY_TYPES)bytes[index];
-		++bytesRead;
-
-		if (newObjectType == CREATE_ENTITY_TYPES.FPS_PLAYER)
-		{
-			FPSPlayerData newData = new FPSPlayerData();
-			newData.SetObjectId(newObjectId);
-
-			IdToObjectsDictionary.Add(newObjectId, newData);
-		}
-
-		serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, playerIndex);
-		serverGameSend.SendDataToPlayerWhenReady((byte)newObjectType, playerIndex);
-		serverGameSend.SendDataToPlayerWhenReady((byte)newObjectId, playerIndex);
-
-		//Debug.Log("ServerLobbyComponent::ChangePlayerReady Player " + playerInfo[playerIndex].playerID + " ready state set to " + playerInfo[playerIndex].isReady);
-
-		return bytesRead;
-	}
-
-	private int HandleSetAllObjectStatesCommand(int index, byte[] bytes, List<PersistentPlayerInfo> playerList, int playerIndex)
-	{
-		Debug.Log("ServerGameComponent::HandleSetAllObjectStatesCommand Start");
-
-		int bytesRead = 0;
-
-		byte numObjects = bytes[index];
-		++bytesRead;
-
-		for (int objectNum = 0; objectNum < numObjects; ++objectNum)
-		{
-			byte objectId = bytes[index + bytesRead];
-			++bytesRead;
-
-			byte numBytesInDelta = bytes[index + bytesRead];
-			++bytesRead;
-
-			byte[] deltaBytes = new byte[numBytesInDelta];
-
-			System.Array.Copy(bytes, index + bytesRead, deltaBytes, 0, numBytesInDelta);
-
-			bytesRead += numBytesInDelta;
-
-			// If the object hasn't been created yet, the don't do anything for now.
-			// In future, should probably through some sort of error
-			if (IdToObjectsDictionary.ContainsKey(objectId))
-			{
-				ObjectWithDelta obj = IdToObjectsDictionary[objectId];
-				obj.ApplyDelta(deltaBytes, true);
-			}
-		}
-
-		Debug.Log("ServerGameComponent::HandleSetAllObjectStatesCommand Finished");
-		return bytesRead;
-	}
-
-
-	private int HeartBeat(int index, byte[] bytes, List<PersistentPlayerInfo> playerInfo, int playerIndex)
-	{
-		// Debug.Log("ServerGameComponent::ReadClientBytes Client " + playerIndex + " sent heartbeat");
-		serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.HEARTBEAT, playerIndex);
-
-		return 0;
-	}
-
-	private void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
-	{
-		while (commandProcessingQueue.Count > 0)
-		{
-			KeyValuePair<GAME_SERVER_PROCESS, int> processCommand = commandProcessingQueue.Dequeue();
-
-			
-
+			i += CommandToFunctionDictionary[clientCmd](i, bytes, playerIndex);
 		}
 	}
 }

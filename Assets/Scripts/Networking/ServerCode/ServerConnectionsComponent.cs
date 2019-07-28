@@ -91,12 +91,14 @@ public class ServerConnectionsComponent : MonoBehaviour
 		if (scene.name == "LobbyScene")
 		{
 			GameObject server = Instantiate(serverLobbyObj);
-			server.GetComponent<ServerLobbyComponent>().Init(this);
+			server.GetComponent<ServerLobbyReceiveComponent>().Init(this);
+			server.GetComponent<ServerLobbyDataComponent>().Init(this);
 		}
 		else if (scene.name == "PlayScene")
 		{
 			GameObject server = Instantiate(serverGameObj);
-			server.GetComponent<ServerGameComponent>().Init(this);
+			server.GetComponent<ServerGameReceiveComponent>().Init(this);
+			server.GetComponent<ServerGameDataComponent>().Init(this);
 		}
 	}
 

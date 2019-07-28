@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 751600689405261550}
   - component: {fileID: 2874985308233358437}
   - component: {fileID: 58119675919495973}
+  - component: {fileID: 2668476143999447667}
   m_Layer: 0
   m_Name: ServerGameObject
   m_TagString: Untagged
@@ -57,3 +58,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sendFrequencyMs: 50
+--- !u!114 &2668476143999447667
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2874985308233358436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b93f15b21704ab438b8d73af8e22a31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

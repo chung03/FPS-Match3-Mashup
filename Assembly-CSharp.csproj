@@ -83,12 +83,14 @@
     <Compile Include="Assets\Scripts\Networking\CommonCode\GameUtil.cs" />
     <Compile Include="Assets\Scripts\Networking\CommonCode\LobbyUtil.cs" />
     <Compile Include="Assets\Scripts\Networking\CommonCode\PersistentPlayerInfo.cs" />
-    <Compile Include="Assets\Scripts\Networking\ServerCode\Game\ServerGameComponent.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\Game\ServerGameDataComponent.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\Game\ServerGameReceiveComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Game\ServerGameSend.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Jobs\Server_Game_Job.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Jobs\ServerReceiveLobbyJob.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Jobs\ServerSendLobbyJob.cs" />
-    <Compile Include="Assets\Scripts\Networking\ServerCode\Lobby\ServerLobbyComponent.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\Lobby\ServerLobbyDataComponent.cs" />
+    <Compile Include="Assets\Scripts\Networking\ServerCode\Lobby\ServerLobbyReceiveComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\Lobby\ServerLobbySend.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerConnectionsComponent.cs" />
     <Compile Include="Assets\Scripts\Networking\ServerCode\ServerUtils.cs" />
