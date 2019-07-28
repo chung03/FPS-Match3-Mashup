@@ -21,7 +21,7 @@ public class SearchUIBehaviour : MonoBehaviour
 	[SerializeField]
 	private GameObject clientObject;
 
-	private ClientLobbyComponent client;
+	private ClientLobbyReceiveComponent client;
 	private string ipString;
 
 	private void Start()
@@ -29,7 +29,7 @@ public class SearchUIBehaviour : MonoBehaviour
 		IPInputField.GetComponent<InputField>().onEndEdit.AddListener(OnSetIP);
 	}
 
-	public void Init(ClientLobbyComponent _client)
+	public void Init(ClientLobbyReceiveComponent _client)
 	{
 		client = _client;
 	}

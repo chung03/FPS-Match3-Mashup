@@ -12,7 +12,7 @@ public class GameUIBehaviour : MonoBehaviour
 	[SerializeField]
 	private GameObject[] teamStats;
 
-	private ClientGameComponent client;
+	private ClientGameDataComponent client;
 
 	public void SetUI(bool isServer)
 	{
@@ -22,7 +22,7 @@ public class GameUIBehaviour : MonoBehaviour
 		}
 	}
 
-	public void Init(ClientGameComponent _client)
+	public void Init(ClientGameDataComponent _client)
 	{
 		client = _client;
 	}

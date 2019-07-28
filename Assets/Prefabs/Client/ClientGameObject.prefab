@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 206684584106676377}
   - component: {fileID: 2304795742684359826}
   - component: {fileID: 927684379278832086}
+  - component: {fileID: 7629729823421405978}
   m_Layer: 0
   m_Name: ClientGameObject
   m_TagString: Untagged
@@ -44,11 +45,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 408cfb79bac4ec34389f08d7e09d611b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameUIObj: {fileID: 1999145933014034460, guid: 797a4a5dbb8777b448da2617d87a984c,
-    type: 3}
-  FPSPlayerObj: {fileID: 4709725410128075721, guid: 274ee331bd8a51a4898427067d5e91d6,
-    type: 3}
-  Match3PlayerObj: {fileID: 0}
 --- !u!114 &927684379278832086
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -63,3 +59,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sendFrequencyMs: 50
   heartbeatFrequencyMs: 2000
+--- !u!114 &7629729823421405978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3471701973108298168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4dcd7b87aba1ca4e935e3cd11f11d14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameUIObj: {fileID: 1999145933014034460, guid: 797a4a5dbb8777b448da2617d87a984c,
+    type: 3}
+  FPSPlayerObj: {fileID: 4709725410128075721, guid: 274ee331bd8a51a4898427067d5e91d6,
+    type: 3}
+  Match3PlayerObj: {fileID: 0}

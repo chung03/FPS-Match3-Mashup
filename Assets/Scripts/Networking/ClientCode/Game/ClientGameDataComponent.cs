@@ -1,20 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using GameUtils;
 
 using Unity.Networking.Transport;
 
 using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
 
-using GameUtils;
-using CommonNetworkingUtils;
-using UnityEngine.SceneManagement;
-
-using System.Text;
-
-public class ClientGameComponent : MonoBehaviour
+public class ClientGameDataComponent : MonoBehaviour
 {
-
 	private static readonly string PLAY_SCENE = "Assets/Scenes/PlayScene.unity";
+
+	// This is the player's ID. This is all it needs to identify itself and to find its player info.
+	private int m_PlayerID;
 
 	// This is the player's info from the lobby. This is all it needs to identify itself and to find its player info.
 	private PersistentPlayerInfo m_PlayerInfo;
@@ -31,6 +29,10 @@ public class ClientGameComponent : MonoBehaviour
 	private ClientConnectionsComponent connectionsComponent;
 	private ClientGameSend clientGameSend;
 
+	// List of Object with Deltas which client will update. ID -> Object
+	private Dictionary<int, ObjectWithDelta> IdToClientControlledObjectDictionary;
+	private Dictionary<int, ObjectWithDelta> IdToServerControlledObjectDictionary;
+
 	[SerializeField]
 	private GameObject gameUIObj;
 	private GameUIBehaviour gameUIInstance;
@@ -40,12 +42,6 @@ public class ClientGameComponent : MonoBehaviour
 
 	[SerializeField]
 	private GameObject Match3PlayerObj;
-
-	// List of Object with Deltas which client will update. ID -> Object
-	private Dictionary<int, ObjectWithDelta> IdToClientControlledObjectDictionary;
-	private Dictionary<int, ObjectWithDelta> IdToServerControlledObjectDictionary;
-	
-	private Dictionary<GAME_SERVER_COMMANDS, ClientHandleIncomingBytes> CommandToFunctionDictionary;
 
 	private void Start()
 	{
@@ -64,17 +60,10 @@ public class ClientGameComponent : MonoBehaviour
 
 		IdToClientControlledObjectDictionary = new Dictionary<int, ObjectWithDelta>();
 		IdToServerControlledObjectDictionary = new Dictionary<int, ObjectWithDelta>();
-
-		// Initialize the byteHandling Table
-		CommandToFunctionDictionary = new Dictionary<GAME_SERVER_COMMANDS, ClientHandleIncomingBytes>();
-		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityOwnershipCommand);
-		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.SET_ALL_OBJECT_STATES, HandleSetAllObjectStatesCommand);
-		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.HEARTBEAT, HandleHeartBeat);
 	}
 
 	public void Init(ClientConnectionsComponent connHolder, PersistentPlayerInfo playerInfo)
 	{
-		//Debug.Log("ClientGameComponent::Init Called");
 		connectionsComponent = connHolder;
 		clientGameSend = GetComponent<ClientGameSend>();
 
@@ -91,23 +80,10 @@ public class ClientGameComponent : MonoBehaviour
 		}
 	}
 
-	void Update()
+	private void Update()
 	{
 		ref UdpCNetworkDriver driver = ref connectionsComponent.GetDriver();
 		ref NetworkConnection connection = ref connectionsComponent.GetConnection();
-
-		driver.ScheduleUpdate().Complete();
-
-		//Debug.Log("ClientGameComponent::Update connection.IsCreated = " + connection.IsCreated);
-
-		if (!connection.IsCreated)
-		{
-			Debug.Log("ClientGameComponent::Update Something went wrong during connect");
-			return;
-		}
-
-		// ***** Receive data *****
-		HandleReceiveData(ref connection, ref driver, m_AllPlayerInfo);
 
 		// ***** Update UI ****
 		// gameUIInstance.UpdateUI(m_AllPlayerInfo);
@@ -116,63 +92,15 @@ public class ClientGameComponent : MonoBehaviour
 		clientGameSend.SendDataIfReady(ref connection, ref driver, IdToClientControlledObjectDictionary);
 	}
 
-	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> allPlayerInfo)
-	{
-		//Debug.Log("ClientGameComponent::HandleReceiveData Called");
 
-		NetworkEvent.Type cmd;
-		DataStreamReader stream;
-		while ((cmd = connection.PopEvent(driver, out stream)) !=
-			NetworkEvent.Type.Empty)
-		{
-			if (cmd == NetworkEvent.Type.Connect)
-			{
-				Debug.Log("ClientGameComponent::HandleReceiveData We are now connected to the server");
-
-				// Get ID
-				clientGameSend.SendDataWhenReady((byte)GAME_CLIENT_REQUESTS.GET_ID);
-			}
-			else if (cmd == NetworkEvent.Type.Data)
-			{
-				ReadServerBytes(allPlayerInfo, stream);
-			}
-			else if (cmd == NetworkEvent.Type.Disconnect)
-			{
-				Debug.Log("ClientGameComponent::HandleReceiveData Client got disconnected from server");
-				connection = default;
-			}
-		}
-	}
-
-	private void ReadServerBytes(List<PersistentPlayerInfo> playerList, DataStreamReader stream)
-	{
-		var readerCtx = default(DataStreamReader.Context);
-
-		Debug.Log("ClientGameComponent::ReadServerBytes stream.Length = " + stream.Length);
-
-		byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
-
-		// Must always manually move index for bytes
-		for (int i = 0; i < stream.Length;)
-		{
-			// Unsafely assuming that everything is working as expected and there are no attackers.
-			GAME_SERVER_COMMANDS serverCmd = (GAME_SERVER_COMMANDS)bytes[i];
-			++i;
-
-			Debug.Log("ClientGameComponent::ReadServerBytes Got " + serverCmd + " from the Server");
-
-			i += CommandToFunctionDictionary[serverCmd](i, bytes, playerList);
-		}
-	}
-
-	private int HandleHeartBeat(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
+	public int HandleHeartBeat(int index, byte[] bytes)
 	{
 		Debug.Log("ClientGameComponent::HandleHeartBeat Received heartbeat from server");
 		return 0;
 	}
 
 	// Returns the number of bytes read from the bytes array
-	private int HandleCreateEntityOwnershipCommand(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
+	public int HandleCreateEntityOwnershipCommand(int index, byte[] bytes)
 	{
 		int bytesRead = 0;
 
@@ -202,7 +130,7 @@ public class ClientGameComponent : MonoBehaviour
 		return bytesRead;
 	}
 
-	private int HandleSetAllObjectStatesCommand(int index, byte[] bytes, List<PersistentPlayerInfo> playerList)
+	public int HandleSetAllObjectStatesCommand(int index, byte[] bytes)
 	{
 		int bytesRead = 0;
 
@@ -218,7 +146,7 @@ public class ClientGameComponent : MonoBehaviour
 			++bytesRead;
 
 			byte[] deltaBytes = new byte[numBytesInDelta];
-				
+
 			System.Array.Copy(bytes, index + bytesRead, deltaBytes, 0, numBytesInDelta);
 
 			bytesRead += numBytesInDelta;

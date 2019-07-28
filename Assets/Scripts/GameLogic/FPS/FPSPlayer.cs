@@ -5,12 +5,12 @@ using UnityEngine;
 public class FPSPlayer : MonoBehaviour
 {
 	private FPSPlayerData data;
-	private ClientGameComponent clientGameComponent;
+	private ClientGameDataComponent clientGameDataComponent;
 
 	// Start is called before the first frame update
 	private void Start()
     {
-		clientGameComponent.AddObjectWithDeltaClient(data);
+		clientGameDataComponent.AddObjectWithDeltaClient(data);
 	}
 
 	private void Update()
@@ -21,9 +21,9 @@ public class FPSPlayer : MonoBehaviour
 		//}
 	}
 
-	public void Init(ClientGameComponent _clientGameComponent, int objectId)
+	public void Init(ClientGameDataComponent _clientGameDataComponent, int objectId)
 	{
-		clientGameComponent = _clientGameComponent;
+		clientGameDataComponent = _clientGameDataComponent;
 		data = new FPSPlayerData();
 		data.SetObjectId(objectId);
 	}

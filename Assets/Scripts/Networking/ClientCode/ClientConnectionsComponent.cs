@@ -81,12 +81,14 @@ public class ClientConnectionsComponent : MonoBehaviour
 		if (scene.name == "LobbyScene")
 		{
 			GameObject client = Instantiate(clientLobbyObj);
-			client.GetComponent<ClientLobbyComponent>().Init(this);
+			client.GetComponent<ClientLobbyReceiveComponent>().Init(this);
+			client.GetComponent<ClientLobbyDataComponent>().Init(this);
 		}
 		else if (scene.name == "PlayScene")
 		{
 			GameObject client = Instantiate(clientGameObj);
-			client.GetComponent<ClientGameComponent>().Init(this, m_PlayerInfo);
+			client.GetComponent<ClientGameReceiveComponent>().Init(this);
+			client.GetComponent<ClientGameDataComponent>().Init(this, m_PlayerInfo);
 		}
 	}
 

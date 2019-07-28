@@ -15,7 +15,7 @@ public class LobbyUIBehaviour : MonoBehaviour
 	[SerializeField]
 	private GameObject[] teamStats;
 
-	private ClientLobbyComponent client;
+	private ClientLobbyDataComponent client;
 
 	private void Start()
 	{
@@ -30,7 +30,7 @@ public class LobbyUIBehaviour : MonoBehaviour
 		}
 	}
 
-	public void Init(ClientLobbyComponent _client)
+	public void Init(ClientLobbyDataComponent _client)
 	{
 		client = _client;
 	}
