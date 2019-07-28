@@ -18,62 +18,24 @@ public class ServerGameReceiveComponent : MonoBehaviour
 		CHANGE_PLAYER_TYPE
 	}
 
-	// Current Player States
-	public List<PersistentPlayerInfo> m_PlayerList;
-
-	// A Pair of Dictionaries to make it easier to map Index and PlayerID
-	// ID -> Connection Index
-	private Dictionary<byte, int> IdToIndexDictionary;
-	// Connection Index -> ID
-	private Dictionary<int, byte> IndexToIdDictionary;
-
-	// Player ID -> Objects they own
-	private Dictionary<byte, int> IdToOwnedObjectsDictionary;
-	// Object ID -> Object
-	private Dictionary<int, byte> IdtoObjectsDictionary;
-
-	// Command and the player ID
-	private Queue<KeyValuePair<GAME_SERVER_PROCESS, int>> commandProcessingQueue;
-
 	private ServerConnectionsComponent connectionsComponent;
 	private ServerGameSend serverGameSend;
 	private ServerGameDataComponent serverGameDataComponent;
-
-	int numTeam1Players = 0;
-	int numTeam2Players = 0;
-
-	private int nextObjectId = 1;
-
+	
 	private Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes> CommandToFunctionDictionary;
-
-	// List of Object with Deltas. ID -> Object
-	private Dictionary<int, ObjectWithDelta> IdToObjectsDictionary;
 
 	private void Start()
 	{
-		//Debug.Log("ServerGameComponent::Start Called");
-		m_PlayerList = new List<PersistentPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
-
-		IdToIndexDictionary = new Dictionary<byte, int>();
-		IndexToIdDictionary = new Dictionary<int, byte>();
-
-		IdToOwnedObjectsDictionary = new Dictionary<byte, int>();
-		IdtoObjectsDictionary = new Dictionary<int, byte>();
-
-		commandProcessingQueue = new Queue<KeyValuePair<GAME_SERVER_PROCESS, int>>();
-
 		CommandToFunctionDictionary = new Dictionary<GAME_CLIENT_REQUESTS, ServerHandleIncomingBytes>();
 		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.CREATE_ENTITY_WITH_OWNERSHIP, serverGameDataComponent.HandleCreateEntityWithOwnership);
 		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.SET_ALL_OBJECT_STATES, serverGameDataComponent.HandleSetAllObjectStatesCommand);
 		CommandToFunctionDictionary.Add(GAME_CLIENT_REQUESTS.HEARTBEAT, serverGameDataComponent.HeartBeat);
-
-		IdToObjectsDictionary = new Dictionary<int, ObjectWithDelta>();
 	}
 
 
 	public void Init(ServerConnectionsComponent connHolder)
 	{
-		//Debug.Log("ServerGameComponent::Init Called");
+		//Debug.Log("ServerGameReceiveComponent::Init Called");
 		connectionsComponent = connHolder;
 		serverGameSend = GetComponent<ServerGameSend>();
 		serverGameDataComponent = GetComponent<ServerGameDataComponent>();
@@ -87,15 +49,15 @@ public class ServerGameReceiveComponent : MonoBehaviour
 		driver.ScheduleUpdate().Complete();
 
 		// ***** Handle Connections *****
-		HandleConnections(ref connections, ref driver, m_PlayerList);
+		HandleConnections(ref connections, ref driver);
 
 		// ***** Receive data *****
-		HandleReceiveData(ref connections, ref driver, m_PlayerList);
+		HandleReceiveData(ref connections, ref driver);
 	}
 
-	private void HandleConnections(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
+	private void HandleConnections(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
 	{
-		//Debug.Log("ServerGameComponent::HandleConnections Called");
+		//Debug.Log("ServerGameReceiveComponent::HandleConnections Called");
 
 		// Clean up connections
 		bool connectionsChanged = false;
@@ -103,94 +65,32 @@ public class ServerGameReceiveComponent : MonoBehaviour
 		{
 			if (!connections[i].IsCreated)
 			{
-				Debug.Log("ServerGameComponent::HandleConnections Removing a connection");
-				connectionsChanged = true;
-
-
-				// Correct number of players on team now.
-
-				if (playerList[i].team == 0)
-				{
-					--numTeam1Players;
-				}
-				else if (playerList[i].team == 1)
-				{
-					--numTeam2Players;
-				}
-				else
-				{
-					Debug.Log("ServerGameComponent::HandleConnections Removing a player not one team 1 or team 2. playerList[i].team = " + playerList[i].team);
-				}
-
-				serverGameSend.ResetIndividualPlayerQueue(i);
+				Debug.Log("ServerGameReceiveComponent::HandleConnections Removing a connection");
 
 				connections.RemoveAtSwapBack(i);
-				playerList.RemoveAtSwapBack(i);
+				serverGameDataComponent.RemovePlayer(i);
 				--i;
 			}
 		}
+			
+		
 
-		// Update the dictionary with new IDs
-		if (connectionsChanged)
-		{
-			IdToIndexDictionary.Clear();
-			IndexToIdDictionary.Clear();
-
-			for (int i = 0; i < playerList.Count; i++)
-			{
-				IdToIndexDictionary.Add(playerList[i].playerID, i);
-				IndexToIdDictionary.Add(i, playerList[i].playerID);
-			}
-		}
-
-		// Accept new connections
+		// Don't accept new connections
 		NetworkConnection c;
 		while ((c = driver.Accept()) != default)
 		{
-			if (connections.Length >= CONSTANTS.MAX_NUM_PLAYERS)
-			{
-				Debug.Log("ServerGameComponent::HandleConnections Too many connections, rejecting latest one");
-				driver.Disconnect(c);
-				continue;
-			}
-
-			Debug.Log("ServerGameComponent::HandleConnections Accepted a connection");
-
-			connections.Add(c);
-			playerList.Add(new PersistentPlayerInfo());
-			playerList[playerList.Count - 1].playerID = connectionsComponent.GetNextPlayerID();
-			playerList[playerList.Count - 1].name = "Player " + playerList[playerList.Count - 1].playerID;
-			IdToIndexDictionary.Add(playerList[playerList.Count - 1].playerID, playerList.Count - 1);
-			IndexToIdDictionary.Add(playerList.Count - 1, playerList[playerList.Count - 1].playerID);
-
-			// Automatically put the player on an empty team. Put on team 1 first if possible, otherwise put on team 2.
-			if (numTeam1Players < 3)
-			{
-				playerList[playerList.Count - 1].team = 0;
-				++numTeam1Players;
-			}
-			else if (numTeam2Players < 3)
-			{
-				playerList[playerList.Count - 1].team = 1;
-				++numTeam2Players;
-			}
-			else
-			{
-				Debug.Log("ServerGameComponent::HandleConnections SHOULD NOT BE IN THIS STATE! TEAMS ARE FULL BUT THERE ARE LESS THAN MAX NUMBER OF PLAYERS CONNECTED? NOT POSSIBLE. numTeam1Players = " + numTeam1Players + ", numTeam2Players = " + numTeam2Players);
-			}
-
-			// Send all current player data to the new connection
-			serverGameSend.SendCurrentPlayerStateDataToNewPlayerWhenReady(connections.Length - 1);
+			Debug.Log("ServerGameReceiveComponent::HandleConnections Too many connections, rejecting latest one");
+			driver.Disconnect(c);
 		}
 	}
 
-	private void HandleReceiveData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
+	private void HandleReceiveData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
 	{
 		for (int index = 0; index < connections.Length; ++index)
 		{
 			if (!connections.IsCreated)
 			{
-				Debug.Log("ServerGameComponent::HandleReceiveData connections[" + index + "] was not created");
+				Debug.Log("ServerGameReceiveComponent::HandleReceiveData connections[" + index + "] was not created");
 				Assert.IsTrue(true);
 			}
 
@@ -204,26 +104,26 @@ public class ServerGameReceiveComponent : MonoBehaviour
 					var readerCtx = default(DataStreamReader.Context);
 					byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
 
-					ReadClientBytes(index, playerList, bytes);
+					ReadClientBytes(index, bytes);
 				}
 				else if (cmd == NetworkEvent.Type.Disconnect)
 				{
-					Debug.Log("ServerGameComponent::HandleReceiveData Client disconnected from server");
+					Debug.Log("ServerGameReceiveComponent::HandleReceiveData Client disconnected from server");
 					connections[index] = default;
 				}
 				else
 				{
-					Debug.Log("ServerGameComponent::HandleReceiveData Unhandled Network Event: " + cmd);
+					Debug.Log("ServerGameReceiveComponent::HandleReceiveData Unhandled Network Event: " + cmd);
 				}
 			}
 
-			//Debug.Log("ServerGameComponent::HandleReceiveData Finished processing connection[" + index + "]");
+			//Debug.Log("ServerGameReceiveComponent::HandleReceiveData Finished processing connection[" + index + "]");
 		}
 	}
 
-	private void ReadClientBytes(int playerIndex, List<PersistentPlayerInfo> playerList, byte[] bytes)
+	private void ReadClientBytes(int playerIndex, byte[] bytes)
 	{
-		Debug.Log("ServerGameComponent::ReadClientBytes bytes.Length = " + bytes.Length);
+		Debug.Log("ServerGameReceiveComponent::ReadClientBytes bytes.Length = " + bytes.Length);
 
 		for (int i = 0; i < bytes.Length;)
 		{
@@ -232,7 +132,7 @@ public class ServerGameReceiveComponent : MonoBehaviour
 			// Unsafely assuming that everything is working as expected and there are no attackers.
 			++i;
 
-			Debug.Log("ServerGameComponent::ReadClientBytes Got " + clientCmd + " from the Client");
+			Debug.Log("ServerGameReceiveComponent::ReadClientBytes Got " + clientCmd + " from the Client");
 
 			i += CommandToFunctionDictionary[clientCmd](i, bytes, playerIndex);
 		}

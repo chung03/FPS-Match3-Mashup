@@ -123,8 +123,8 @@ public class ServerLobbyDataComponent : MonoBehaviour
 
 		for (int i = 0; i < m_PlayerList.Count; i++)
 		{
-			IdToIndexDictionary.Add(m_PlayerList[index].playerID, index);
-			IndexToIdDictionary.Add(index, m_PlayerList[index].playerID);
+			IdToIndexDictionary.Add(m_PlayerList[i].playerID, i);
+			IndexToIdDictionary.Add(i, m_PlayerList[i].playerID);
 		}
 	}
 

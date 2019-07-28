@@ -86,6 +86,38 @@ public class ServerGameDataComponent : MonoBehaviour
 		// ***** Send data *****
 		serverGameSend.SendDataIfReady(ref connections, ref driver, IdToObjectsDictionary);
 	}
+
+	public void RemovePlayer(int index)
+	{
+		// Correct number of players on team now.
+
+		if (m_PlayerList[index].team == 0)
+		{
+			--numTeam1Players;
+		}
+		else if (m_PlayerList[index].team == 1)
+		{
+			--numTeam2Players;
+		}
+		else
+		{
+			Debug.Log("ServerGameDataComponent::RemovePlayer Removing a player not one team 1 or team 2. m_PlayerList["+index+"].team = " + m_PlayerList[index].team);
+		}
+
+		serverGameSend.ResetIndividualPlayerQueue(index);
+
+		m_PlayerList.RemoveAtSwapBack(index);
+
+
+		IdToIndexDictionary.Clear();
+		IndexToIdDictionary.Clear();
+
+		for (int i = 0; i < m_PlayerList.Count; i++)
+		{
+			IdToIndexDictionary.Add(m_PlayerList[i].playerID, i);
+			IndexToIdDictionary.Add(i, m_PlayerList[i].playerID);
+		}
+	}
 	
 
 	public int HandleCreateEntityWithOwnership(int index, byte[] bytes, int playerIndex)
