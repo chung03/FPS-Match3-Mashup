@@ -22,20 +22,6 @@ public class ServerLobbyReceiveComponent : MonoBehaviour
 	private ServerLobbyDataComponent serverLobbyDataComponent;
 	private ServerLobbySend serverLobbySend;
 
-	private Dictionary<int, ServerHandleIncomingBytes> CommandToFunctionDictionary;
-
-	private void Start()
-	{
-		CommandToFunctionDictionary = new Dictionary<int, ServerHandleIncomingBytes>();
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.READY, serverLobbyDataComponent.ChangePlayerReady);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM, serverLobbyDataComponent.ChangePlayerTeam);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE, serverLobbyDataComponent.ChangePlayerType);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.GET_ID, serverLobbyDataComponent.GetPlayerID);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.START_GAME, serverLobbyDataComponent.StartGame);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_NAME, serverLobbyDataComponent.ChangePlayerName);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.HEARTBEAT, serverLobbyDataComponent.HeartBeat);
-	}
-
 
 	public void Init(ServerConnectionsComponent connHolder)
 	{
@@ -113,8 +99,8 @@ public class ServerLobbyReceiveComponent : MonoBehaviour
 				{
 					var readerCtx = default(DataStreamReader.Context);
 					byte[] bytes = stream.ReadBytesAsArray(ref readerCtx, stream.Length);
-					
-					ReadClientBytes(index, bytes);
+
+					serverLobbyDataComponent.ProcessClientBytes(index, bytes);
 				}
 				else if (cmd == NetworkEvent.Type.Disconnect)
 				{
@@ -128,23 +114,6 @@ public class ServerLobbyReceiveComponent : MonoBehaviour
 			}
 
 			//Debug.Log("ServerLobbyComponent::HandleReceiveData Finished processing connection[" + index + "]");
-		}
-	}
-
-	private void ReadClientBytes(int playerIndex, byte[] bytes)
-	{
-		Debug.Log("ServerLobbyComponent::ReadClientBytes bytes.Length = " + bytes.Length);
-
-		for (int i = 0; i < bytes.Length;)
-		{
-			byte clientCmd = bytes[i];
-
-			// Unsafely assuming that everything is working as expected and there are no attackers.
-			++i;
-
-			Debug.Log("ServerLobbyComponent::ReadClientBytes Got " + clientCmd + " from the Client");
-
-			i += CommandToFunctionDictionary[clientCmd](i, bytes, playerIndex);
 		}
 	}
 }

@@ -47,6 +47,15 @@ public class ServerLobbyDataComponent : MonoBehaviour
 		IndexToIdDictionary = new Dictionary<int, byte>();
 
 		commandProcessingQueue = new Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>>();
+
+		CommandToFunctionDictionary = new Dictionary<int, ServerHandleIncomingBytes>();
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.READY, ChangePlayerReady);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM, ChangePlayerTeam);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE, ChangePlayerType);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.GET_ID, GetPlayerID);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.START_GAME, StartGame);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_NAME, ChangePlayerName);
+		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.HEARTBEAT, HeartBeat);
 	}
 
 
@@ -128,7 +137,7 @@ public class ServerLobbyDataComponent : MonoBehaviour
 		}
 	}
 
-	public int ChangePlayerReady(int index, byte[] bytes, int playerIndex)
+	private int ChangePlayerReady(int index, byte[] bytes, int playerIndex)
 	{
 		if (m_PlayerList[playerIndex].isReady == 0)
 		{
@@ -144,7 +153,7 @@ public class ServerLobbyDataComponent : MonoBehaviour
 		return 0;
 	}
 
-	public int ChangePlayerTeam(int index, byte[] bytes, int playerIndex)
+	private int ChangePlayerTeam(int index, byte[] bytes, int playerIndex)
 	{
 		if (m_PlayerList[playerIndex].team == 0 && numTeam2Players < 3)
 		{
@@ -170,14 +179,14 @@ public class ServerLobbyDataComponent : MonoBehaviour
 		return 0;
 	}
 
-	public int ChangePlayerType(int index, byte[] bytes, int playerIndex)
+	private int ChangePlayerType(int index, byte[] bytes, int playerIndex)
 	{
 		commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.CHANGE_PLAYER_TYPE, playerIndex));
 
 		return 0;
 	}
 
-	public int GetPlayerID(int index, byte[] bytes, int playerIndex)
+	private int GetPlayerID(int index, byte[] bytes, int playerIndex)
 	{
 		Debug.Log("ServerLobbyDataComponent::GetPlayerID Client " + playerIndex + " sent request for its ID");
 
@@ -187,14 +196,14 @@ public class ServerLobbyDataComponent : MonoBehaviour
 		return 0;
 	}
 
-	public int StartGame(int index, byte[] bytes, int playerIndex)
+	private int StartGame(int index, byte[] bytes, int playerIndex)
 	{
 		commandProcessingQueue.Enqueue(new KeyValuePair<LOBBY_SERVER_PROCESS, int>(LOBBY_SERVER_PROCESS.START_GAME, CONSTANTS.SEND_ALL_PLAYERS));
 
 		return 0;
 	}
 
-	public int ChangePlayerName(int index, byte[] bytes, int playerIndex)
+	private int ChangePlayerName(int index, byte[] bytes, int playerIndex)
 	{
 		int afterStringReadIndex = index;
 
@@ -205,7 +214,7 @@ public class ServerLobbyDataComponent : MonoBehaviour
 		return afterStringReadIndex - index;
 	}
 
-	public int HeartBeat(int index, byte[] bytes, int playerIndex)
+	private int HeartBeat(int index, byte[] bytes, int playerIndex)
 	{
 		Debug.Log("ServerLobbyDataComponent::HeartBeat Client " + playerIndex + " sent heartbeat");
 		serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.HEARTBEAT, playerIndex);
@@ -298,6 +307,23 @@ public class ServerLobbyDataComponent : MonoBehaviour
 				}
 			}
 
+		}
+	}
+
+	public void ProcessClientBytes(int playerIndex, byte[] bytes)
+	{
+		Debug.Log("ServerLobbyComponent::ReadClientBytes bytes.Length = " + bytes.Length);
+
+		for (int i = 0; i < bytes.Length;)
+		{
+			byte clientCmd = bytes[i];
+
+			// Unsafely assuming that everything is working as expected and there are no attackers.
+			++i;
+
+			Debug.Log("ServerLobbyComponent::ReadClientBytes Got " + clientCmd + " from the Client");
+
+			i += CommandToFunctionDictionary[clientCmd](i, bytes, playerIndex);
 		}
 	}
 }

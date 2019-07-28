@@ -214,12 +214,17 @@ public class FPSPlayerData: ObjectWithDelta
 			index += sizeof(float);
 		}
 
-		currentPlayerPosn = desiredPlayerPosn;
-		currentPlayerRotation = desiredPlayerRotation;
+		//currentPlayerPosn = desiredPlayerPosn;
+		//currentPlayerRotation = desiredPlayerRotation;
 
 		if (isServer)
 		{
 			ServerCheckDeltaResults();
+		}
+		else
+		{
+			currentPlayerPosn = desiredPlayerPosn;
+			currentPlayerRotation = desiredPlayerRotation;
 		}
 
 		isDirty = false;
