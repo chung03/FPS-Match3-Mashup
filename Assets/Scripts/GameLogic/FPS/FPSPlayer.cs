@@ -17,7 +17,7 @@ public class FPSPlayer : MonoBehaviour
 	{
 		//if (!data.IsDirty())
 		//{
-			transform.position = data.GetPlayerPosn();
+		// transform.position = data.GetPlayerPosn();
 		//}
 	}
 

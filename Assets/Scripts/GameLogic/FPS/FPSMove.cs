@@ -87,23 +87,18 @@ public class FPSMove : MonoBehaviour
 		}
 
 
-		//MoveChar(moveVector);
-
-		moveVector.y = 0;
+		MoveChar(moveVector);
 
 		if (moveVector != Vector3.zero)
 		{
+			// Send data to the Server
 			fpsPlayer.SetPlayerPosn(transform.position + moveVector);
 		}
-		
 
 		for (int move = 0; move < momentVectors.Length; ++move)
         {
             momentVectors[move] = Vector3.zero;
         }
-
-		//fpsPlayer.SetPlayerPosn(transform.position);
-		//fpsPlayer.SetPlayerPosn(transform.position + moveVector);
 	}
 
 	public void CheckCollision(ControllerColliderHit hit)
