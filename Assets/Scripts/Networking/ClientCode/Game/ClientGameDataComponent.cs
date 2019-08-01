@@ -67,6 +67,7 @@ public class ClientGameDataComponent : MonoBehaviour
 		// Initialize the byteHandling Table
 		CommandToFunctionDictionary = new Dictionary<GAME_SERVER_COMMANDS, ClientHandleIncomingBytes>();
 		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, HandleCreateEntityOwnershipCommand);
+		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.CREATE_ENTITY, HandleCreateEntityCommand);
 		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.SET_ALL_OBJECT_STATES, HandleSetAllObjectStatesCommand);
 		CommandToFunctionDictionary.Add(GAME_SERVER_COMMANDS.HEARTBEAT, HandleHeartBeat);
 	}
@@ -104,7 +105,7 @@ public class ClientGameDataComponent : MonoBehaviour
 
 	public int HandleHeartBeat(int index, byte[] bytes)
 	{
-		Debug.Log("ClientGameComponent::HandleHeartBeat Received heartbeat from server");
+		Debug.Log("ClientGameDataComponent::HandleHeartBeat Received heartbeat from server");
 		return 0;
 	}
 
@@ -122,7 +123,41 @@ public class ClientGameDataComponent : MonoBehaviour
 		if (objectType == (byte)CREATE_ENTITY_TYPES.FPS_PLAYER)
 		{
 			FPSPlayer fpsPlayer = Instantiate(FPSPlayerObj).GetComponent<FPSPlayer>();
+			fpsPlayer.Init(this, newId, true);
+
+			IdToClientControlledObjectDictionary.Add(newId, fpsPlayer.GetData());
+		}
+		else if (objectType == (byte)CREATE_ENTITY_TYPES.MATCH3_PLAYER)
+		{
+			/*
+			FPSPlayer fpsPlayer = Instantiate(FPSPlayerObj).GetComponent<FPSPlayer>();
 			fpsPlayer.Init(this, newId);
+			*/
+		}
+
+
+		Debug.Log("ClientGameDataComponent::HandleCreateEntityOwnershipCommand Object ID was set to " + newId + " and Object type is " + objectType);
+		return bytesRead;
+	}
+
+	public int HandleCreateEntityCommand(int index, byte[] bytes)
+	{
+		int bytesRead = 0;
+
+		byte objectType = bytes[index];
+		++bytesRead;
+
+		byte newId = bytes[index + bytesRead];
+		++bytesRead;
+
+		if (objectType == (byte)CREATE_ENTITY_TYPES.FPS_PLAYER)
+		{
+			FPSPlayer fpsPlayer = Instantiate(FPSPlayerObj).GetComponent<FPSPlayer>();
+			fpsPlayer.Init(this, newId, false);
+
+			// Since the player doesn't control this, remove input. Also remove camera
+			//Destroy(fpsPlayer.GetComponent<FPSPlayerInput>());
+			//Destroy(fpsPlayer.transform.Find("Camera"));
 
 			//IdToClientControlledObjectDictionary.Add(newId, fpsPlayer.GetData());
 		}
@@ -135,7 +170,7 @@ public class ClientGameDataComponent : MonoBehaviour
 		}
 
 
-		Debug.Log("ClientGameComponent::HandleCreateEntityOwnershipCommand Object ID was set to " + newId + " and Object type is " + objectType);
+		Debug.Log("ClientGameDataComponent::HandleCreateEntityOwnershipCommand Object ID was set to " + newId + " and Object type is " + objectType);
 		return bytesRead;
 	}
 
@@ -169,13 +204,13 @@ public class ClientGameDataComponent : MonoBehaviour
 			}
 		}
 
-		Debug.Log("ClientGameComponent::HandleSetAllObjectStatesCommand Finished");
+		Debug.Log("ClientGameDataComponent::HandleSetAllObjectStatesCommand Finished");
 		return bytesRead;
 	}
 
 	public void AddObjectWithDeltaClient(ObjectWithDelta newObj)
 	{
-		IdToClientControlledObjectDictionary.Add(newObj.GetObjectId(), newObj);
+		//IdToClientControlledObjectDictionary.Add(newObj.GetObjectId(), newObj);
 		IdToServerControlledObjectDictionary.Add(newObj.GetObjectId(), newObj);
 	}
 
@@ -188,7 +223,7 @@ public class ClientGameDataComponent : MonoBehaviour
 			GAME_SERVER_COMMANDS serverCmd = (GAME_SERVER_COMMANDS)bytes[i];
 			++i;
 
-			Debug.Log("ClientGameComponent::ReadServerBytes Got " + serverCmd + " from the Server");
+			Debug.Log("ClientGameDataComponent::ReadServerBytes Got " + serverCmd + " from the Server");
 
 			i += CommandToFunctionDictionary[serverCmd](i, bytes);
 		}

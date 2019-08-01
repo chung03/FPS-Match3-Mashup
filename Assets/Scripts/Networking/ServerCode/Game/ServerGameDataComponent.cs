@@ -51,10 +51,12 @@ public class ServerGameDataComponent : MonoBehaviour
 	private void Start()
 	{
 		//Debug.Log("ServerGameDataComponent::Start Called");
-		m_PlayerList = new List<PersistentPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		m_PlayerList = connectionsComponent.GetGameInfo();
 
 		IdToIndexDictionary = new Dictionary<byte, int>();
 		IndexToIdDictionary = new Dictionary<int, byte>();
+
+		ReconstructIndexIdDictionaries();
 
 		IdToOwnedObjectsDictionary = new Dictionary<byte, int>();
 		IdtoObjectsDictionary = new Dictionary<int, byte>();
@@ -115,7 +117,12 @@ public class ServerGameDataComponent : MonoBehaviour
 
 		m_PlayerList.RemoveAtSwapBack(index);
 
+		ReconstructIndexIdDictionaries();
+	}
+	
 
+	private void ReconstructIndexIdDictionaries()
+	{
 		IdToIndexDictionary.Clear();
 		IndexToIdDictionary.Clear();
 
@@ -125,7 +132,6 @@ public class ServerGameDataComponent : MonoBehaviour
 			IndexToIdDictionary.Add(i, m_PlayerList[i].playerID);
 		}
 	}
-	
 
 	public int HandleCreateEntityWithOwnership(int index, byte[] bytes, int playerIndex)
 	{
@@ -144,9 +150,26 @@ public class ServerGameDataComponent : MonoBehaviour
 			IdToObjectsDictionary.Add(newObjectId, newData);
 		}
 
+		// Create the entity with ownership on the owning player
 		serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.CREATE_ENTITY_WITH_OWNERSHIP, playerIndex);
 		serverGameSend.SendDataToPlayerWhenReady((byte)newObjectType, playerIndex);
 		serverGameSend.SendDataToPlayerWhenReady((byte)newObjectId, playerIndex);
+
+		// Create the entity without ownership on every other player
+		for (int i = 0; i < m_PlayerList.Count; ++i)
+		{
+			int otherPlayerIndex = IdToIndexDictionary[m_PlayerList[i].playerID];
+
+			// Make sure we don't send data to the player with ownership again
+			if (otherPlayerIndex == playerIndex )
+			{
+				continue;
+			}
+
+			serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.CREATE_ENTITY, otherPlayerIndex);
+			serverGameSend.SendDataToPlayerWhenReady((byte)newObjectType, otherPlayerIndex);
+			serverGameSend.SendDataToPlayerWhenReady((byte)newObjectId, otherPlayerIndex);
+		}
 
 		//Debug.Log("ServerLobbyComponent::ChangePlayerReady Player " + playerInfo[playerIndex].playerID + " ready state set to " + playerInfo[playerIndex].isReady);
 

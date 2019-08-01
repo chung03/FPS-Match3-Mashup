@@ -21,11 +21,19 @@ public class FPSPlayer : MonoBehaviour
 		//}
 	}
 
-	public void Init(ClientGameDataComponent _clientGameDataComponent, int objectId)
+	public void Init(ClientGameDataComponent _clientGameDataComponent, int objectId, bool isOwner)
 	{
 		clientGameDataComponent = _clientGameDataComponent;
 		data = new FPSPlayerData();
 		data.SetObjectId(objectId);
+
+		if (!isOwner)
+		{
+			// Since the player doesn't control this, remove input. Also remove camera
+			Destroy(GetComponent<FPSPlayerInput>());
+			Destroy(GetComponent<FPSLook>());
+			Destroy(transform.Find("Camera").gameObject);
+		}
 	}
 
 	public void SetPlayerPosn(Vector3 posn)
