@@ -20,10 +20,10 @@ public class ClientConnectionsComponent : MonoBehaviour
 	private IPAddress ipAddress;
 
 	[SerializeField]
-	private GameObject clientLobbyObj;
+	private GameObject clientLobbyObj = null;
 
 	[SerializeField]
-	private GameObject clientGameObj;
+	private GameObject clientGameObj = null;
 
 	[SerializeField]
 	private int connectTimeoutMs = 5000;

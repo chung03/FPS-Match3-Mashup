@@ -7,10 +7,10 @@ using UnityEngine.UI;
 public class GameUIBehaviour : MonoBehaviour
 {
 	[SerializeField]
-	private GameObject startGameButton;
+	private GameObject startGameButton = null;
 
 	[SerializeField]
-	private GameObject[] teamStats;
+	private GameObject[] teamStats = null;
 
 	private ClientGameDataComponent client;
 

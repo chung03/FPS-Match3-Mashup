@@ -32,7 +32,7 @@ public class ClientLobbyDataComponent : MonoBehaviour
 	private ClientLobbySend clientLobbySend;
 
 	[SerializeField]
-	private GameObject lobbyUIObj;
+	private GameObject lobbyUIObj = null;
 	private LobbyUIBehaviour lobbyUIInstance;
 
 	private void Start()

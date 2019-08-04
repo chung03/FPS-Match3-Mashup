@@ -14,16 +14,16 @@ public class FPSMove : MonoBehaviour
 	}
 
 	[SerializeField]
-    private float moveSpeed;
+    private float moveSpeed = 0;
 
 	[SerializeField]
-	private float grapplingHookSpeed;
+	private float grapplingHookSpeed = 0;
 
 	[SerializeField]
-    private float jumpHeight;
+    private float jumpHeight = 0;
 
     [SerializeField]
-    private float jumpDuration;
+    private float jumpDuration = 0;
 
     private float timeSinceJumpStart = 0f;
     private MOVE_STATE moveState = MOVE_STATE.ON_GROUND;
@@ -34,7 +34,7 @@ public class FPSMove : MonoBehaviour
 
 	private Vector3 grappleHookTarget = Vector3.zero;
 
-	private FPSPlayer fpsPlayer;
+	private FPSPlayer fpsPlayer = null;
 
 	// Use this for initialization
 	private void Start () {

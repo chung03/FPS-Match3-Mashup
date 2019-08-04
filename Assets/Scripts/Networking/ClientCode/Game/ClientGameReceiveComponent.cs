@@ -13,8 +13,6 @@ using System.Text;
 
 public class ClientGameReceiveComponent : MonoBehaviour
 {
-	private static readonly string PLAY_SCENE = "Assets/Scenes/PlayScene.unity";
-
 	private ClientConnectionsComponent connectionsComponent;
 	private ClientGameSend clientGameSend;
 	private ClientGameDataComponent clientGameData;

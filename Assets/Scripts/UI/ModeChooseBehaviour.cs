@@ -11,10 +11,10 @@ public class ModeChooseBehaviour : MonoBehaviour
 	private static readonly string SEARCH_SCENE = "Assets/Scenes/SearchScene.unity";
 
 	[SerializeField]
-	private GameObject serverObject;
+	private GameObject serverObject = null;
 
 	[SerializeField]
-	private GameObject clientObject;
+	private GameObject clientObject = null;
 
 	public void BeServer()
 	{

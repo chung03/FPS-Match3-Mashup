@@ -10,8 +10,6 @@ using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Ne
 
 public class ClientGameDataComponent : MonoBehaviour
 {
-	private static readonly string PLAY_SCENE = "Assets/Scenes/PlayScene.unity";
-
 	// This is the player's ID. This is all it needs to identify itself and to find its player info.
 	private int m_PlayerID;
 
@@ -37,14 +35,14 @@ public class ClientGameDataComponent : MonoBehaviour
 	private Dictionary<GAME_SERVER_COMMANDS, ClientHandleIncomingBytes> CommandToFunctionDictionary;
 
 	[SerializeField]
-	private GameObject gameUIObj;
+	private GameObject gameUIObj = null;
 	private GameUIBehaviour gameUIInstance;
 
 	[SerializeField]
-	private GameObject FPSPlayerObj;
+	private GameObject FPSPlayerObj = null;
 
 	[SerializeField]
-	private GameObject Match3PlayerObj;
+	private GameObject Match3PlayerObj = null;
 
 	private void Start()
 	{

@@ -7,13 +7,13 @@ using UnityEngine.UI;
 public class LobbyUIBehaviour : MonoBehaviour
 {
 	[SerializeField]
-	private GameObject startGameButton;
+	private GameObject startGameButton = null;
 
 	[SerializeField]
-	private GameObject nameInputField;
+	private GameObject nameInputField = null;
 
 	[SerializeField]
-	private GameObject[] teamStats;
+	private GameObject[] teamStats = null;
 
 	private ClientLobbyDataComponent client;
 

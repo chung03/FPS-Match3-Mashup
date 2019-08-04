@@ -19,15 +19,15 @@ public class ServerConnectionsComponent : MonoBehaviour
 	public UdpCNetworkDriver m_BroadcastDriver;
 	public NativeList<NetworkConnection> m_Connections;
 
-	List<PersistentPlayerInfo> persistencePlayerInfo;
+	List<PersistentPlayerInfo> persistencePlayerInfo = null;
 
 	private byte nextPlayerID = 1;
 
 	[SerializeField]
-	private GameObject serverLobbyObj;
+	private GameObject serverLobbyObj = null;
 
 	[SerializeField]
-	private GameObject serverGameObj;
+	private GameObject serverGameObj = null;
 
 	[SerializeField]
 	private int connectTimeoutMs = 5000;

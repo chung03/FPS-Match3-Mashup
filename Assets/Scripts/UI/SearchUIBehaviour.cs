@@ -13,13 +13,13 @@ public class SearchUIBehaviour : MonoBehaviour
 	private static readonly string LOBBY_SCENE = "Assets/Scenes/LobbyScene.unity";
 
 	[SerializeField]
-	private GameObject joinGameButton;
+	private GameObject joinGameButton = null;
 
 	[SerializeField]
-	private GameObject IPInputField;
+	private GameObject IPInputField = null;
 
 	[SerializeField]
-	private GameObject clientObject;
+	private GameObject clientObject = null;
 
 	private ClientLobbyReceiveComponent client;
 	private string ipString;

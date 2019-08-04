@@ -7,7 +7,7 @@ public class FPSLook : MonoBehaviour
 {
 
     [SerializeField]
-    private float lookSpeed;
+    private float lookSpeed = 0;
 
     private float rotY = 0.0f; // rotation around the up/y axis
     private float rotX = 0.0f; // rotation around the right/x axis
@@ -15,7 +15,7 @@ public class FPSLook : MonoBehaviour
 	private Vector3 initialRotation;
 
 	[SerializeField]
-	private Camera fpsCamera;
+	private Camera fpsCamera = null;
 
 	private FPSPlayer fpsPlayer;
 
