@@ -75,4 +75,4 @@ MonoBehaviour:
     type: 3}
   FPSPlayerObj: {fileID: 4709725410128075721, guid: 274ee331bd8a51a4898427067d5e91d6,
     type: 3}
-  Match3PlayerObj: {fileID: 0}
+  Match3PlayerObj: {fileID: 100000, guid: a73a9491a21d3ae479dfcb04783f7743, type: 3}

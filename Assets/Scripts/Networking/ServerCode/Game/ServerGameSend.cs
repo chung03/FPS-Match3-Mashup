@@ -72,18 +72,15 @@ public class ServerGameSend : MonoBehaviour
 
 		foreach (ObjectWithDelta data in IdToObjectsDictionary.Values)
 		{
-			//if (data.IsDirty())
-			//{
-				SendDataToPlayerWhenReady((byte)data.GetObjectId(), CONSTANTS.SEND_ALL_PLAYERS);
+			SendDataToPlayerWhenReady((byte)data.GetObjectId(), CONSTANTS.SEND_ALL_PLAYERS);
 
-				List<byte> delta = data.ServerGetDeltaBytes(false);
+			List<byte> delta = data.GetDeltaBytes(false);
+			data.SetDeltaToZero();
 
-				foreach (byte dataByte in delta)
-				{
-					SendDataToPlayerWhenReady(dataByte, CONSTANTS.SEND_ALL_PLAYERS);
-				}
-			//}
-			
+			foreach (byte dataByte in delta)
+			{
+				SendDataToPlayerWhenReady(dataByte, CONSTANTS.SEND_ALL_PLAYERS);
+			}
 		}
 	}
 

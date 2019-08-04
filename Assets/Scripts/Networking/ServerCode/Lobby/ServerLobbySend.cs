@@ -76,7 +76,8 @@ public class ServerLobbySend : MonoBehaviour
 		// Send data for players that were here before
 		for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
 		{
-			List<byte> deltaInfo = playerList[playerNum].ServerGetDeltaBytes(false);
+			List<byte> deltaInfo = playerList[playerNum].GetDeltaBytes(false);
+			playerList[playerNum].SetDeltaToZero();
 
 			// Tell Client what changed
 			SendDataToPlayerWhenReady(deltaInfo, CONSTANTS.SEND_ALL_PLAYERS);
@@ -197,7 +198,8 @@ public class ServerLobbySend : MonoBehaviour
 		// Send full data for new players
 		for (int playerNum = beginningIndex; playerNum < endIndex; playerNum++)
 		{
-			List<byte> deltaInfo = playerList[playerNum].ServerGetDeltaBytes(true);
+			List<byte> deltaInfo = playerList[playerNum].GetDeltaBytes(true);
+			playerList[playerNum].SetDeltaToZero();
 
 			SendDataToPlayerWhenReady(deltaInfo, connectionIndex);
 		}

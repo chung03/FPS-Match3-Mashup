@@ -90,7 +90,8 @@ public class ClientGameSend : MonoBehaviour
 		{
 			SendDataWhenReady((byte)data.GetObjectId());
 
-			List<byte> request = data.ServerGetDeltaBytes(false);
+			List<byte> request = data.GetDeltaBytes(false);
+			data.SetDeltaToZero();
 
 			foreach (byte dataByte in request)
 			{

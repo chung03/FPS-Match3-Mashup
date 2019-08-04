@@ -6,42 +6,49 @@ using System;
 // This class stores the data for all FPS Player Components and handles deltas (create and read)
 public class FPSPlayerData: ObjectWithDelta
 {
-	bool isDirty = false;
 	int objectId = 0;
-	Vector3 desiredPlayerPosn;
-	Quaternion desiredPlayerRotation;
+	Vector3 previousPlayerPosn;
+	Quaternion previousPlayerRotation;
 
 	Vector3 currentPlayerPosn;
 	Quaternion currentPlayerRotation;
 
+	FPSPlayer fpsPlayer = null;
+
 	public FPSPlayerData()
 	{
 		currentPlayerPosn = Vector3.zero;
-		desiredPlayerPosn = Vector3.zero;
+		previousPlayerPosn = Vector3.zero;
 
-		desiredPlayerRotation = Quaternion.identity;
+		previousPlayerRotation = Quaternion.identity;
 		currentPlayerRotation = Quaternion.identity;
+	}
+
+	public void SetFpsPlayer(FPSPlayer _fpsPlayer)
+	{
+		fpsPlayer = _fpsPlayer;
 	}
 
 	public void SetPlayerPosn(Vector3 playerPosn)
 	{
-		desiredPlayerPosn = playerPosn;
+		currentPlayerPosn = playerPosn;
 
 		// Debug.LogWarning("SetPlayerPosn called. New currentPlayerPosn = " + currentPlayerPosn + ", previousPlayerPosn = " + previousPlayerPosn + ", currentPlayerPosn.x != previousPlayerPosn.x = " + (currentPlayerPosn.x != previousPlayerPosn.x));
-
-		isDirty = true;
 	}
 
 	public Vector3 GetPlayerPosn()
 	{
-		//return currentPlayerPosn;
 		return currentPlayerPosn;
 	}
 
 	public void SetPlayerRotation(Quaternion playerRotation)
 	{
-		desiredPlayerRotation = playerRotation;
-		isDirty = true;
+		currentPlayerRotation = playerRotation;
+	}
+
+	public Quaternion GetPlayerRotation()
+	{
+		return currentPlayerRotation;
 	}
 
 	private byte CalculateDiffMask(bool getFullState)
@@ -63,37 +70,37 @@ public class FPSPlayerData: ObjectWithDelta
 			// Debug.LogWarning("CalculateDiffMask called. currentPlayerPosn = " + currentPlayerPosn + ", previousPlayerPosn = " + previousPlayerPosn);
 
 
-			if (desiredPlayerPosn.x != currentPlayerPosn.x)
+			if (previousPlayerPosn.x != currentPlayerPosn.x)
 			{
 				playerDiffFlags |= FPS_PLAYER_DATA_CONSTANTS.POSN_X_MASK;
 			}
 
-			if (desiredPlayerPosn.y != currentPlayerPosn.y)
+			if (previousPlayerPosn.y != currentPlayerPosn.y)
 			{
 				playerDiffFlags |= FPS_PLAYER_DATA_CONSTANTS.POSN_Y_MASK;
 			}
 
-			if (desiredPlayerPosn.z != currentPlayerPosn.z)
+			if (previousPlayerPosn.z != currentPlayerPosn.z)
 			{
 				playerDiffFlags |= FPS_PLAYER_DATA_CONSTANTS.POSN_Z_MASK;
 			}
 
-			if (desiredPlayerRotation.w != currentPlayerRotation.w)
+			if (previousPlayerRotation.w != currentPlayerRotation.w)
 			{
 				playerDiffFlags |= FPS_PLAYER_DATA_CONSTANTS.ROTATION_W_MASK;
 			}
 
-			if (desiredPlayerRotation.x != currentPlayerRotation.x)
+			if (previousPlayerRotation.x != currentPlayerRotation.x)
 			{
 				playerDiffFlags |= FPS_PLAYER_DATA_CONSTANTS.ROTATION_X_MASK;
 			}
 
-			if (desiredPlayerRotation.y != currentPlayerRotation.y)
+			if (previousPlayerRotation.y != currentPlayerRotation.y)
 			{
 				playerDiffFlags |= FPS_PLAYER_DATA_CONSTANTS.ROTATION_Y_MASK;
 			}
 
-			if (desiredPlayerRotation.z != currentPlayerRotation.z)
+			if (previousPlayerRotation.z != currentPlayerRotation.z)
 			{
 				playerDiffFlags |= FPS_PLAYER_DATA_CONSTANTS.ROTATION_Z_MASK;
 			}
@@ -102,7 +109,7 @@ public class FPSPlayerData: ObjectWithDelta
 		return playerDiffFlags;
 	}
 
-	public List<byte> ServerGetDeltaBytes(bool getFullState)
+	public List<byte> GetDeltaBytes(bool getFullState)
 	{
 		List<byte> deltaBytes = new List<byte>();
 
@@ -110,7 +117,7 @@ public class FPSPlayerData: ObjectWithDelta
 
 		if (playerDiffFlags != 0)
 		{
-			Debug.LogWarning("GetDeltaBytes Generated a non-zero delta. playerDiffFlags = " + playerDiffFlags);
+			//Debug.LogWarning("GetDeltaBytes Generated a non-zero delta. playerDiffFlags = " + playerDiffFlags);
 		}
 
 		// Prepare to send data now
@@ -118,41 +125,40 @@ public class FPSPlayerData: ObjectWithDelta
 
 		if ((playerDiffFlags & FPS_PLAYER_DATA_CONSTANTS.POSN_X_MASK) > 0)
 		{
-			deltaBytes.AddRange(BitConverter.GetBytes(desiredPlayerPosn.x));
+			deltaBytes.AddRange(BitConverter.GetBytes(currentPlayerPosn.x));
 		}
 
 		if ((playerDiffFlags & FPS_PLAYER_DATA_CONSTANTS.POSN_Y_MASK) > 0)
 		{
-			deltaBytes.AddRange(BitConverter.GetBytes(desiredPlayerPosn.y));
+			deltaBytes.AddRange(BitConverter.GetBytes(currentPlayerPosn.y));
 		}
 
 		if ((playerDiffFlags & FPS_PLAYER_DATA_CONSTANTS.POSN_Z_MASK) > 0)
 		{
-			deltaBytes.AddRange(BitConverter.GetBytes(desiredPlayerPosn.z));
+			deltaBytes.AddRange(BitConverter.GetBytes(currentPlayerPosn.z));
 		}
 
 		if ((playerDiffFlags & FPS_PLAYER_DATA_CONSTANTS.ROTATION_W_MASK) > 0)
 		{
-			deltaBytes.AddRange(BitConverter.GetBytes(desiredPlayerRotation.w));
+			deltaBytes.AddRange(BitConverter.GetBytes(currentPlayerRotation.w));
 		}
 
 		if ((playerDiffFlags & FPS_PLAYER_DATA_CONSTANTS.ROTATION_X_MASK) > 0)
 		{
-			deltaBytes.AddRange(BitConverter.GetBytes(desiredPlayerRotation.x));
+			deltaBytes.AddRange(BitConverter.GetBytes(currentPlayerRotation.x));
 		}
 
 		if ((playerDiffFlags & FPS_PLAYER_DATA_CONSTANTS.ROTATION_Y_MASK) > 0)
 		{
-			deltaBytes.AddRange(BitConverter.GetBytes(desiredPlayerRotation.y));
+			deltaBytes.AddRange(BitConverter.GetBytes(currentPlayerRotation.y));
 		}
 
 		if ((playerDiffFlags & FPS_PLAYER_DATA_CONSTANTS.ROTATION_Z_MASK) > 0)
 		{
-			deltaBytes.AddRange(BitConverter.GetBytes(desiredPlayerRotation.z));
+			deltaBytes.AddRange(BitConverter.GetBytes(currentPlayerRotation.z));
 		}
 		
 		deltaBytes.Insert(0, (byte)deltaBytes.Count);
-		isDirty = false;
 
 		return deltaBytes;
 	}
@@ -164,7 +170,7 @@ public class FPSPlayerData: ObjectWithDelta
 
 		if (playerDiffMask != 0)
 		{
-			Debug.LogWarning("ClientApplyDelta Got a non-zero delta. playerDiffMask = " + playerDiffMask);
+			//Debug.LogWarning("ClientApplyDelta Got a non-zero delta. playerDiffMask = " + playerDiffMask);
 		}
 		else
 		{
@@ -172,77 +178,60 @@ public class FPSPlayerData: ObjectWithDelta
 			return;
 		}
 
+		/*
+		if (isServer)
+		{
+			previousPlayerPosn = currentPlayerPosn;
+			previousPlayerRotation = currentPlayerRotation;
+		}
+		*/
+
 		if ((playerDiffMask & FPS_PLAYER_DATA_CONSTANTS.POSN_X_MASK) > 0)
 		{
-			desiredPlayerPosn.x = BitConverter.ToSingle(delta, index);
+			currentPlayerPosn.x = BitConverter.ToSingle(delta, index);
 			index += sizeof(float);
 		}
 
 		if ((playerDiffMask & FPS_PLAYER_DATA_CONSTANTS.POSN_Y_MASK) > 0)
 		{
-			desiredPlayerPosn.y = BitConverter.ToSingle(delta, index);
+			currentPlayerPosn.y = BitConverter.ToSingle(delta, index);
 			index += sizeof(float);
 		}
 
 		if ((playerDiffMask & FPS_PLAYER_DATA_CONSTANTS.POSN_Z_MASK) > 0)
 		{
-			desiredPlayerPosn.z = BitConverter.ToSingle(delta, index);
+			currentPlayerPosn.z = BitConverter.ToSingle(delta, index);
 			index += sizeof(float);
 		}
 
 		if ((playerDiffMask & FPS_PLAYER_DATA_CONSTANTS.ROTATION_W_MASK) > 0)
 		{
-			desiredPlayerRotation.w = BitConverter.ToSingle(delta, index);
+			currentPlayerRotation.w = BitConverter.ToSingle(delta, index);
 			index += sizeof(float);
 		}
 
 		if ((playerDiffMask & FPS_PLAYER_DATA_CONSTANTS.ROTATION_X_MASK) > 0)
 		{
-			desiredPlayerRotation.x = BitConverter.ToSingle(delta, index);
+			currentPlayerRotation.x = BitConverter.ToSingle(delta, index);
 			index += sizeof(float);
 		}
 
 		if ((playerDiffMask & FPS_PLAYER_DATA_CONSTANTS.ROTATION_Y_MASK) > 0)
 		{
-			desiredPlayerRotation.y = BitConverter.ToSingle(delta, index);
+			currentPlayerRotation.y = BitConverter.ToSingle(delta, index);
 			index += sizeof(float);
 		}
 
 		if ((playerDiffMask & FPS_PLAYER_DATA_CONSTANTS.ROTATION_Z_MASK) > 0)
 		{
-			desiredPlayerRotation.z = BitConverter.ToSingle(delta, index);
+			currentPlayerRotation.z = BitConverter.ToSingle(delta, index);
 			index += sizeof(float);
 		}
-
-		//currentPlayerPosn = desiredPlayerPosn;
-		//currentPlayerRotation = desiredPlayerRotation;
-
-		if (isServer)
-		{
-			ServerCheckDeltaResults();
-		}
-		else
-		{
-			currentPlayerPosn = desiredPlayerPosn;
-			currentPlayerRotation = desiredPlayerRotation;
-		}
-
-		isDirty = false;
 	}
 
 	private void ServerCheckDeltaResults()
 	{
 		
-	}
-
-	public List<byte> ClientGetRequestBytes()
-	{
-		return null;
-	}
-
-	public bool IsDirty()
-	{
-		return isDirty;
 	}
 
 	public int GetObjectId()
@@ -253,6 +242,12 @@ public class FPSPlayerData: ObjectWithDelta
 	public void SetObjectId(int newId)
 	{
 		objectId = newId;
+	}
+
+	public void SetDeltaToZero()
+	{
+		previousPlayerPosn = currentPlayerPosn;
+		previousPlayerRotation = currentPlayerRotation;
 	}
 
 	private class FPS_PLAYER_DATA_CONSTANTS

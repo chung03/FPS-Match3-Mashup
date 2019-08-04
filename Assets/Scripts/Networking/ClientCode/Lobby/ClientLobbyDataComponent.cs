@@ -26,7 +26,7 @@ public class ClientLobbyDataComponent : MonoBehaviour
 	// Connection Index -> ID
 	private Dictionary<int, int> IndexToIdDictionary;
 
-	private Dictionary<int, ClientHandleIncomingBytes> CommandToFunctionDictionary;
+	private Dictionary<LOBBY_SERVER_COMMANDS, ClientHandleIncomingBytes> CommandToFunctionDictionary;
 
 	private ClientConnectionsComponent connectionsComponent;
 	private ClientLobbySend clientLobbySend;
@@ -50,13 +50,13 @@ public class ClientLobbyDataComponent : MonoBehaviour
 		lobbyUIInstance.Init(this);
 
 		// Initialize the byteHandling Table
-		CommandToFunctionDictionary = new Dictionary<int, ClientHandleIncomingBytes>();
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.READY, HandleReadyCommand);
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.CHANGE_TEAM, HandleChangeTeamCommand);
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.SET_ID, HandleSetIdCommand);
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, HandlePlayerStatesCommand);
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.START_GAME, HandleStartCommand);
-		CommandToFunctionDictionary.Add((int)LOBBY_SERVER_COMMANDS.HEARTBEAT, HandleHeartBeat);
+		CommandToFunctionDictionary = new Dictionary<LOBBY_SERVER_COMMANDS, ClientHandleIncomingBytes>();
+		CommandToFunctionDictionary.Add(LOBBY_SERVER_COMMANDS.READY, HandleReadyCommand);
+		CommandToFunctionDictionary.Add(LOBBY_SERVER_COMMANDS.CHANGE_TEAM, HandleChangeTeamCommand);
+		CommandToFunctionDictionary.Add(LOBBY_SERVER_COMMANDS.SET_ID, HandleSetIdCommand);
+		CommandToFunctionDictionary.Add(LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, HandlePlayerStatesCommand);
+		CommandToFunctionDictionary.Add(LOBBY_SERVER_COMMANDS.START_GAME, HandleStartCommand);
+		CommandToFunctionDictionary.Add(LOBBY_SERVER_COMMANDS.HEARTBEAT, HandleHeartBeat);
 
 
 		IdToIndexDictionary = new Dictionary<int, int>();
@@ -236,7 +236,7 @@ public class ClientLobbyDataComponent : MonoBehaviour
 		for (int i = 0; i < bytes.Length;)
 		{
 			// Unsafely assuming that everything is working as expected and there are no attackers.
-			byte serverCmd = bytes[i];
+			LOBBY_SERVER_COMMANDS serverCmd = (LOBBY_SERVER_COMMANDS)bytes[i];
 			++i;
 
 			Debug.Log("ClientLobbyComponent::ReadServerBytes Got " + serverCmd + " from the Server");

@@ -13,33 +13,36 @@ public class PersistentPlayerInfo : ObjectWithDelta
 	public string name;
 	public PLAYER_TYPE playerType;
 	public byte playerID;
-	private bool isDirty;
 
 	public PersistentPlayerInfo()
 	{
 		previousState = null;
-		isDirty = true;
 	}
 
 	public PersistentPlayerInfo Clone()
 	{
-		PersistentPlayerInfo ret = new PersistentPlayerInfo();
-		ret.team = team;
-		ret.isReady = isReady;
+		PersistentPlayerInfo other = new PersistentPlayerInfo();
+		other.team = team;
+		other.isReady = isReady;
 
 		if (name != null)
 		{
-			ret.name = System.String.Copy(name);
+			other.name = System.String.Copy(name);
 		}
 		else
 		{
-			ret.name = null;
+			other.name = null;
 		}
 
-		ret.playerType = playerType;
-		ret.playerID = playerID;
+		other.playerType = playerType;
+		other.playerID = playerID;
 
-		return ret;
+		return other;
+	}
+
+	public void SetDeltaToZero()
+	{
+		previousState = Clone();
 	}
 
 	private byte CalculateDiffMask()
@@ -74,7 +77,7 @@ public class PersistentPlayerInfo : ObjectWithDelta
 		return playerDiffFlags;
 	}
 
-	public List<byte> ServerGetDeltaBytes(bool getFullState)
+	public List<byte> GetDeltaBytes(bool getFullState)
 	{
 		List<byte> deltaBytes = new List<byte>();
 
@@ -139,9 +142,6 @@ public class PersistentPlayerInfo : ObjectWithDelta
 			}
 		}
 
-		previousState = Clone();
-		isDirty = false;
-
 		deltaBytes.Insert(0, (byte)deltaBytes.Count);
 
 		return deltaBytes;
@@ -187,17 +187,7 @@ public class PersistentPlayerInfo : ObjectWithDelta
 
 		}
 	}
-
-	public List<byte> ClientGetRequestBytes()
-	{
-		return null;
-	}
-
-	public bool IsDirty()
-	{
-		return isDirty;
-	}
-
+	
 	public int GetObjectId()
 	{
 		return playerID;

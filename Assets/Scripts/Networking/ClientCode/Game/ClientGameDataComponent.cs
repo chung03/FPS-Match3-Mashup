@@ -158,6 +158,8 @@ public class ClientGameDataComponent : MonoBehaviour
 			//Destroy(fpsPlayer.transform.Find("Camera"));
 
 			//IdToClientControlledObjectDictionary.Add(newId, fpsPlayer.GetData());
+
+			IdToServerControlledObjectDictionary.Add(newId, fpsPlayer.GetData());
 		}
 		else if (objectType == (byte)CREATE_ENTITY_TYPES.MATCH3_PLAYER)
 		{
@@ -168,7 +170,7 @@ public class ClientGameDataComponent : MonoBehaviour
 		}
 
 
-		Debug.Log("ClientGameDataComponent::HandleCreateEntityOwnershipCommand Object ID was set to " + newId + " and Object type is " + objectType);
+		Debug.Log("ClientGameDataComponent::HandleCreateEntityCommand Object ID was set to " + newId + " and Object type is " + objectType);
 		return bytesRead;
 	}
 
@@ -195,10 +197,11 @@ public class ClientGameDataComponent : MonoBehaviour
 
 			// If the object hasn't been created yet, the don't do anything for now.
 			// In future, should probably through some sort of error
-			if (IdToServerControlledObjectDictionary.ContainsKey(objectId))
+			if (deltaBytes[0] != 0 && IdToServerControlledObjectDictionary.ContainsKey(objectId))
 			{
 				ObjectWithDelta obj = IdToServerControlledObjectDictionary[objectId];
 				obj.ApplyDelta(deltaBytes, false);
+				obj.SetDeltaToZero();
 			}
 		}
 
@@ -209,7 +212,7 @@ public class ClientGameDataComponent : MonoBehaviour
 	public void AddObjectWithDeltaClient(ObjectWithDelta newObj)
 	{
 		//IdToClientControlledObjectDictionary.Add(newObj.GetObjectId(), newObj);
-		IdToServerControlledObjectDictionary.Add(newObj.GetObjectId(), newObj);
+		//IdToServerControlledObjectDictionary.Add(newObj.GetObjectId(), newObj);
 	}
 
 	public void ProcessServerBytes(byte[] bytes)

@@ -36,7 +36,7 @@ public class ServerLobbyDataComponent : MonoBehaviour
 	int numTeam1Players = 0;
 	int numTeam2Players = 0;
 
-	private Dictionary<int, ServerHandleIncomingBytes> CommandToFunctionDictionary;
+	private Dictionary<LOBBY_CLIENT_REQUESTS, ServerHandleIncomingBytes> CommandToFunctionDictionary;
 
 	private void Start()
 	{
@@ -48,14 +48,14 @@ public class ServerLobbyDataComponent : MonoBehaviour
 
 		commandProcessingQueue = new Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>>();
 
-		CommandToFunctionDictionary = new Dictionary<int, ServerHandleIncomingBytes>();
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.READY, ChangePlayerReady);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_TEAM, ChangePlayerTeam);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE, ChangePlayerType);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.GET_ID, GetPlayerID);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.START_GAME, StartGame);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.CHANGE_NAME, ChangePlayerName);
-		CommandToFunctionDictionary.Add((int)LOBBY_CLIENT_REQUESTS.HEARTBEAT, HeartBeat);
+		CommandToFunctionDictionary = new Dictionary<LOBBY_CLIENT_REQUESTS, ServerHandleIncomingBytes>();
+		CommandToFunctionDictionary.Add(LOBBY_CLIENT_REQUESTS.READY, ChangePlayerReady);
+		CommandToFunctionDictionary.Add(LOBBY_CLIENT_REQUESTS.CHANGE_TEAM, ChangePlayerTeam);
+		CommandToFunctionDictionary.Add(LOBBY_CLIENT_REQUESTS.CHANGE_PLAYER_TYPE, ChangePlayerType);
+		CommandToFunctionDictionary.Add(LOBBY_CLIENT_REQUESTS.GET_ID, GetPlayerID);
+		CommandToFunctionDictionary.Add(LOBBY_CLIENT_REQUESTS.START_GAME, StartGame);
+		CommandToFunctionDictionary.Add(LOBBY_CLIENT_REQUESTS.CHANGE_NAME, ChangePlayerName);
+		CommandToFunctionDictionary.Add(LOBBY_CLIENT_REQUESTS.HEARTBEAT, HeartBeat);
 	}
 
 
@@ -316,11 +316,11 @@ public class ServerLobbyDataComponent : MonoBehaviour
 
 		for (int i = 0; i < bytes.Length;)
 		{
-			byte clientCmd = bytes[i];
+			LOBBY_CLIENT_REQUESTS clientCmd = (LOBBY_CLIENT_REQUESTS)bytes[i];
 
 			// Unsafely assuming that everything is working as expected and there are no attackers.
 			++i;
-
+			
 			Debug.Log("ServerLobbyComponent::ReadClientBytes Got " + clientCmd + " from the Client");
 
 			i += CommandToFunctionDictionary[clientCmd](i, bytes, playerIndex);

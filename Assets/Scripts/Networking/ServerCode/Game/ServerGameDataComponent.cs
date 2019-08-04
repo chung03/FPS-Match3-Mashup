@@ -204,6 +204,7 @@ public class ServerGameDataComponent : MonoBehaviour
 			if (IdToObjectsDictionary.ContainsKey(objectId))
 			{
 				ObjectWithDelta obj = IdToObjectsDictionary[objectId];
+				obj.SetDeltaToZero();
 				obj.ApplyDelta(deltaBytes, true);
 			}
 		}
