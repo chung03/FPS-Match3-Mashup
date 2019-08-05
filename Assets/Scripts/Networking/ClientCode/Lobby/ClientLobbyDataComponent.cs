@@ -202,7 +202,7 @@ public class ClientLobbyDataComponent : MonoBehaviour
 
 			System.Array.Copy(bytes, index, deltaBytes, 0, playerDeltaSize);
 
-			m_AllPlayerInfo[player].ApplyDelta(deltaBytes, false);
+			m_AllPlayerInfo[player].ApplyDelta(deltaBytes);
 
 			index += playerDeltaSize;
 		}

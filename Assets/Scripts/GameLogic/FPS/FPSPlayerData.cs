@@ -163,7 +163,7 @@ public class FPSPlayerData: ObjectWithDelta
 		return deltaBytes;
 	}
 
-	public void ApplyDelta(byte[] delta, bool isServer)
+	public void ApplyDelta(byte[] delta)
 	{
 		byte playerDiffMask = delta[0];
 		int index = 1;
@@ -177,14 +177,6 @@ public class FPSPlayerData: ObjectWithDelta
 			// Nothing to change, so return
 			return;
 		}
-
-		/*
-		if (isServer)
-		{
-			previousPlayerPosn = currentPlayerPosn;
-			previousPlayerRotation = currentPlayerRotation;
-		}
-		*/
 
 		if ((playerDiffMask & FPS_PLAYER_DATA_CONSTANTS.POSN_X_MASK) > 0)
 		{

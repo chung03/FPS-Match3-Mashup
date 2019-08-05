@@ -200,7 +200,7 @@ public class ClientGameDataComponent : MonoBehaviour
 			if (deltaBytes[0] != 0 && IdToServerControlledObjectDictionary.ContainsKey(objectId))
 			{
 				ObjectWithDelta obj = IdToServerControlledObjectDictionary[objectId];
-				obj.ApplyDelta(deltaBytes, false);
+				obj.ApplyDelta(deltaBytes);
 				obj.SetDeltaToZero();
 			}
 		}

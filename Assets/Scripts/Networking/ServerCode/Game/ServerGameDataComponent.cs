@@ -205,7 +205,7 @@ public class ServerGameDataComponent : MonoBehaviour
 			{
 				ObjectWithDelta obj = IdToObjectsDictionary[objectId];
 				obj.SetDeltaToZero();
-				obj.ApplyDelta(deltaBytes, true);
+				obj.ApplyDelta(deltaBytes);
 			}
 		}
 
