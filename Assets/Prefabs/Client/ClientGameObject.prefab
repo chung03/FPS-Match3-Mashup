@@ -57,7 +57,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13338d1682e8bfb4ab724e18a0ae18dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sendFrequencyMs: 50
+  sendFrequencyMs: 25
   heartbeatFrequencyMs: 2000
 --- !u!114 &7629729823421405978
 MonoBehaviour:

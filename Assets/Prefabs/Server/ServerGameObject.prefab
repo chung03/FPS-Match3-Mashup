@@ -57,7 +57,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7eb69ccaae1f2941847e4a66279ec29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sendFrequencyMs: 50
+  sendFrequencyMs: 25
 --- !u!114 &2668476143999447667
 MonoBehaviour:
   m_ObjectHideFlags: 0
