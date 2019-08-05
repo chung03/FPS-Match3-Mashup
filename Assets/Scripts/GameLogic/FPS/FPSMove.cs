@@ -92,7 +92,7 @@ public class FPSMove : MonoBehaviour
 		if (moveVector != Vector3.zero)
 		{
 			// Send data to the Server
-			fpsPlayer.SetPlayerPosn(transform.position + moveVector);
+			fpsPlayer.SetPlayerPosn(transform.position);
 		}
 
 		for (int move = 0; move < momentVectors.Length; ++move)
