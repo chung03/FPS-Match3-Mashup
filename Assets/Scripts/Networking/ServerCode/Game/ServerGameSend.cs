@@ -68,18 +68,34 @@ public class ServerGameSend : MonoBehaviour
 		}
 
 		SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.SET_ALL_OBJECT_STATES, CONSTANTS.SEND_ALL_PLAYERS);
-		SendDataToPlayerWhenReady((byte)IdToObjectsDictionary.Count, CONSTANTS.SEND_ALL_PLAYERS);
+
+		// Figure out how many objects have changed and only send deltas for those objects
+		byte numObjectsToSend = 0;
+		foreach (ObjectWithDelta data in IdToObjectsDictionary.Values)
+		{
+			// Only send data if something changed
+			if (data.HasChanged())
+			{
+				++numObjectsToSend;
+			}
+		}
+
+		SendDataToPlayerWhenReady(numObjectsToSend, CONSTANTS.SEND_ALL_PLAYERS);
 
 		foreach (ObjectWithDelta data in IdToObjectsDictionary.Values)
 		{
-			SendDataToPlayerWhenReady((byte)data.GetObjectId(), CONSTANTS.SEND_ALL_PLAYERS);
-
-			List<byte> delta = data.GetDeltaBytes(false);
-			data.SetDeltaToZero();
-
-			foreach (byte dataByte in delta)
+			// Only send data if something changed
+			if (data.HasChanged())
 			{
-				SendDataToPlayerWhenReady(dataByte, CONSTANTS.SEND_ALL_PLAYERS);
+				SendDataToPlayerWhenReady((byte)data.GetObjectId(), CONSTANTS.SEND_ALL_PLAYERS);
+
+				List<byte> delta = data.GetDeltaBytes(false);
+				data.SetDeltaToZero();
+
+				foreach (byte dataByte in delta)
+				{
+					SendDataToPlayerWhenReady(dataByte, CONSTANTS.SEND_ALL_PLAYERS);
+				}
 			}
 		}
 	}

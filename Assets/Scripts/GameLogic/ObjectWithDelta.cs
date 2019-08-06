@@ -7,4 +7,5 @@ public interface ObjectWithDelta
 	void SetObjectId(int newId);
 	void ApplyDelta(byte[] delta);
 	void SetDeltaToZero();
+	bool HasChanged();
 }

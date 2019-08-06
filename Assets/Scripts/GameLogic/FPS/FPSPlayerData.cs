@@ -226,6 +226,11 @@ public class FPSPlayerData: ObjectWithDelta
 		
 	}
 
+	public bool HasChanged()
+	{
+		return CalculateDiffMask(false) != 0;
+	}
+
 	public int GetObjectId()
 	{
 		return objectId;

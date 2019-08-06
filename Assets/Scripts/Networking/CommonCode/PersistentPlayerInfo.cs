@@ -182,7 +182,12 @@ public class PersistentPlayerInfo : ObjectWithDelta
 			++index;
 		}
 	}
-	
+
+	public bool HasChanged()
+	{
+		return CalculateDiffMask() != 0;
+	}
+
 	public int GetObjectId()
 	{
 		return playerID;
