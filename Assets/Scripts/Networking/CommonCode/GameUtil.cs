@@ -66,7 +66,8 @@ namespace GameUtils
 	public enum CREATE_ENTITY_TYPES
 	{
 		FPS_PLAYER = 20,
-		MATCH3_PLAYER
+		MATCH3_PLAYER,
+		NONE
 	}
 
 	public enum PLAYER_TYPE

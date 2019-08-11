@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using GameUtils;
 
 // This class stores the data for all FPS Player Components and handles deltas (create and read)
 public class FPSPlayerData: ObjectWithDelta
@@ -245,6 +246,11 @@ public class FPSPlayerData: ObjectWithDelta
 	{
 		previousPlayerPosn = currentPlayerPosn;
 		previousPlayerRotation = currentPlayerRotation;
+	}
+
+	public CREATE_ENTITY_TYPES GetEntityType()
+	{
+		return CREATE_ENTITY_TYPES.FPS_PLAYER;
 	}
 
 	private class FPS_PLAYER_DATA_CONSTANTS

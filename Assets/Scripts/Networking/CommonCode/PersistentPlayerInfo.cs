@@ -197,4 +197,9 @@ public class PersistentPlayerInfo : ObjectWithDelta
 	{
 		playerID = (byte)newId;
 	}
+
+	public GameUtils.CREATE_ENTITY_TYPES GetEntityType()
+	{
+		return GameUtils.CREATE_ENTITY_TYPES.NONE;
+	}
 }

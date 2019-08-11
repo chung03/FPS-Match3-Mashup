@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using GameUtils;
 
 public interface ObjectWithDelta
 {
@@ -8,4 +9,5 @@ public interface ObjectWithDelta
 	void ApplyDelta(byte[] delta);
 	void SetDeltaToZero();
 	bool HasChanged();
+	CREATE_ENTITY_TYPES GetEntityType();
 }

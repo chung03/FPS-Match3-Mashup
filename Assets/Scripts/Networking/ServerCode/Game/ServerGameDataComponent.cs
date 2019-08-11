@@ -222,6 +222,27 @@ public class ServerGameDataComponent : MonoBehaviour
 		return 0;
 	}
 
+	public Type CreateServerOwnedEntity<Type>(CREATE_ENTITY_TYPES newEntityType) where Type : ObjectWithDelta
+	{
+		Type retObj = default;
+
+		int newObjectId = GetNextObjectId();
+		retObj.SetObjectId(newObjectId);
+		IdToObjectsDictionary.Add(newObjectId, retObj);
+
+		// Create the entity without ownership on every other player
+		for (int i = 0; i < m_PlayerList.Count; ++i)
+		{
+			int otherPlayerIndex = IdToIndexDictionary[m_PlayerList[i].playerID];
+
+			serverGameSend.SendDataToPlayerWhenReady((byte)GAME_SERVER_COMMANDS.CREATE_ENTITY, otherPlayerIndex);
+			serverGameSend.SendDataToPlayerWhenReady((byte)retObj.GetEntityType(), otherPlayerIndex);
+			serverGameSend.SendDataToPlayerWhenReady((byte)newObjectId, otherPlayerIndex);
+		}
+
+		return retObj;
+	}
+
 	public void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
 	{
 		while (commandProcessingQueue.Count > 0)
