@@ -45,6 +45,7 @@ public class ServerLobbyDataComponent : MonoBehaviour
 	{
 		//Debug.Log("ServerLobbyDataComponent::Start Called");
 		m_PlayerList = new List<PersistentPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		m_PreviousStatePlayerList = new List<PersistentPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
 
 		IdToIndexDictionary = new Dictionary<byte, int>();
 		IndexToIdDictionary = new Dictionary<int, byte>();
