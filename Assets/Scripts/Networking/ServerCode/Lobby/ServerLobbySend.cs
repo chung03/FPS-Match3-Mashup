@@ -17,9 +17,8 @@ public class ServerLobbySend : MonoBehaviour
 	// Byte to send and the player ID
 	public List<Queue<byte>> individualSendQueues;
 	private Queue<byte> allSendQueue;
-	
-	// Used for calculating deltas and ultimately save on network bandwidth
-	public List<PersistentPlayerInfo> m_PreviousStatePlayerList;
+
+	private ServerLobbyDataComponent serverLobbyData;
 
 	[SerializeField]
 	private float sendFrequencyMs = 50;
@@ -37,7 +36,7 @@ public class ServerLobbySend : MonoBehaviour
 
 		allSendQueue = new Queue<byte>();
 
-		m_PreviousStatePlayerList = new List<PersistentPlayerInfo>(CONSTANTS.MAX_NUM_PLAYERS);
+		serverLobbyData = GetComponent<ServerLobbyDataComponent>();
 	}
 
     // Is kind of like an update, but is called by other code
@@ -52,42 +51,11 @@ public class ServerLobbySend : MonoBehaviour
 
 		timeSinceLastSend = Time.time;
 
-		HandlePlayerDiff(ref connections, ref driver, playerList);
+		serverLobbyData.SendPlayerDiffs();
 
 		HandleIndividualPlayerSend(ref connections, ref driver);
 
 		HandleAllPlayerSend(ref connections, ref driver);
-	}
-
-	private void HandlePlayerDiff(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> playerList)
-	{
-		// No players, so nothing to do
-		if (playerList.Count <= 0)
-		{
-			return;
-		}
-
-		// Send player state to all players
-		// Calculate and send Delta
-
-		SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, CONSTANTS.SEND_ALL_PLAYERS);
-		SendDataToPlayerWhenReady((byte)playerList.Count, CONSTANTS.SEND_ALL_PLAYERS);
-
-		// Send data for players that were here before
-		for (int playerNum = 0; playerNum < Mathf.Min(playerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
-		{
-			List<byte> deltaInfo = playerList[playerNum].GetDeltaBytes(false);
-			playerList[playerNum].SetDeltaToZero();
-
-			// Tell Client what changed
-			SendDataToPlayerWhenReady(deltaInfo, CONSTANTS.SEND_ALL_PLAYERS);
-		}
-
-		// Send full data for new players
-		SendFullPlayerState(playerList, CONSTANTS.SEND_ALL_PLAYERS, m_PreviousStatePlayerList.Count, playerList.Count);
-
-		// Save previous state so that we can create deltas later
-		m_PreviousStatePlayerList = DeepClone(playerList);
 	}
 
 	private void HandleIndividualPlayerSend(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
@@ -176,44 +144,5 @@ public class ServerLobbySend : MonoBehaviour
 		{
 			SendDataToPlayerWhenReady(_byte, connectionIndex);
 		}
-	}
-
-	// Send current player states to a new connection.
-	// This will bring the connection up to date and able to use the deltas in the next update
-	public void SendCurrentPlayerStateDataToNewPlayerWhenReady(int connectionIndex)
-	{
-		// Nothing to send if no players
-		if (m_PreviousStatePlayerList.Count <= 0)
-		{
-			return;
-		}
-
-		SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, connectionIndex);
-		SendDataToPlayerWhenReady((byte)m_PreviousStatePlayerList.Count, connectionIndex);
-		SendFullPlayerState(m_PreviousStatePlayerList, connectionIndex, 0, m_PreviousStatePlayerList.Count);
-	}
-
-	private void SendFullPlayerState(List<PersistentPlayerInfo> playerList, int connectionIndex, int beginningIndex, int endIndex)
-	{
-		// Send full data for new players
-		for (int playerNum = beginningIndex; playerNum < endIndex; playerNum++)
-		{
-			List<byte> deltaInfo = playerList[playerNum].GetDeltaBytes(true);
-			playerList[playerNum].SetDeltaToZero();
-
-			SendDataToPlayerWhenReady(deltaInfo, connectionIndex);
-		}
-	}
-
-	private List<PersistentPlayerInfo> DeepClone(List<PersistentPlayerInfo> list)
-	{
-		List<PersistentPlayerInfo> ret = new List<PersistentPlayerInfo>();
-
-		foreach (PersistentPlayerInfo player in list)
-		{
-			ret.Add(player.Clone());
-		}
-
-		return ret;
 	}
 }

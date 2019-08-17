@@ -21,6 +21,9 @@ public class ServerLobbyDataComponent : MonoBehaviour
 	// Current Player States
 	public List<PersistentPlayerInfo> m_PlayerList;
 
+	// Used for calculating deltas and ultimately save on network bandwidth
+	public List<PersistentPlayerInfo> m_PreviousStatePlayerList;
+
 	// A Pair of Dictionaries to make it easier to map Index and PlayerID
 	// ID -> Connection Index
 	private Dictionary<byte, int> IdToIndexDictionary;
@@ -103,7 +106,7 @@ public class ServerLobbyDataComponent : MonoBehaviour
 		}
 
 		// Send all current player data to the new connection
-		serverLobbySend.SendCurrentPlayerStateDataToNewPlayerWhenReady(m_PlayerList.Count - 1);
+		SendCurrentPlayerStateDataToNewPlayerWhenReady(m_PlayerList.Count - 1);
 	}
 
 	public void RemovePlayerFromTeam(int index)
@@ -325,5 +328,75 @@ public class ServerLobbyDataComponent : MonoBehaviour
 
 			i += CommandToFunctionDictionary[clientCmd](i, bytes, playerIndex);
 		}
+	}
+
+	public void SendPlayerDiffs()
+	{
+		// No players, so nothing to do
+		if (m_PlayerList.Count <= 0)
+		{
+			return;
+		}
+
+		// Send player state to all players
+		// Calculate and send Delta
+
+		serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, CONSTANTS.SEND_ALL_PLAYERS);
+		serverLobbySend.SendDataToPlayerWhenReady((byte)m_PlayerList.Count, CONSTANTS.SEND_ALL_PLAYERS);
+
+		// Send data for players that were here before
+		for (int playerNum = 0; playerNum < Mathf.Min(m_PlayerList.Count, m_PreviousStatePlayerList.Count); playerNum++)
+		{
+			List<byte> deltaInfo = m_PlayerList[playerNum].GetDeltaBytes(false);
+			m_PlayerList[playerNum].SetDeltaToZero();
+
+			// Tell Client what changed
+			serverLobbySend.SendDataToPlayerWhenReady(deltaInfo, CONSTANTS.SEND_ALL_PLAYERS);
+		}
+
+		// Send full data for new players
+		SendFullPlayerState(m_PlayerList, CONSTANTS.SEND_ALL_PLAYERS, m_PreviousStatePlayerList.Count, m_PlayerList.Count);
+
+		// Save previous state so that we can create deltas later
+		m_PreviousStatePlayerList = DeepClone(m_PlayerList);
+	}
+
+	private void SendFullPlayerState(List<PersistentPlayerInfo> playerList, int connectionIndex, int beginningIndex, int endIndex)
+	{
+		// Send full data for new players
+		for (int playerNum = beginningIndex; playerNum < endIndex; playerNum++)
+		{
+			List<byte> deltaInfo = playerList[playerNum].GetDeltaBytes(true);
+			playerList[playerNum].SetDeltaToZero();
+
+			serverLobbySend.SendDataToPlayerWhenReady(deltaInfo, connectionIndex);
+		}
+	}
+
+	private List<PersistentPlayerInfo> DeepClone(List<PersistentPlayerInfo> list)
+	{
+		List<PersistentPlayerInfo> ret = new List<PersistentPlayerInfo>();
+
+		foreach (PersistentPlayerInfo player in list)
+		{
+			ret.Add(player.Clone());
+		}
+
+		return ret;
+	}
+
+	// Send current player states to a new connection.
+	// This will bring the connection up to date and able to use the deltas in the next update
+	public void SendCurrentPlayerStateDataToNewPlayerWhenReady(int connectionIndex)
+	{
+		// Nothing to send if no players
+		if (m_PreviousStatePlayerList.Count <= 0)
+		{
+			return;
+		}
+
+		serverLobbySend.SendDataToPlayerWhenReady((byte)LOBBY_SERVER_COMMANDS.SET_ALL_PLAYER_STATES, connectionIndex);
+		serverLobbySend.SendDataToPlayerWhenReady((byte)m_PreviousStatePlayerList.Count, connectionIndex);
+		SendFullPlayerState(m_PreviousStatePlayerList, connectionIndex, 0, m_PreviousStatePlayerList.Count);
 	}
 }
