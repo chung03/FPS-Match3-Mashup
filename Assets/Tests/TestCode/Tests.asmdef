@@ -1,5 +1,10 @@
 ﻿{
     "name": "Tests",
+	"references": [
+        "Unity.Collections",
+        "Unity.Networking.Transport",
+		"FpsMatch3Mashup"
+    ],
     "optionalUnityReferences": [
         "TestAssemblies"
     ],

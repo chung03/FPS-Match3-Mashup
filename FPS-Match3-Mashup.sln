@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{3037CE80-6A6A-02F1-B646-6AF728B49AED}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FpsMatch3Mashup", "FpsMatch3Mashup.csproj", "{B4AE6206-1EED-0569-4376-B8B1F5F41D0F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.Networking.Transport", "Unity.Networking.Transport.csproj", "{ECC6072A-E593-4C4C-8D44-3E6BACDDE3AE}"
 EndProject
@@ -13,10 +13,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3037CE80-6A6A-02F1-B646-6AF728B49AED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3037CE80-6A6A-02F1-B646-6AF728B49AED}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3037CE80-6A6A-02F1-B646-6AF728B49AED}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3037CE80-6A6A-02F1-B646-6AF728B49AED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4AE6206-1EED-0569-4376-B8B1F5F41D0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4AE6206-1EED-0569-4376-B8B1F5F41D0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4AE6206-1EED-0569-4376-B8B1F5F41D0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4AE6206-1EED-0569-4376-B8B1F5F41D0F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{ECC6072A-E593-4C4C-8D44-3E6BACDDE3AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{ECC6072A-E593-4C4C-8D44-3E6BACDDE3AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ECC6072A-E593-4C4C-8D44-3E6BACDDE3AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
