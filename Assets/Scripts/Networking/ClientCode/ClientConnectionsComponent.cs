@@ -46,6 +46,12 @@ public class ClientConnectionsComponent : MonoBehaviour
 		m_BroadcastConnection = default;
 
 		//var endpoint = new IPEndPoint(IPAddress.Loopback, 9000);
+
+		if (ipAddress == null)
+		{
+			ipAddress = IPAddress.Loopback;
+		}
+
 		var endpoint = new IPEndPoint(ipAddress, 9000);
 		m_Connection = m_Driver.Connect(endpoint);
 
@@ -77,14 +83,19 @@ public class ClientConnectionsComponent : MonoBehaviour
 
 	private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
 	{
+		PrepareClient(scene.name);
+	}
+
+	public void PrepareClient(string sceneName)
+	{
 		//Debug.Log("ClientConnectionsComponent::OnSceneLoaded called");
-		if (scene.name == "LobbyScene")
+		if (sceneName == "LobbyScene")
 		{
 			GameObject client = Instantiate(clientLobbyObj);
 			client.GetComponent<ClientLobbyReceiveComponent>().Init(this);
 			client.GetComponent<ClientLobbyDataComponent>().Init(this);
 		}
-		else if (scene.name == "PlayScene")
+		else if (sceneName == "PlayScene")
 		{
 			GameObject client = Instantiate(clientGameObj);
 			client.GetComponent<ClientGameReceiveComponent>().Init(this);

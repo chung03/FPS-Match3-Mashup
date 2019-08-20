@@ -46,7 +46,7 @@ public class ClientLobbySend : MonoBehaviour
 		timeSinceLastSend = Time.time;
 
 
-		if (sendQueue.Count <= 0)
+		if (sendQueue.Count <= 0 || driver.GetConnectionState(connection) != NetworkConnection.State.Connected)
 		{
 			return;
 		}

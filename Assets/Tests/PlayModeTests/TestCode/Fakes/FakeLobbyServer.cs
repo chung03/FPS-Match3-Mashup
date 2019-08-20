@@ -23,12 +23,6 @@ public class FakeLobbyServer : MonoBehaviour
 	private byte nextPlayerID = 1;
 
 	[SerializeField]
-	private GameObject serverLobbyObj = null;
-
-	[SerializeField]
-	private GameObject serverGameObj = null;
-
-	[SerializeField]
 	private int connectTimeoutMs = 5000;
 
 	[SerializeField]
@@ -43,7 +37,7 @@ public class FakeLobbyServer : MonoBehaviour
 		m_Driver = new UdpCNetworkDriver(config);
 		if (m_Driver.Bind(new IPEndPoint(IPAddress.Any, 9000)) != 0)
 		{
-			Debug.Log("ServerConnectionsComponent::Start Failed to bind to port 9000");
+			Debug.Log("FakeLobbyServer::Start Failed to bind to port 9000");
 		}
 		else
 		{
@@ -56,7 +50,6 @@ public class FakeLobbyServer : MonoBehaviour
 
 	void Update()
 	{
-
 		m_Driver.ScheduleUpdate().Complete();
 
 		// ***** Handle Connections *****
