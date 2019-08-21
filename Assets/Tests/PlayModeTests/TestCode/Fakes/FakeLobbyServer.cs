@@ -30,6 +30,8 @@ public class FakeLobbyServer : MonoBehaviour
 
 	private void Start()
 	{
+		//Debug.Log("FakeLobbyServer::Start Called");
+
 		NetworkConfigParameter config = new NetworkConfigParameter();
 		config.connectTimeoutMS = connectTimeoutMs;
 		config.disconnectTimeoutMS = disconnectTimeoutMs;
@@ -67,14 +69,14 @@ public class FakeLobbyServer : MonoBehaviour
 
 	private void HandleConnections(NativeList<NetworkConnection> connections, UdpCNetworkDriver driver)
 	{
-		//Debug.Log("ServerLobbyComponent::HandleConnections Called");
+		//Debug.Log("FakeLobbyServer::HandleConnections Called");
 
 		// Clean up connections
 		for (int i = 0; i < connections.Length; i++)
 		{
 			if (!connections[i].IsCreated)
 			{
-				Debug.Log("ServerLobbyComponent::HandleConnections Removing a connection");
+				Debug.Log("FakeLobbyServer::HandleConnections Removing a connection");
 
 				//serverLobbyDataComponent.RemovePlayerFromTeam(i);
 				connections.RemoveAtSwapBack(i);
@@ -88,15 +90,14 @@ public class FakeLobbyServer : MonoBehaviour
 		{
 			if (connections.Length >= CONSTANTS.MAX_NUM_PLAYERS)
 			{
-				Debug.Log("ServerLobbyComponent::HandleConnections Too many connections, rejecting latest one");
+				Debug.Log("FakeLobbyServer::HandleConnections Too many connections, rejecting latest one");
 				driver.Disconnect(c);
 				continue;
 			}
 
-			Debug.Log("ServerLobbyComponent::HandleConnections Accepted a connection");
+			Debug.Log("FakeLobbyServer::HandleConnections Accepted a connection");
 
 			connections.Add(c);
-			//serverLobbyDataComponent.AddPlayerToTeam();
 		}
 	}
 
@@ -106,7 +107,7 @@ public class FakeLobbyServer : MonoBehaviour
 		{
 			if (!connections.IsCreated)
 			{
-				Debug.Log("ServerLobbyComponent::HandleReceiveData connections[" + index + "] was not created");
+				Debug.Log("FakeLobbyServer::HandleReceiveData connections[" + index + "] was not created");
 				Assert.IsTrue(true);
 			}
 
@@ -124,16 +125,16 @@ public class FakeLobbyServer : MonoBehaviour
 				}
 				else if (cmd == NetworkEvent.Type.Disconnect)
 				{
-					Debug.Log("ServerLobbyComponent::HandleReceiveData Client disconnected from server");
+					Debug.Log("FakeLobbyServer::HandleReceiveData Client disconnected from server");
 					connections[index] = default;
 				}
 				else
 				{
-					Debug.Log("ServerLobbyComponent::HandleReceiveData Unhandled Network Event: " + cmd);
+					Debug.Log("FakeLobbyServer::HandleReceiveData Unhandled Network Event: " + cmd);
 				}
 			}
 
-			//Debug.Log("ServerLobbyComponent::HandleReceiveData Finished processing connection[" + index + "]");
+			//Debug.Log("FakeLobbyServer::HandleReceiveData Finished processing connection[" + index + "]");
 		}
 	}
 
@@ -142,9 +143,9 @@ public class FakeLobbyServer : MonoBehaviour
 		return nextPlayerID++;
 	}
 
-	// Only supposed to be called from ServerGame to get info for connections
-	public List<PersistentPlayerInfo> GetGameInfo()
+	// Function to be called by tests
+	public NativeList<NetworkConnection> GetConnections()
 	{
-		return persistencePlayerInfo;
+		return m_Connections;
 	}
 }
