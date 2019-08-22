@@ -3,7 +3,7 @@
 using Unity.Networking.Transport;
 using Unity.Collections;
 using Unity.Jobs;
-using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
+
 
 using LobbyUtils;
 
@@ -18,7 +18,7 @@ namespace ServerUtils
 
 	public struct ServerUpdateConnectionsJob : IJob
 	{
-		public UdpCNetworkDriver driver;
+		public UdpNetworkDriver driver;
 		public NativeList<NetworkConnection> connections;
 		public NativeList<LobbyPlayerInfo> playersList;
 

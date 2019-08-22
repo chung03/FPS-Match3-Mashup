@@ -5,7 +5,7 @@ using Unity.Networking.Transport;
 using Unity.Collections;
 using System.Collections.Generic;
 
-using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
+
 
 using UnityEngine.Assertions;
 using LobbyUtils;
@@ -14,8 +14,8 @@ public class FakeLobbyServer : MonoBehaviour
 {
 	public static readonly int MAX_NUM_PLAYERS = 6;
 
-	public UdpCNetworkDriver m_Driver;
-	public UdpCNetworkDriver m_BroadcastDriver;
+	public UdpNetworkDriver m_Driver;
+	public UdpNetworkDriver m_BroadcastDriver;
 	public NativeList<NetworkConnection> m_Connections;
 
 	List<PersistentPlayerInfo> persistencePlayerInfo = null;
@@ -36,8 +36,11 @@ public class FakeLobbyServer : MonoBehaviour
 		config.connectTimeoutMS = connectTimeoutMs;
 		config.disconnectTimeoutMS = disconnectTimeoutMs;
 
-		m_Driver = new UdpCNetworkDriver(config);
-		if (m_Driver.Bind(new IPEndPoint(IPAddress.Any, 9000)) != 0)
+		NetworkEndPoint addr = NetworkEndPoint.AnyIpv4;
+		addr.Port = 9000;
+
+		m_Driver = new UdpNetworkDriver(config);
+		if (m_Driver.Bind(addr) != 0)
 		{
 			Debug.Log("FakeLobbyServer::Start Failed to bind to port 9000");
 		}
@@ -50,7 +53,7 @@ public class FakeLobbyServer : MonoBehaviour
 		
 	}
 
-	void Update()
+	private void FixedUpdate()
 	{
 		m_Driver.ScheduleUpdate().Complete();
 
@@ -67,7 +70,7 @@ public class FakeLobbyServer : MonoBehaviour
 		m_Connections.Dispose();
 	}
 
-	private void HandleConnections(NativeList<NetworkConnection> connections, UdpCNetworkDriver driver)
+	private void HandleConnections(NativeList<NetworkConnection> connections, UdpNetworkDriver driver)
 	{
 		//Debug.Log("FakeLobbyServer::HandleConnections Called");
 
@@ -85,23 +88,31 @@ public class FakeLobbyServer : MonoBehaviour
 		}
 
 		// Accept new connections
-		NetworkConnection c;
-		while ((c = driver.Accept()) != default)
+		while (true)
 		{
+			NetworkConnection con = driver.Accept();
+
 			if (connections.Length >= CONSTANTS.MAX_NUM_PLAYERS)
 			{
 				Debug.Log("FakeLobbyServer::HandleConnections Too many connections, rejecting latest one");
-				driver.Disconnect(c);
+				driver.Disconnect(con);
 				continue;
+			}
+
+			// "Nothing more to accept" is signaled by returning an invalid connection from accept
+			if (!con.IsCreated)
+			{
+				Debug.Log("FakeLobbyServer::HandleConnections No new connections");
+				break;
 			}
 
 			Debug.Log("FakeLobbyServer::HandleConnections Accepted a connection");
 
-			connections.Add(c);
+			connections.Add(con);
 		}
 	}
 
-	private void HandleReceiveData(NativeList<NetworkConnection> connections, UdpCNetworkDriver driver)
+	private void HandleReceiveData(NativeList<NetworkConnection> connections, UdpNetworkDriver driver)
 	{
 		for (int index = 0; index < connections.Length; ++index)
 		{

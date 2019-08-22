@@ -6,8 +6,6 @@ using UnityEngine.SceneManagement;
 
 using Unity.Networking.Transport;
 
-using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
-
 using System.Text;
 
 public class ClientLobbyDataComponent : MonoBehaviour
@@ -71,7 +69,7 @@ public class ClientLobbyDataComponent : MonoBehaviour
 
 	private void Update()
 	{
-		ref UdpCNetworkDriver driver = ref connectionsComponent.GetDriver();
+		ref UdpNetworkDriver driver = ref connectionsComponent.GetDriver();
 		ref NetworkConnection connection = ref connectionsComponent.GetConnection();
 
 		// ***** Update UI ****

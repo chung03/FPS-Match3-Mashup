@@ -28,7 +28,7 @@ namespace Tests
 			ClientConnectionsComponent clientConn = GameObject.Find("ClientConnectionObject").GetComponent<ClientConnectionsComponent>();
 			FakeLobbyServer fakeServer = GameObject.Find("FakeLobbyServerObject").GetComponent<FakeLobbyServer>();
 
-			clientConn.Init(false, IPAddress.Loopback);
+			clientConn.Init(false, "127.0.0.1");
 			clientConn.PrepareClient("LobbyScene");
 
 
@@ -36,7 +36,7 @@ namespace Tests
 			Time.timeScale = 1.0f;
 
 			float time = 0;
-			while (time < 6)
+			while (time < 10)
 			{
 				time += Time.fixedDeltaTime;
 				yield return new WaitForFixedUpdate();

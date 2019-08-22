@@ -5,7 +5,7 @@ using UnityEngine;
 using Unity.Networking.Transport;
 using Unity.Collections;
 
-using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
+
 
 using UnityEngine.Assertions;
 using GameUtils;
@@ -42,7 +42,7 @@ public class ServerGameSend : MonoBehaviour
 
     // Is kind of like an update, but is called by other code
 	// This is writen so that the ServerGameComponent can ensure that all data is ready before trying to send
-    public void SendDataIfReady(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver, Dictionary<int, ObjectWithDelta> IdToObjectsDictionary)
+    public void SendDataIfReady(ref NativeList<NetworkConnection> connections, ref UdpNetworkDriver driver, Dictionary<int, ObjectWithDelta> IdToObjectsDictionary)
     {
 		// Not time to send yet.
 		if (timeSinceLastSend * 1000 + sendFrequencyMs > Time.time * 1000)
@@ -100,7 +100,7 @@ public class ServerGameSend : MonoBehaviour
 		}
 	}
 
-	private void HandleIndividualPlayerSend(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
+	private void HandleIndividualPlayerSend(ref NativeList<NetworkConnection> connections, ref UdpNetworkDriver driver)
 	{
 		// Send messages meant for individual players
 		for (int index = 0; index < connections.Length; ++index)
@@ -131,7 +131,7 @@ public class ServerGameSend : MonoBehaviour
 		}
 	}
 
-	private void HandleAllPlayerSend(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
+	private void HandleAllPlayerSend(ref NativeList<NetworkConnection> connections, ref UdpNetworkDriver driver)
 	{
 		// If the queue is empty, then nothing to do
 		if (allSendQueue.Count <= 0)

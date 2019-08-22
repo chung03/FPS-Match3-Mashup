@@ -10,9 +10,7 @@
     ],
     "includePlatforms": [],
     "excludePlatforms": [
-        "LinuxStandalone32",
         "LinuxStandalone64",
-        "LinuxStandaloneUniversal",
         "macOSStandalone",
         "WSA",
         "WindowsStandalone32",

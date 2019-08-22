@@ -5,7 +5,7 @@ using CommonNetworkingUtils;
 using Unity.Networking.Transport;
 using Unity.Collections;
 
-using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
+
 
 using UnityEngine.Assertions;
 using LobbyUtils;
@@ -72,7 +72,7 @@ public class ServerLobbyDataComponent : MonoBehaviour
 
 	void Update()
 	{
-		ref UdpCNetworkDriver driver = ref connectionsComponent.GetDriver();
+		ref UdpNetworkDriver driver = ref connectionsComponent.GetDriver();
 		ref NativeList<NetworkConnection> connections = ref connectionsComponent.GetConnections();
 
 		// ***** Process data *****
@@ -226,7 +226,7 @@ public class ServerLobbyDataComponent : MonoBehaviour
 		return 0;
 	}
 
-	public void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpCNetworkDriver driver)
+	public void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpNetworkDriver driver)
 	{
 		while (commandProcessingQueue.Count > 0)
 		{

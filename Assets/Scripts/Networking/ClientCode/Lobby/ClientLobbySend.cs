@@ -5,7 +5,7 @@ using UnityEngine;
 using Unity.Networking.Transport;
 using Unity.Collections;
 
-using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
+
 
 using UnityEngine.Assertions;
 using LobbyUtils;
@@ -28,7 +28,7 @@ public class ClientLobbySend : MonoBehaviour
 		sendQueue = new Queue<byte>();
 	}
 
-	public void SendDataIfReady(ref NetworkConnection connection, ref UdpCNetworkDriver driver, List<PersistentPlayerInfo> allPlayerInfo)
+	public void SendDataIfReady(ref NetworkConnection connection, ref UdpNetworkDriver driver, List<PersistentPlayerInfo> allPlayerInfo)
 	{
 		// Heart beat every once in a while to prevent disconnects for no reason
 		if (timeSinceLastHeartBeat * 1000 + heartbeatFrequencyMs <= Time.time * 1000)

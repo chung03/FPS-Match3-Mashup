@@ -23,7 +23,7 @@ public class ModeChooseBehaviour : MonoBehaviour
 		DontDestroyOnLoad(newServer);
 
 		GameObject newClient = Instantiate(clientObject);
-		newClient.GetComponent<ClientConnectionsComponent>().Init(true, IPAddress.Loopback);
+		newClient.GetComponent<ClientConnectionsComponent>().Init(true, "127.0.0.1");
 		DontDestroyOnLoad(newClient);
 
 		SceneManager.LoadScene(LOBBY_SCENE);

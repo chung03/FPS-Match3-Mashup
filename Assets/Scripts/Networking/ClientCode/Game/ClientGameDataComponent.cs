@@ -6,8 +6,6 @@ using CommonNetworkingUtils;
 
 using Unity.Networking.Transport;
 
-using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
-
 public class ClientGameDataComponent : MonoBehaviour
 {
 	// This is the player's ID. This is all it needs to identify itself and to find its player info.
@@ -90,7 +88,7 @@ public class ClientGameDataComponent : MonoBehaviour
 
 	private void Update()
 	{
-		ref UdpCNetworkDriver driver = ref connectionsComponent.GetDriver();
+		ref UdpNetworkDriver driver = ref connectionsComponent.GetDriver();
 		ref NetworkConnection connection = ref connectionsComponent.GetConnection();
 
 		// ***** Update UI ****

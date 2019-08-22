@@ -3,7 +3,7 @@ using UnityEngine;
 
 using Unity.Networking.Transport;
 
-using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
+
 
 using GameUtils;
 using CommonNetworkingUtils;
@@ -27,7 +27,7 @@ public class ClientGameReceiveComponent : MonoBehaviour
 
 	void Update()
 	{
-		ref UdpCNetworkDriver driver = ref connectionsComponent.GetDriver();
+		ref UdpNetworkDriver driver = ref connectionsComponent.GetDriver();
 		ref NetworkConnection connection = ref connectionsComponent.GetConnection();
 
 		driver.ScheduleUpdate().Complete();
@@ -44,7 +44,7 @@ public class ClientGameReceiveComponent : MonoBehaviour
 		HandleReceiveData(ref connection, ref driver);
 	}
 
-	private void HandleReceiveData(ref NetworkConnection connection, ref UdpCNetworkDriver driver)
+	private void HandleReceiveData(ref NetworkConnection connection, ref UdpNetworkDriver driver)
 	{
 		//Debug.Log("ClientGameComponent::HandleReceiveData Called");
 

@@ -4,20 +4,20 @@ using UnityEngine;
 using Unity.Networking.Transport;
 using Unity.Collections;
 
-using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
+//
 
 using UnityEngine.SceneManagement;
 using GameUtils;
 
 public class ClientConnectionsComponent : MonoBehaviour
 {
-	public UdpCNetworkDriver m_Driver;
-	public UdpCNetworkDriver m_BroadcastDriver;
+	public UdpNetworkDriver m_Driver;
+	public UdpNetworkDriver m_BroadcastDriver;
 	public NetworkConnection m_Connection;
 	public NetworkConnection m_BroadcastConnection;
 
 	private bool m_IsHost = false;
-	private IPAddress ipAddress;
+	private string ipAddress;
 
 	[SerializeField]
 	private GameObject clientLobbyObj = null;
@@ -40,19 +40,25 @@ public class ClientConnectionsComponent : MonoBehaviour
 		config.disconnectTimeoutMS = disconnectTimeoutMs;
 
 		//Debug.Log("ClientConnectionsComponent::Start called");
-		m_Driver = new UdpCNetworkDriver(config);
-		m_BroadcastDriver = new UdpCNetworkDriver(config);
+		m_Driver = new UdpNetworkDriver(config);
+		m_BroadcastDriver = new UdpNetworkDriver(config);
 		m_Connection = default;
 		m_BroadcastConnection = default;
 
-		//var endpoint = new IPEndPoint(IPAddress.Loopback, 9000);
-
 		if (ipAddress == null)
 		{
-			ipAddress = IPAddress.Loopback;
+			ipAddress = "127.0.0.1";
 		}
 
-		var endpoint = new IPEndPoint(ipAddress, 9000);
+		//var endpoint = new IPEndPoint(ipAddress, 9000);
+		NetworkEndPoint endpoint = new NetworkEndPoint();
+
+		if(!NetworkEndPoint.TryParse(ipAddress, 9000, out endpoint))
+		{
+			Debug.LogError("ClientConnectionsComponent::Start Could not parse IP Address");
+		}
+
+
 		m_Connection = m_Driver.Connect(endpoint);
 
 		/*
@@ -66,7 +72,7 @@ public class ClientConnectionsComponent : MonoBehaviour
 		m_Driver.Dispose();
 	}
 
-	public ref UdpCNetworkDriver GetDriver()
+	public ref UdpNetworkDriver GetDriver()
 	{
 		return ref m_Driver;
 	}
@@ -103,7 +109,7 @@ public class ClientConnectionsComponent : MonoBehaviour
 		}
 	}
 
-	public void Init(bool _isHost, IPAddress _ipAddress)
+	public void Init(bool _isHost, string _ipAddress)
 	{
 		SceneManager.sceneLoaded += OnSceneLoaded;
 		m_IsHost = _isHost;

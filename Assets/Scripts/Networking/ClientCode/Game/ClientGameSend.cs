@@ -5,7 +5,7 @@ using UnityEngine;
 using Unity.Networking.Transport;
 using Unity.Collections;
 
-using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
+
 
 using UnityEngine.Assertions;
 using GameUtils;
@@ -36,7 +36,7 @@ public class ClientGameSend : MonoBehaviour
 		}
 	}
 
-	public void SendDataIfReady(ref NetworkConnection connection, ref UdpCNetworkDriver driver, Dictionary<int, ObjectWithDelta> IdToClientControlledObjectDictionary)
+	public void SendDataIfReady(ref NetworkConnection connection, ref UdpNetworkDriver driver, Dictionary<int, ObjectWithDelta> IdToClientControlledObjectDictionary)
 	{
 		CreateQueueIfNecessary();
 

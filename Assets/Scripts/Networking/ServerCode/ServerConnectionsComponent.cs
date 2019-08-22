@@ -5,7 +5,7 @@ using Unity.Networking.Transport;
 using Unity.Collections;
 using System.Collections.Generic;
 
-using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
+
 
 using UnityEngine.SceneManagement;
 
@@ -15,8 +15,8 @@ public class ServerConnectionsComponent : MonoBehaviour
 {
 	public static readonly int MAX_NUM_PLAYERS = 6;
 
-	public UdpCNetworkDriver m_Driver;
-	public UdpCNetworkDriver m_BroadcastDriver;
+	public UdpNetworkDriver m_Driver;
+	public UdpNetworkDriver m_BroadcastDriver;
 	public NativeList<NetworkConnection> m_Connections;
 
 	List<PersistentPlayerInfo> persistencePlayerInfo = null;
@@ -44,8 +44,11 @@ public class ServerConnectionsComponent : MonoBehaviour
 		config.connectTimeoutMS = connectTimeoutMs;
 		config.disconnectTimeoutMS = disconnectTimeoutMs;
 
-		m_Driver = new UdpCNetworkDriver(config);
-		if (m_Driver.Bind(new IPEndPoint(IPAddress.Any, 9000)) != 0)
+		NetworkEndPoint addr = NetworkEndPoint.AnyIpv4;
+		addr.Port = 9000;
+
+		m_Driver = new UdpNetworkDriver(config);
+		if (m_Driver.Bind(addr) != 0)
 		{
 			Debug.Log("ServerConnectionsComponent::Start Failed to bind to port 9000");
 		}
@@ -57,7 +60,7 @@ public class ServerConnectionsComponent : MonoBehaviour
 		m_Connections = new NativeList<NetworkConnection>(MAX_NUM_PLAYERS, Allocator.Persistent);
 		
 		/*
-		m_BroadcastDriver = new UdpCNetworkDriver(config);
+		m_BroadcastDriver = new UdpNetworkDriver(config);
 		if (m_BroadcastDriver.Bind(new IPEndPoint(IPAddress.Any, 6677)) != 0)
 		{
 			Debug.Log("ServerConnectionsComponent::Start Failed to bind to port 6677");
@@ -75,7 +78,7 @@ public class ServerConnectionsComponent : MonoBehaviour
 		m_Connections.Dispose();
 	}
 
-	public ref UdpCNetworkDriver GetDriver()
+	public ref UdpNetworkDriver GetDriver()
 	{
 		return ref m_Driver;
 	}
