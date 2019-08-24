@@ -6,11 +6,18 @@ using UnityEngine.TestTools;
 using UnityEngine.SceneManagement;
 
 using System.Net;
+using TestUtils;
+using LobbyUtils;
 
 namespace Tests
 {
-    public class LobbyClientTest
-    {
+	public class LobbyClientTest
+	{
+		[TearDown]
+		public void TearDown(){
+			DestroyAllGameObjectsInScene();
+		}
+
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         // `yield return null;` to skip a frame.
         [UnityTest]
@@ -33,6 +40,28 @@ namespace Tests
 			clientConn.PrepareClient("LobbyScene");
 
 			fakeServer.PrepareServer("LobbyScene");
+
+			yield return null;
+
+			ListAllGameObjectsInScene();
+
+			FakeServerLobbyDataComponent fakeServerData = GameObject.Find("FakeServerLobbyObject(Clone)").GetComponent<FakeServerLobbyDataComponent>();
+
+			List<byte> heartbeatRequest = new List< byte >();
+			heartbeatRequest.Add((byte)LOBBY_CLIENT_REQUESTS.HEARTBEAT);
+
+			List<byte> heartbeatResponse = new List< byte >();
+			heartbeatResponse.Add((byte)LOBBY_SERVER_COMMANDS.HEARTBEAT);
+
+			List<byte> getIdRequest = new List<byte>();
+			getIdRequest.Add((byte)LOBBY_CLIENT_REQUESTS.GET_ID);
+
+			List<byte> getIdResponse = new List<byte>();
+			getIdResponse.Add((byte)LOBBY_SERVER_COMMANDS.SET_ID);
+			getIdResponse.Add((byte)1);
+
+			fakeServerData.SetResponse(heartbeatRequest, heartbeatResponse);
+			fakeServerData.SetResponse(getIdRequest, getIdResponse);
 
 			//serverConn.PrepareServer("LobbyScene");
 
@@ -66,5 +95,24 @@ namespace Tests
 
 			Assert.AreEqual(1, fakeServer.GetConnections().Length);
 		}
-    }
+
+
+		private void ListAllGameObjectsInScene()
+		{
+			GameObject[] allObjects = UnityEngine.Object.FindObjectsOfType<GameObject>();
+			foreach (GameObject go in allObjects)
+			{
+				Debug.Log("GO in Test Scene: " + go.name);
+			}
+		}
+
+		private void DestroyAllGameObjectsInScene()
+		{
+			GameObject[] allObjects = UnityEngine.Object.FindObjectsOfType<GameObject>();
+			foreach (GameObject go in allObjects)
+			{
+				GameObject.Destroy(go);
+			}
+		}
+	}
 }

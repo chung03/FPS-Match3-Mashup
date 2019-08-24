@@ -54,8 +54,7 @@ public class FakeServerLobbyReceiveComponent : MonoBehaviour
 			if (!connections[i].IsCreated)
 			{
 				Debug.Log("FakeServerLobbyReceiveComponent::HandleConnections Removing a connection");
-
-				serverLobbyDataComponent.RemovePlayerFromTeam(i);
+				
 				connections.RemoveAtSwapBack(i);
 				--i;
 			}
@@ -75,7 +74,6 @@ public class FakeServerLobbyReceiveComponent : MonoBehaviour
 			Debug.Log("FakeServerLobbyReceiveComponent::HandleConnections Accepted a connection");
 
 			connections.Add(c);
-			serverLobbyDataComponent.AddPlayerToTeam();
 		}
 	}
 

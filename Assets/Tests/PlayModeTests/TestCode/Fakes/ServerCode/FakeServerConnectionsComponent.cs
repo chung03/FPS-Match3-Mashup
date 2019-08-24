@@ -130,4 +130,10 @@ public class FakeServerConnectionsComponent : MonoBehaviour
 	{
 		return persistencePlayerInfo;
 	}
+
+	// Only supposed to be called from ServerGame to get info for connections
+	public void DisconnectAPlayer(int connectionIndex)
+	{
+		m_Connections[connectionIndex].Disconnect(m_Driver);
+	}
 }

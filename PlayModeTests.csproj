@@ -70,6 +70,7 @@
     <Compile Include="Assets\Tests\PlayModeTests\TestCode\Fakes\ServerCode\Lobby\FakeServerLobbyReceiveComponent.cs" />
     <Compile Include="Assets\Tests\PlayModeTests\TestCode\Fakes\ServerCode\Lobby\FakeServerLobbySend.cs" />
     <Compile Include="Assets\Tests\PlayModeTests\TestCode\LobbyClientTest.cs" />
+    <Compile Include="Assets\Tests\PlayModeTests\TestCode\TestUtils.cs" />
     <Reference Include="Unity.Collections">
       <HintPath>D:/Game Dev/Unity Experiments/FPS-Match3-Mashup/Library/ScriptAssemblies/Unity.Collections.dll</HintPath>
     </Reference>

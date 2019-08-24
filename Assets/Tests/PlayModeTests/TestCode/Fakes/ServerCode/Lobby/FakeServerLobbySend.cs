@@ -51,8 +51,6 @@ public class FakeServerLobbySend : MonoBehaviour
 
 		timeSinceLastSend = Time.time;
 
-		serverLobbyData.SendPlayerDiffs();
-
 		HandleIndividualPlayerSend(ref connections, ref driver);
 
 		HandleAllPlayerSend(ref connections, ref driver);
