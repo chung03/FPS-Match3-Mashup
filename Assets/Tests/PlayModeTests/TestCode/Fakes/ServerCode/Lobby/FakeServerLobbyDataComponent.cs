@@ -38,7 +38,11 @@ public class FakeServerLobbyDataComponent : MonoBehaviour
 	int numTeam1Players = 0;
 	int numTeam2Players = 0;
 
-	private Trie<byte, List<byte>> byteSequenceTrie;
+	// This is to allow the test code to control how the fake server replies
+	private Trie<byte, List<byte>> byteSequenceResponseTrie;
+
+	// This is to allow the test code to count how many times the fake server received a sequence
+	private Trie<byte, int> byteSequenceCountTrie;
 
 	private void Start()
 	{
@@ -51,7 +55,8 @@ public class FakeServerLobbyDataComponent : MonoBehaviour
 
 		commandProcessingQueue = new Queue<KeyValuePair<LOBBY_SERVER_PROCESS, int>>();
 
-		byteSequenceTrie = new Trie<byte, List<byte>>();
+		byteSequenceResponseTrie = new Trie<byte, List<byte>>();
+		byteSequenceCountTrie = new Trie<byte, int>();
 	}
 
 
@@ -76,7 +81,12 @@ public class FakeServerLobbyDataComponent : MonoBehaviour
 
 	public void SetResponse(List<byte> receivedBytes, List<byte> bytesToShare)
 	{
-		byteSequenceTrie.AddSequence(receivedBytes, bytesToShare);
+		byteSequenceResponseTrie.SetValueOfSequence(receivedBytes, bytesToShare);
+	}
+
+	public int GetResponseNumTimesCalled(List<byte> receivedBytes)
+	{
+		return byteSequenceCountTrie.GetValueOfSequence(receivedBytes);
 	}
 
 	public void ProcessData(ref NativeList<NetworkConnection> connections, ref UdpNetworkDriver driver)
@@ -185,7 +195,18 @@ public class FakeServerLobbyDataComponent : MonoBehaviour
 			++i;
 		}
 
-		List<byte> response = byteSequenceTrie.GetValueOfSequence(receivedByteSequence);
+		List<byte> response = byteSequenceResponseTrie.GetValueOfSequence(receivedByteSequence);
+
+		if (!byteSequenceCountTrie.CheckHasSequence(receivedByteSequence))
+		{
+			byteSequenceCountTrie.SetValueOfSequence(receivedByteSequence, 1);
+		}
+		else
+		{
+			int numTimesCalled = byteSequenceCountTrie.GetValueOfSequence(receivedByteSequence);
+			byteSequenceCountTrie.SetValueOfSequence(receivedByteSequence, numTimesCalled + 1);
+		}
+
 
 		if (response != null && response.Count > 0)
 		{

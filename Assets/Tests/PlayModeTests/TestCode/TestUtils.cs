@@ -13,14 +13,14 @@ namespace TestUtils
 			nodes = new TrieNode<TKey, TValue>();
 		}
 
-		public void AddSequence(List<TKey> sequence, TValue value)
+		public void SetValueOfSequence(List<TKey> sequence, TValue value)
 		{
 			// Go through the tree of nodes like an n-ary tree
 			TrieNode<TKey, TValue> currentNode = nodes;
 
 			foreach (TKey key in sequence)
 			{
-				currentNode.AddNewNode(key);
+				currentNode.AddNewNodeIfNeeded(key);
 				currentNode = currentNode.GetNextNode(key);
 			}
 
@@ -43,6 +43,24 @@ namespace TestUtils
 			}
 
 			return currentNode.GetValueAtNode();
+		}
+
+		public bool CheckHasSequence(List<TKey> sequence)
+		{
+			// Go through the tree of nodes like an n-ary tree
+			TrieNode<TKey, TValue> currentNode = nodes;
+
+			foreach (TKey key in sequence)
+			{
+				currentNode = currentNode.GetNextNode(key);
+
+				if (currentNode == null)
+				{
+					return false;
+				}
+			}
+
+			return currentNode == null;
 		}
 
 		// This is a Trie
@@ -76,7 +94,7 @@ namespace TestUtils
 				return collectionOfNodes[key];
 			}
 
-			public void AddNewNode(TKey2 key)
+			public void AddNewNodeIfNeeded(TKey2 key)
 			{
 				if (!collectionOfNodes.ContainsKey(key))
 				{

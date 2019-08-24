@@ -116,7 +116,7 @@ namespace Tests
 			Time.timeScale = 1.0f;
 
 			float time = 0;
-			while (time < 7)
+			while (time < 10)
 			{
 				time += Time.fixedDeltaTime;
 				yield return new WaitForFixedUpdate();
@@ -125,6 +125,8 @@ namespace Tests
 			Time.timeScale = 1.0f;
 
 			Assert.AreEqual(1, fakeServer.GetConnections().Length);
+			Assert.GreaterOrEqual(1, fakeServerData.GetResponseNumTimesCalled(heartbeatRequest));
+			Assert.AreEqual(1, fakeServerData.GetResponseNumTimesCalled(getIdRequest));
 		}
 
 		private void ListAllGameObjectsInScene()
