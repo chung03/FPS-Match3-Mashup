@@ -58,12 +58,12 @@ public class ClientConnectionsComponent : MonoBehaviour
 			Debug.LogError("ClientConnectionsComponent::Start Could not parse IP Address");
 		}
 
-		Debug.Log("ClientConnectionsComponent::Start endpoint = " + ipAddress + ":" + endpoint.Port);
+		//Debug.Log("ClientConnectionsComponent::Start endpoint = " + ipAddress + ":" + endpoint.Port);
 		m_Connection = m_Driver.Connect(endpoint);
 
-		Debug.Log("ClientConnectionsComponent::Start Connection state = " + m_Driver.GetConnectionState(m_Connection));
-		Debug.Log("ClientConnectionsComponent::Start Remote Endpoint port = " + m_Driver.RemoteEndPoint(m_Connection).Port);
-		Debug.Log("ClientConnectionsComponent::Start Local Endpoint port = " + m_Driver.LocalEndPoint().Port);
+		//Debug.Log("ClientConnectionsComponent::Start Connection state = " + m_Driver.GetConnectionState(m_Connection));
+		//Debug.Log("ClientConnectionsComponent::Start Remote Endpoint port = " + m_Driver.RemoteEndPoint(m_Connection).Port);
+		//Debug.Log("ClientConnectionsComponent::Start Local Endpoint port = " + m_Driver.LocalEndPoint().Port);
 
 		/*
 		var broadcastEndpoint = new IPEndPoint(IPAddress.Any, 6677);

@@ -33,7 +33,6 @@ namespace Tests
 			yield return null;
 
 			ClientConnectionsComponent clientConn = GameObject.Find("ClientConnectionObject").GetComponent<ClientConnectionsComponent>();
-			// ServerConnectionsComponent serverConn = GameObject.Find("ServerConnectionsObject").GetComponent<ServerConnectionsComponent>();
 			FakeServerConnectionsComponent fakeServer = GameObject.Find("FakeServerConnectionsObject").GetComponent<FakeServerConnectionsComponent>();
 
 			clientConn.Init(false, "127.0.0.1");
@@ -63,29 +62,11 @@ namespace Tests
 			fakeServerData.SetResponse(heartbeatRequest, heartbeatResponse);
 			fakeServerData.SetResponse(getIdRequest, getIdResponse);
 
-			//serverConn.PrepareServer("LobbyScene");
-
-			//clientConn.gameObject.SetActive(false);
-
 			//Time.timeScale = 20.0f;
 			Time.timeScale = 1.0f;
 
 			float time = 0;
-			while (time < 3)
-			{
-				time += Time.fixedDeltaTime;
-				yield return new WaitForFixedUpdate();
-			}
-
-			//clientConn.gameObject.SetActive(true);
-			yield return null;
-
-
-			//clientConn.Init(false, "127.0.0.1");
-			//clientConn.PrepareClient("LobbyScene");
-
-			time = 0;
-			while (time < 6)
+			while (time < 7)
 			{
 				time += Time.fixedDeltaTime;
 				yield return new WaitForFixedUpdate();
