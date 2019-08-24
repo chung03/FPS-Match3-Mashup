@@ -30,6 +30,11 @@ public class ClientLobbySend : MonoBehaviour
 
 	public void SendDataIfReady(ref NetworkConnection connection, ref UdpNetworkDriver driver, List<PersistentPlayerInfo> allPlayerInfo)
 	{
+		if (sendQueue == null)
+		{
+			return;
+		}
+
 		// Heart beat every once in a while to prevent disconnects for no reason
 		if (timeSinceLastHeartBeat * 1000 + heartbeatFrequencyMs <= Time.time * 1000)
 		{

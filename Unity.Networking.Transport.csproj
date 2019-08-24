@@ -320,6 +320,9 @@
     <Reference Include="Unity.Analytics.Tracker">
       <HintPath>D:/Game Dev/Unity Experiments/FPS-Match3-Mashup/Library/PackageCache/com.unity.analytics@3.3.2/Unity.Analytics.Tracker.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.Burst.Unsafe">
+      <HintPath>D:/Game Dev/Unity Experiments/FPS-Match3-Mashup/Library/PackageCache/com.unity.burst@1.1.2/Unity.Burst.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
       <HintPath>D:/Game Dev/Unity Experiments/FPS-Match3-Mashup/Library/PackageCache/com.unity.collections@0.0.9-preview.20/System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>

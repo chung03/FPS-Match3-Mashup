@@ -62,7 +62,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Tests\PlayModeTests\TestCode\Fakes\FakeLobbyServer.cs" />
+    <Compile Include="Assets\Tests\PlayModeTests\TestCode\Fakes\ServerCode\FakeServerConnectionsComponent.cs" />
+    <Compile Include="Assets\Tests\PlayModeTests\TestCode\Fakes\ServerCode\Game\FakeServerGameDataComponent.cs" />
+    <Compile Include="Assets\Tests\PlayModeTests\TestCode\Fakes\ServerCode\Game\FakeServerGameReceiveComponent.cs" />
+    <Compile Include="Assets\Tests\PlayModeTests\TestCode\Fakes\ServerCode\Game\FakeServerGameSend.cs" />
+    <Compile Include="Assets\Tests\PlayModeTests\TestCode\Fakes\ServerCode\Lobby\FakeServerLobbyDataComponent.cs" />
+    <Compile Include="Assets\Tests\PlayModeTests\TestCode\Fakes\ServerCode\Lobby\FakeServerLobbyReceiveComponent.cs" />
+    <Compile Include="Assets\Tests\PlayModeTests\TestCode\Fakes\ServerCode\Lobby\FakeServerLobbySend.cs" />
     <Compile Include="Assets\Tests\PlayModeTests\TestCode\LobbyClientTest.cs" />
     <Reference Include="Unity.Collections">
       <HintPath>D:/Game Dev/Unity Experiments/FPS-Match3-Mashup/Library/ScriptAssemblies/Unity.Collections.dll</HintPath>

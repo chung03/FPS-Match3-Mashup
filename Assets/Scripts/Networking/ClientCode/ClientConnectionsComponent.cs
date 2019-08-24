@@ -58,8 +58,12 @@ public class ClientConnectionsComponent : MonoBehaviour
 			Debug.LogError("ClientConnectionsComponent::Start Could not parse IP Address");
 		}
 
-
+		Debug.Log("ClientConnectionsComponent::Start endpoint = " + ipAddress + ":" + endpoint.Port);
 		m_Connection = m_Driver.Connect(endpoint);
+
+		Debug.Log("ClientConnectionsComponent::Start Connection state = " + m_Driver.GetConnectionState(m_Connection));
+		Debug.Log("ClientConnectionsComponent::Start Remote Endpoint port = " + m_Driver.RemoteEndPoint(m_Connection).Port);
+		Debug.Log("ClientConnectionsComponent::Start Local Endpoint port = " + m_Driver.LocalEndPoint().Port);
 
 		/*
 		var broadcastEndpoint = new IPEndPoint(IPAddress.Any, 6677);
@@ -97,15 +101,21 @@ public class ClientConnectionsComponent : MonoBehaviour
 		//Debug.Log("ClientConnectionsComponent::OnSceneLoaded called");
 		if (sceneName == "LobbyScene")
 		{
+			Debug.Log("ClientConnectionsComponent::PrepareClient LobbyScene loading");
 			GameObject client = Instantiate(clientLobbyObj);
 			client.GetComponent<ClientLobbyReceiveComponent>().Init(this);
 			client.GetComponent<ClientLobbyDataComponent>().Init(this);
 		}
 		else if (sceneName == "PlayScene")
 		{
+			Debug.Log("ClientConnectionsComponent::PrepareClient PlayScene loading");
 			GameObject client = Instantiate(clientGameObj);
 			client.GetComponent<ClientGameReceiveComponent>().Init(this);
 			client.GetComponent<ClientGameDataComponent>().Init(this, m_PlayerInfo);
+		}
+		else
+		{
+			Debug.LogError("ClientConnectionsComponent::PrepareClient Wrong scene! sceneName = " + sceneName);
 		}
 	}
 

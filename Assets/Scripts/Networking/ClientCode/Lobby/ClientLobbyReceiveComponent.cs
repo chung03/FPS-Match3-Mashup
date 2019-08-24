@@ -33,7 +33,7 @@ public class ClientLobbyReceiveComponent : MonoBehaviour
 
 		if (!connection.IsCreated)
 		{
-			Debug.Log("ClientLobbyComponent::Update Something went wrong during connect");
+			//Debug.Log("ClientLobbyComponent::Update Something went wrong during connect. driver.ReceiveErrorCode = " + driver.ReceiveErrorCode);
 			return;
 		}
 
@@ -63,7 +63,7 @@ public class ClientLobbyReceiveComponent : MonoBehaviour
 			}
 			else if (cmd == NetworkEvent.Type.Disconnect)
 			{
-				Debug.Log("ClientLobbyComponent::HandleReceiveData Client got disconnected from server");
+				Debug.Log("ClientLobbyComponent::HandleReceiveData Client got disconnected from server. driver.ReceiveErrorCode = " + driver.ReceiveErrorCode);
 				connection = default;
 			}
 		}

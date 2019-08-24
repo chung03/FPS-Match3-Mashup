@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 
 using LobbyUtils;
 
-public class ServerConnectionsComponent : MonoBehaviour
+public class FakeServerConnectionsComponent : MonoBehaviour
 {
 	public static readonly int MAX_NUM_PLAYERS = 6;
 
@@ -37,7 +37,7 @@ public class ServerConnectionsComponent : MonoBehaviour
 
 	private void Start()
 	{
-		//Debug.Log("ServerConnectionsComponent::Start called");
+		//Debug.Log("FakeServerConnectionsComponent::Start called");
 
 		// Set timeout to something larger
 		NetworkConfigParameter config = new NetworkConfigParameter();
@@ -50,7 +50,7 @@ public class ServerConnectionsComponent : MonoBehaviour
 		m_Driver = new UdpNetworkDriver(config);
 		if (m_Driver.Bind(addr) != 0)
 		{
-			Debug.Log("ServerConnectionsComponent::Start Failed to bind to port 9000");
+			Debug.Log("FakeServerConnectionsComponent::Start Failed to bind to port 9000");
 		}
 		else
 		{
@@ -88,18 +88,18 @@ public class ServerConnectionsComponent : MonoBehaviour
 
 	public void PrepareServer(string sceneName)
 	{
-		Debug.Log("ServerConnectionsComponent::OnSceneLoaded called");
+		Debug.Log("FakeServerConnectionsComponent::OnSceneLoaded called");
 		if (sceneName == "LobbyScene")
 		{
 			GameObject server = Instantiate(serverLobbyObj);
-			server.GetComponent<ServerLobbyReceiveComponent>().Init(this);
-			server.GetComponent<ServerLobbyDataComponent>().Init(this);
+			server.GetComponent<FakeServerLobbyReceiveComponent>().Init(this);
+			server.GetComponent<FakeServerLobbyDataComponent>().Init(this);
 		}
 		else if (sceneName == "PlayScene")
 		{
 			GameObject server = Instantiate(serverGameObj);
-			server.GetComponent<ServerGameReceiveComponent>().Init(this);
-			server.GetComponent<ServerGameDataComponent>().Init(this);
+			server.GetComponent<FakeServerGameReceiveComponent>().Init(this);
+			server.GetComponent<FakeServerGameDataComponent>().Init(this);
 		}
 	}
 
