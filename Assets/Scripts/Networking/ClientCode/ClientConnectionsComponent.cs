@@ -124,6 +124,11 @@ public class ClientConnectionsComponent : MonoBehaviour
 		SceneManager.sceneLoaded += OnSceneLoaded;
 		m_IsHost = _isHost;
 
+		SetIP(_ipAddress);
+	}
+
+	public void SetIP(string _ipAddress)
+	{
 		ipAddress = _ipAddress;
 	}
 

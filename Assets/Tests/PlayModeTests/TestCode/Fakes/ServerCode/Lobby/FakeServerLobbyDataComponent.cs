@@ -185,7 +185,12 @@ public class FakeServerLobbyDataComponent : MonoBehaviour
 			++i;
 		}
 
-		serverLobbySend.SendDataToPlayerWhenReady(byteSequenceTrie.GetValueOfSequence(receivedByteSequence), playerIndex);
+		List<byte> response = byteSequenceTrie.GetValueOfSequence(receivedByteSequence);
+
+		if (response != null && response.Count > 0)
+		{
+			serverLobbySend.SendDataToPlayerWhenReady(response, playerIndex);
+		}
 	}
 
 	private List<PersistentPlayerInfo> DeepClone(List<PersistentPlayerInfo> list)

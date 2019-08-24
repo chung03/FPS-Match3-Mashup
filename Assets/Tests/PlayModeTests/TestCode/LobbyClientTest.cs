@@ -13,6 +13,21 @@ namespace Tests
 {
 	public class LobbyClientTest
 	{
+		private bool loadedAllAssetBundles = false;
+
+		[SetUp]
+		public void SetUp()
+		{
+			DestroyAllGameObjectsInScene();
+
+			if (!loadedAllAssetBundles)
+			{
+				AssetBundle myLoadedAssetBundle;
+				myLoadedAssetBundle = AssetBundle.LoadFromFile("Assets/AssetBundles/testscenes");
+				loadedAllAssetBundles = true;
+			}
+		}
+
 		[TearDown]
 		public void TearDown(){
 			DestroyAllGameObjectsInScene();
@@ -23,9 +38,6 @@ namespace Tests
         [UnityTest]
         public IEnumerator LobbyClientCanConnectToServer()
         {
-			AssetBundle myLoadedAssetBundle;
-			myLoadedAssetBundle = AssetBundle.LoadFromFile("Assets/AssetBundles/testscenes");
-
 			// Assuming the path of the test scene
 			SceneManager.LoadScene("Assets/Tests/PlayModeTests/TestScenes/TestLobbyClient.unity");
 
@@ -35,21 +47,59 @@ namespace Tests
 			ClientConnectionsComponent clientConn = GameObject.Find("ClientConnectionObject").GetComponent<ClientConnectionsComponent>();
 			FakeServerConnectionsComponent fakeServer = GameObject.Find("FakeServerConnectionsObject").GetComponent<FakeServerConnectionsComponent>();
 
-			clientConn.Init(false, "127.0.0.1");
+			//clientConn.Init(false, "127.0.0.1");
+			clientConn.SetIP("127.0.0.1");
 			clientConn.PrepareClient("LobbyScene");
 
 			fakeServer.PrepareServer("LobbyScene");
 
 			yield return null;
 
-			ListAllGameObjectsInScene();
+			// ListAllGameObjectsInScene();
+
+			//Time.timeScale = 20.0f;
+			Time.timeScale = 1.0f;
+
+			float time = 0;
+			while (time < 3)
+			{
+				time += Time.fixedDeltaTime;
+				yield return new WaitForFixedUpdate();
+			}
+			
+			Time.timeScale = 1.0f;
+
+			Assert.AreEqual(1, fakeServer.GetConnections().Length);
+		}
+
+		[UnityTest]
+		public IEnumerator LobbyClientSendsHeartBeatAndIDToServer()
+		{
+			// Assuming the path of the test scene
+			SceneManager.LoadScene("Assets/Tests/PlayModeTests/TestScenes/TestLobbyClient.unity");
+
+			// Wait one frame for the scene to load
+			yield return null;
+
+			ClientConnectionsComponent clientConn = GameObject.Find("ClientConnectionObject").GetComponent<ClientConnectionsComponent>();
+			FakeServerConnectionsComponent fakeServer = GameObject.Find("FakeServerConnectionsObject").GetComponent<FakeServerConnectionsComponent>();
+
+			//clientConn.Init(false, "127.0.0.1");
+			clientConn.SetIP("127.0.0.1");
+			clientConn.PrepareClient("LobbyScene");
+
+			fakeServer.PrepareServer("LobbyScene");
+
+			yield return null;
+
+			// ListAllGameObjectsInScene();
 
 			FakeServerLobbyDataComponent fakeServerData = GameObject.Find("FakeServerLobbyObject(Clone)").GetComponent<FakeServerLobbyDataComponent>();
 
-			List<byte> heartbeatRequest = new List< byte >();
+			List<byte> heartbeatRequest = new List<byte>();
 			heartbeatRequest.Add((byte)LOBBY_CLIENT_REQUESTS.HEARTBEAT);
 
-			List<byte> heartbeatResponse = new List< byte >();
+			List<byte> heartbeatResponse = new List<byte>();
 			heartbeatResponse.Add((byte)LOBBY_SERVER_COMMANDS.HEARTBEAT);
 
 			List<byte> getIdRequest = new List<byte>();
@@ -71,12 +121,11 @@ namespace Tests
 				time += Time.fixedDeltaTime;
 				yield return new WaitForFixedUpdate();
 			}
-			
+
 			Time.timeScale = 1.0f;
 
 			Assert.AreEqual(1, fakeServer.GetConnections().Length);
 		}
-
 
 		private void ListAllGameObjectsInScene()
 		{
